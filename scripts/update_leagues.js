@@ -62,7 +62,7 @@ fs.stat(path, (err, stats) => {
 						leagues[id].season = parseInt(data[1]);
 				}
 
-				if (++finished >= total) 
+				if (++finished >= total)
 					save();
 			});
 		}).on('error', err => {

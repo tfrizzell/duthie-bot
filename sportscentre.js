@@ -19,7 +19,7 @@ const pkg = require('./package.json');
 
 /**
  * Common functionality for easy reuasbility
- */ 
+ */
 function getDefaultChannel(guild, defaultChannel) {
 	let channel;
 
@@ -78,8 +78,8 @@ function tokenize(string) {
 		return '${' + (tokens.length - 1) + '}';
 	}).split(/\s+/).map(token => {
 		let t;
-		return (t = token.match(/^\${(\d+)}$/)) ? tokens[t[1]] : token; 
-	});	
+		return (t = token.match(/^\${(\d+)}$/)) ? tokens[t[1]] : token;
+	});
 }
 
 function updateNewsSubscribers(league, team) {
@@ -423,7 +423,7 @@ client.on('message', message => {
 			if (lmessage) console.log(lmessage);
 		});
 
-		if (updated) 
+		if (updated)
 			saveData();
 		else if (types.length > 1)
 			message.channel.send('Great news! You were already watching for everything you wanted!');
