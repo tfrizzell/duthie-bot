@@ -13,8 +13,8 @@ let data = JSON.parse(fs.readFileSync('./data/data.json', 'utf8')) || {};
 let leagues = JSON.parse(fs.readFileSync('./data/leagues.json', 'utf8')) || {};
 let teams = JSON.parse(fs.readFileSync('./data/teams.json', 'utf8')) || {};
 
-const app = require('./application.json');
 const client = new Discord.Client();
+const config = require('./config.json');
 const pkg = require('./package.json');
 
 /**
@@ -107,13 +107,13 @@ function updateNewsSubscribers(league, team) {
 					return;
 
 				let player = {name: data[1].trim()}, bid = {amount: data[2].trim()};
-				message = eval('`' + app.messages.news.bidWon + '`');
+				message = `The ${team.name} have won bidding rights to ${player.name} with a bid of ${bid.amount}!`;
 			} else if (item.type == 'contract') {
 				if (!(data = item.message.match(/^(.*?) and the .*? have agreed to a (\d+) season deal at (.*?) per season$/i)))
 					return;
 
 				let player = {name: data[1].trim()}, contract = {length: data[2].trim(), salary: data[3].trim()};
-				message = eval('`' + app.messages.news.signed + '`');
+				message = `The ${team.name} have signed ${player.name} to a ${contract.length} season contract worth ${contract.salary} per season!`;
 			} else if (/^(draft|trade|waiver)$/.test(item.type) || (item.type == 'news' && item.message.match(/have (been eliminated|claimed|clinched|drafted|placed|traded)/i)))
 				message = item.message;
 
@@ -162,11 +162,11 @@ function updateScheduleSubscribers(league, team) {
 				let guild = client.guilds.get(s.guild), channel = guild.channels.get(s.channel) || getDefaultChannel(guild), our = game.home.id == s.team ? game.home : game.visitor, their = our == game.home ? game.visitor : game.home;
 
 				if (our.score > their.score)
-					channel.send(eval('`' + app.messages.games.win + '`'));
+					channel.send(`**The ${our.name} have defeated the ${their.name} by the score of ${our.score} to ${their.score}!**`);
 				else if (our.score < their.score)
-					channel.send(eval('`' + app.messages.games.loss + '`'));
+					channel.send(`The _${our.name}_ have been defeated by the _${their.name}_ by the score of _${their.score} to ${our.score}_.`);
 				else
-					channel.send(eval('`' + app.messages.games.tie + '`'));
+					channel.send(`The ${our.name} have tied the ${their.name} by the score of ${our.score} to ${their.score}.`);
 			});
 		});
 
@@ -183,7 +183,7 @@ function updateScheduleSubscribers(league, team) {
  * Set up the Discord client event handlers, and log in
  */
 client.on('ready', () => {
-	console.log(eval('`' + app.messages._core.start + '`'));
+	console.log(`node.js v${process.version.replace(/^v+/g, '')}\ndiscord.js v${Discord.version.replace(/^v+/g, '')}\n\nStarted ${config.name} v${pkg.version.replace(/^v+/g, '')}, active on ${client.guilds.size} guild${client.guilds.size != 1 ? 's' : ''}`);
 	client.user.setGame('in testing...');
 
 	client.guilds.forEach(guild => {
@@ -196,7 +196,7 @@ client.on('ready', () => {
 });
 
 client.on('guildCreate', guild => {
-	console.log(eval('`' + app.messages._core.guild.joined + '`'));
+	console.log(`Joining ${guild.name}, now active on ${client.guilds.size} guild${client.guilds.size != 1 ? 's' : ''}`);
 
 	if (data.guilds[guild.id])
 		return;
@@ -210,7 +210,7 @@ client.on('guildCreate', guild => {
 });
 
 client.on('guildDelete', guild => {
-	console.log(eval('`' + app.messages._core.guild.left + '`'));
+	console.log(`Leaving ${guild.name}, now active on ${client.guilds.size} guild${client.guilds.size != 1 ? 's' : ''}`);
 	delete data.guilds[guild.id];
 	data.watchers = data.watchers.filter(w => {return w.guild!=guild.id});
 	saveData();
@@ -220,17 +220,12 @@ client.on('message', message => {
 	if (message.author.bot) return;
 
 	let tokens = tokenize(message.content.trim());
-	if (tokens[0] != app.config.prefix) return;
-	if (data.guilds[message.guild.id].admins.indexOf(message.author.id) == -1) return message.channel.send(eval('`' + app.messages._core.permissionDenied + '`'));
-	if (message.channel.type == 'voice' || !message.guild.id) return message.channel.send('You can\'t do that here!');
+	if (tokens[0] != config.prefix) return;
+	if (data.guilds[message.guild.id].admins.indexOf(message.author.id) == -1 || message.channel.type == 'voice' || !message.guild.id) return message.channel.send(`I'm sorry, ${message.author.username}, but you aren't allowed to do that`);
 
 	switch (tokens[1].toLowerCase()) {
-	  case 'panic!': {
-		console.log(`${message.author.username} issued panic command from channel ${message.channel.name} on server ${message.guild.name}`);
-		process.exit();
-	  }
 	  case 'help': {
-		message.channel.send(eval('`' + app.messages.help._help + '`'), {code: app.config.help.format, split: app.config.help.split});
+		message.channel.send(eval('`'+fs.readFileSync('./help/main.tpl')+'`'), {code: config.help.code, split: config.help.split});
 		break;
 	  }
 	  case 'ping': {
@@ -258,10 +253,13 @@ client.on('message', message => {
 		if (tokens[5] && (tmp = tokens[5].match(/^<\#(\d+)>$/)))
 			channel = message.guild.channels.get(tmp[1]) || null;
 
-		if (type == 'help')
-			err = new Error(eval('`' + app.messages.help.unwatch + '`'));
-		else if (!/^(all|all.?news|bids|contracts|draft|games|news|trades|waivers)$/.test(type))
-			err = new Error(`${type} is not a valid watcher type. See ${app.config.prefix} ${tokens[1].toLowerCase()} help for more information`);
+		if (type == 'help') {
+			message.channel.send(eval('`'+fs.readFileSync('./help/unwatch.tpl')+'`'), {code: config.help.code, split: config.help.split});
+			break;
+		}
+
+		if (!/^(all|all.?news|bids|contracts|draft|games|news|trades|waivers)$/.test(type))
+			err = new Error(`${type} is not a valid watcher type. See ${config.prefix} ${tokens[1].toLowerCase()} help for more information`);
 		else if (tokens[3] && !league)
 			err = new Error(`${tokens[3]} is not a valid league`);
 		else if (type == 'games' && !team)
@@ -270,7 +268,7 @@ client.on('message', message => {
 			err = new Error(`The channel you requested could not be found in your server`);
 
 		if (err) {
-			message.channel.send(err.message, {code: app.config.help.format, split: app.config.help.split});
+			message.channel.send(err.message);
 			break;
 		}
 
@@ -369,10 +367,13 @@ client.on('message', message => {
 		if (channel === null)
 			channel = getDefaultChannel(message.guild, data.guilds[message.guild.id].defaultChannel);
 
-		if (type == 'help')
-			err = new Error(eval('`' + app.messages.help.watch + '`'));
-		else if (!/^(all|all.?news|bids|contracts|draft|games|news|trades|waivers)$/.test(type))
-			err = new Error(`${type} is not a valid watcher type. See ${app.config.prefix} ${tokens[1].toLowerCase()} help for more information`);
+		if (type == 'help') {
+			message.channel.send(eval('`'+fs.readFileSync('./help/watch.tpl')+'`'), {code: config.help.code, split: config.help.split});
+			break;
+		}
+
+		if (!/^(all|all.?news|bids|contracts|draft|games|news|trades|waivers)$/.test(type))
+			err = new Error(`${type} is not a valid watcher type. See ${config.prefix} ${tokens[1].toLowerCase()} help for more information`);
 		else if (!league && !tokens[3].match(/^<\#(\d+)>$/))
 			err = new Error(`${tokens[3]} is not a valid league`);
 		else if (type == 'games' && !team && !tokens[4].match(/^<\#(\d+)>$/))
@@ -381,7 +382,7 @@ client.on('message', message => {
 			err = new Error(`The channel you requested could not be found in your server`);
 
 		if (err) {
-			message.channel.send(err.message, {code: app.config.help.format, split: app.config.help.split});
+			message.channel.send(err.message);
 			break;
 		}
 
@@ -432,7 +433,7 @@ client.on('message', message => {
 	}
 });
 
-client.login(app.config.token);
+client.login(config.token);
 
 /**
  * Set up filesystem data watchers
@@ -496,7 +497,7 @@ process.on('uncaughtException', err => {
 });
 
 process.on('exit', () => {
-	console.log(`Shutting down ${app.config.name} v${pkg.version.replace(/^v+/g, '')}...`);
+	console.log(`Shutting down ${config.name} v${pkg.version.replace(/^v+/g, '')}...`);
 	client.destroy();
 	clearInterval(cron);
 });
