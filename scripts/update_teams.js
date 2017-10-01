@@ -1,17 +1,16 @@
 const fs = require('fs');
-const http = require('http');
+const request = require('request');
 const url = require('url');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
 const leagues = require(`${dir}/data/leagues.json`);
 const path = `${dir}/data/teams.json`;
-let teams = {}, tmap = {};
 
 function save() {
 	fs.readFile(path, 'utf8', (err, json) => {
 		if (err) {
 			console.error(err.message);
-			return;
+			process.exit();
 		}
 
 		Object.keys(teams).forEach(id => {teams[id].leagues=tmap[id].filter((l,i) => {return tmap[id].indexOf(l)==i}).sort()});
@@ -27,31 +26,21 @@ function save() {
 
 fs.stat(path, (err, stats) => {
 	if (err) fs.writeFileSync(path, '{}');
-	let ids = Object.keys(leagues), total = ids.length, finished = 0;
+	let teams = {}, lmap = {}, ids = Object.keys(leagues), total = ids.length, finished = 0;
 
 	ids.forEach(function(id) {
 		let league = leagues[id], regex = new RegExp(`<div(?:[^>]+)?class="team_box_icon"(?:[^>]+)?>.*?<a(?:[^>]+)?page=team_page&(?:amp;)?teamid=(\\d+)&(?:amp;)?leagueid=${league.id}&(?:amp;)?seasonid=${league.season}(?:[^>]+)?>(.*?)</a></div>`, 'ig'), regex1 = new RegExp(`<td(?:[^>]+)?><img(?:[^>]+)?/team\\d+.png(?:[^>]+)?> \\d+\\) <a(?:[^>]+)?page=team_page&(?:amp;)?teamid=(\\d+)&(?:amp;)?leagueid=${league.id}&(?:amp;)?seasonid=${league.season}(?:[^>]+)?>(.*?)</a></td>`, 'ig');
 
-		http.get(`http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=standing&leagueid=${id}&seasonid=${league.season}`, res => {
-			const { statusCode } = res;
-			const contentType = res.headers['content-type'];
-			let err;
+		request(`http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=standing&leagueid=${id}&seasonid=${league.season}`, (err, res, html) => {
+			html = html.replace(/>\s+</g, '><');
+			let contentType = res.headers['content-type'];
 
-			if (statusCode !== 200)
-				err = new Error(`Failed to fetch team list for league ${id} (status code=${statusCode})`);
+			if (res.statusCode != 200)
+				err = new Error(`Failed to fetch team list for ${league.name} (status=${res.statusCode})`);
 			else if (!/^text\/html/.test(contentType))
-				err = new Error(`Failed to fetch team list for league ${id} (content-type=${contentType})`);
+				err = new Error(`Failed to fetch team list for ${league.name} (content-type=${contentType})`);
 
-			if (err) {
-				console.error(err.message);
-				res.resume();
-				return;
-			}
-
-			let html = '';
-			res.setEncoding('utf8');
-			res.on('data', chunk => { html += chunk; });
-			res.on('end', () => {
+			if (!err) {
 				let data;
 
 				if (data = html.match(regex)) {
@@ -61,7 +50,7 @@ fs.stat(path, (err, stats) => {
 
 						let id = parseInt(link.teamid);
 						teams[id] = teams[id] || {id: id, leagues: [], name: name.trim(), shortname: null};
-						tmap[id] = (tmap[id] || []).concat(parseInt(link.leagueid));
+						lmap[id] = (lmap[id] || []).concat(parseInt(link.leagueid));
 					}
 				}
 
@@ -74,19 +63,30 @@ fs.stat(path, (err, stats) => {
 
 						if (teams[id]) {
 							teams[id].shortname = teams[id].shortname || name.trim();
-							tmap[id] = (tmap[id] || []).concat(parseInt(link.leagueid));
+							lmap[id] = (lmap[id] || []).concat(parseInt(link.leagueid));
 						}
 					}
 				}
+			} else
+				console.error(err.message);
 
-				if (++finished >= total)
-					save();
+			if (++finished < total) return;
+
+			fs.readFile(path, 'utf8', (err, json) => {
+				if (err) {
+					console.error(err.message);
+					process.exit();
+				}
+
+				Object.keys(teams).forEach(id => {teams[id].leagues=lmap[id].filter((v,i,a) => {return a.indexOf(v)==i}).sort()});
+				let data = JSON.stringify(teams);
+				if (json == data) process.exit();
+
+				fs.writeFile(path, data, err => {
+					if (err) console.error(err.message);
+					process.exit();
+				});
 			});
-		}).on('error', err => {
-			console.error(err.message);
-
-			if (++finished >= total)
-				save();
 		});
 	});
 });

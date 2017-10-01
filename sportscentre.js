@@ -4,7 +4,6 @@
 const child = require('child_process');
 const Discord = require('discord.js');
 const fs = require('fs');
-const http = require('http');
 
 /*
  * Load application data
@@ -64,6 +63,14 @@ function getTeam(team, league) {
 	}).shift();
 }
 
+function isNewsWatcher(watcher) {
+	return /^(bids|contracts|draft|news|trades|waivers)$/.test(watcher instanceof Object ? watcher.type : watcher);
+}
+
+function isValidWatcherType(type) {
+	return /^(all|all.?news|games)$/i.test(type) || isNewsWatcher(type);
+}
+
 function saveData() {
 	fs.writeFile('./data/data.json', JSON.stringify(data), err => {
 		if (err)
@@ -72,14 +79,17 @@ function saveData() {
 }
 
 function tokenize(string) {
-	let tokens = [];
+	let tokens = [], t;
 	return string.replace(/(["'])(.*?[^\\])\1/g, (substr, token, value) => {
 		tokens.push(value);
 		return '${' + (tokens.length - 1) + '}';
 	}).split(/\s+/).map(token => {
-		let t;
 		return (t = token.match(/^\${(\d+)}$/)) ? tokens[t[1]] : token;
 	});
+}
+
+function updateDailyStarsSubscribers(league, team) {
+
 }
 
 function updateNewsSubscribers(league, team) {
@@ -87,7 +97,7 @@ function updateNewsSubscribers(league, team) {
 		return;
 
 	let path = `./data/news-${league.id}${team ? '-' + team.id : ''}.json`;
-	let subs = data.watchers.filter(s => {return s.league==league.id && (!team || s.teams.indexOf(team.id) != -1) && /^(bids|contracts|draft|news|trades|waivers)$/.test(s.type)});
+	let subs = data.watchers.filter(s => {return s.league==league.id && (!team || s.teams.indexOf(team.id) != -1) && isNewsWatcher(s)});
 
 	if (!subs.length)
 		return fs.unlink(path);
@@ -102,19 +112,19 @@ function updateNewsSubscribers(league, team) {
 			item.new = false;
 			count++;
 
-			if (item.type == 'bidding') {
+			if (item.type == 'bids') {
 				if (!(data = item.message.match(/have earned the player rights for (.*?) with a bid amount of (\S+)/i)))
 					return;
 
 				let player = {name: data[1].trim()}, bid = {amount: data[2].trim()};
 				message = `The ${team.name} have won bidding rights to ${player.name} with a bid of ${bid.amount}!`;
-			} else if (item.type == 'contract') {
+			} else if (item.type == 'contracts') {
 				if (!(data = item.message.match(/^(.*?) and the .*? have agreed to a (\d+) season deal at (.*?) per season$/i)))
 					return;
 
 				let player = {name: data[1].trim()}, contract = {length: data[2].trim(), salary: data[3].trim()};
 				message = `The ${team.name} have signed ${player.name} to a ${contract.length} season contract worth ${contract.salary} per season!`;
-			} else if (/^(draft|trade|waiver)$/.test(item.type) || (item.type == 'news' && item.message.match(/have (been eliminated|claimed|clinched|drafted|placed|traded)/i)))
+			} else if (/^(draft|trades|waivers)$/.test(item.type) || (item.type == 'news' && item.message.match(/have (been eliminated|claimed|clinched|drafted|placed|traded)/i)))
 				message = item.message;
 
 			if (!message)
@@ -124,7 +134,7 @@ function updateNewsSubscribers(league, team) {
 				return (!sub.team || item.teams.indexOf(sub.team) != -1) && (sub.type == 'news' || sub.type == item.type);
 			}).forEach(sub => {
 				let guild = client.guilds.get(sub.guild);
-				(guild.channels.get(sub.channel) || getDefaultChannel(guild)).send(message);
+				getDefaultChannel(guild, sub.channel).send(message);
 			});
 		});
 
@@ -159,7 +169,7 @@ function updateScheduleSubscribers(league, team) {
 				 return;
 
 			subs.forEach(function(s) {
-				let guild = client.guilds.get(s.guild), channel = guild.channels.get(s.channel) || getDefaultChannel(guild), our = game.home.id == s.team ? game.home : game.visitor, their = our == game.home ? game.visitor : game.home;
+				let guild = client.guilds.get(s.guild), channel = getDefaultChannel(guild, s.channel), our = game.home.id == s.team ? game.home : game.visitor, their = our == game.home ? game.visitor : game.home;
 
 				if (our.score > their.score)
 					channel.send(`**The ${our.name} have defeated the ${their.name} by the score of ${our.score} to ${their.score}!**`);
@@ -176,8 +186,6 @@ function updateScheduleSubscribers(league, team) {
 		console.log(e);
 	}
 }
-
-
 
 /**
  * Set up the Discord client event handlers, and log in
@@ -218,10 +226,9 @@ client.on('guildDelete', guild => {
 
 client.on('message', message => {
 	if (message.author.bot) return;
-
 	let tokens = tokenize(message.content.trim());
 	if (tokens[0] != config.prefix) return;
-	if (data.guilds[message.guild.id].admins.indexOf(message.author.id) == -1 || message.channel.type == 'voice' || !message.guild.id) return message.channel.send(`I'm sorry, ${message.author.username}, but you aren't allowed to do that`);
+	if (message.channel.type == 'voice') return message.channel.send(`I'm sorry, ${message.author.username}, but you can't do that here`);
 
 	switch (tokens[1].toLowerCase()) {
 	  case 'help': {
@@ -234,6 +241,7 @@ client.on('message', message => {
 		break;
 	  }
 	  case 'unwatch': {
+		if (data.guilds[message.guild.id].admins.indexOf(message.author.id) == -1 || !message.guild.id) return message.channel.send(`I'm sorry, ${message.author.username}, but you aren't allowed to do that`);
 		let channel, err, league = {}, team = {}, type = tokens[2].trim().toLowerCase();
 
 		if (tokens[3]) {
@@ -258,7 +266,7 @@ client.on('message', message => {
 			break;
 		}
 
-		if (!/^(all|all.?news|bids|contracts|draft|games|news|trades|waivers)$/.test(type))
+		if (!isValidWatcherType(type))
 			err = new Error(`${type} is not a valid watcher type. See ${config.prefix} ${tokens[1].toLowerCase()} help for more information`);
 		else if (tokens[3] && !league)
 			err = new Error(`${tokens[3]} is not a valid league`);
@@ -345,6 +353,7 @@ client.on('message', message => {
 		break;
 	  }
 	  case 'watch': {
+		if (data.guilds[message.guild.id].admins.indexOf(message.author.id) == -1 || !message.guild.id) return message.channel.send(`I'm sorry, ${message.author.username}, but you aren't allowed to do that`);
 		let channel = null, err, league, team, tmp, type = tokens[2].trim().toLowerCase();
 
 		if (tokens[3]) {
@@ -372,7 +381,7 @@ client.on('message', message => {
 			break;
 		}
 
-		if (!/^(all|all.?news|bids|contracts|draft|games|news|trades|waivers)$/.test(type))
+		if (!isValidWatcherType(type))
 			err = new Error(`${type} is not a valid watcher type. See ${config.prefix} ${tokens[1].toLowerCase()} help for more information`);
 		else if (!league && !tokens[3].match(/^<\#(\d+)>$/))
 			err = new Error(`${tokens[3]} is not a valid league`);
@@ -446,6 +455,8 @@ fs.watch('./data', (ev, filename) => {
 		leagues = require('./data/leagues.json');
 	else if (filename == 'teams.json')
 		teams = require('teams.json');
+	else if (data = filename.match(/^daily-stars-(\d+)(?:-(\d+))?\.json$/))
+		updateDailyStarsSubscribers(data[1], data[2]);
 	else if (data = filename.match(/^news-(\d+)(?:-(\d+))?\.json$/))
 		updateNewsSubscribers(data[1], data[2]);
 	else if (data = filename.match(/^schedule-(\d+)(?:-(\d+))?\.json$/))
@@ -473,6 +484,9 @@ setTimeout(cron = () => {
 			child.fork(`${__dirname}/scripts/update_teams.js`, {silent:true});
 	}
 
+	if (date.getUTCHours() > 14 && date.getUTCHours() < 17 && date.getUTCMinutes() % 10 == 0)
+		child.fork(`${__dirname}/scripts/update_daily_stars.js`, {silent:true});
+
 	if ((date.getUTCHours() > 19 && date.getUTCMinutes() % 5 == 0) || date.getUTCMinutes() % 30 == 0)
 		child.fork(`${__dirname}/scripts/update_news.js`, {silent:true});
 
@@ -492,12 +506,11 @@ process.on('SIGINT', () => {
 });
 
 process.on('uncaughtException', err => {
-	console.log(err.stack);
+	console.error(err.stack);
 	process.exit(99);
 });
 
 process.on('exit', () => {
 	console.log(`Shutting down ${config.name} v${pkg.version.replace(/^v+/g, '')}...`);
 	client.destroy();
-	clearInterval(cron);
 });

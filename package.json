@@ -1,11 +1,11 @@
 {
   "name": "lg-sportscentre",
   "version": "0.1.0",
-  "description": "Spruce up your server with this informative bot for LeagueGaming.com's EA NHL leagues!",
-  "homepage": "https://github.com/tfrizzell/lg-sportscentre",
+  "description": "Duthie Bot: Spruce up your server with this informative bot for LeagueGaming.com's EA NHL leagues!",
   "main": "sportscenter.js",
   "dependencies": {
-    "discord.js": "^11.2.1"
+    "discord.js": "^11.2.1",
+    "request": "^2.83.0"
   },
   "devDependencies": {},
   "scripts": {
