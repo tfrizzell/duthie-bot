@@ -54,7 +54,7 @@ fs.stat(file, (err, stats) => {
 				if ((team = teams[news[3]]) && team.leagues.indexOf(league.id) != -1)
 					_teams.push(team.id);
 
-				let item = {league: league.id, message: news[4].replace(/<img(?:[^>]+)?\/team(\d+)\.png(?:[^>]+)?> <span(?:[^>]+)?>(.*?)<\/span>/g, (a,b) => {
+				let item = {league: league.id, message: news[4].replace(/<img(?:[^>]+)?\/team(\d+)\.png(?:[^>]+)?><span(?:[^>]+)?>(.*?)<\/span>/g, (a,b) => {
 					let team;
 
 					if (team = teams[b]) {
