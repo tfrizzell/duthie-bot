@@ -60,7 +60,7 @@ function downloadSchedule() {
 				game.updated = updating;
 
 			newSchedule[game.id] = game;
-			udpates = updated || game.updated;
+			updated = updated || game.updated;
 		}
 
 		if (!updated)
