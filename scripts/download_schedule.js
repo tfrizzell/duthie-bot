@@ -3,6 +3,7 @@ const request = require('request');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
 const leagues = require(`${dir}/data/leagues.json`);
+const prefix = 'schedule-';
 const teams = require(`${dir}/data/teams.json`);
 let [league, team] = process.argv.slice(2);
 
@@ -18,59 +19,65 @@ if (!teams[team]) {
 } else
 	team = teams[team];
 
-const file = `${dir}/data/schedule-${league.id}-${team.id}.json`;
+const path = `${dir}/data/${prefix}${league.id}-${team.id}.json`;
 console.log(`Downloading schedule for S${league.season} ${league.name} ${team.name}`);
 
-fs.stat(file, (err, stats) => {
-	if (err) fs.writeFileSync(file, '{}');
+function downloadSchedule() {
+	let regex0 = new RegExp(`<tr(?:[^>]+)?><td(?:[^>]+)?>(.*?)</td><td(?:[^>]+)?>.*?</td><td(?:[^>]+)?><a(?:[^>]+)?page=game&(?:amp;)?gameid=(\\d+)&(?:amp;)?leagueid=${league.id}&(?:amp;)?seasonid=${league.season}(?:[^>]+)?><img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>(.*?)(?: - (\\d+))? @ <img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>(.*?)(?: - (\\d+))?</a></td></tr>`, 'ig');
+	let regex1 = new RegExp(regex0.source, regex0.flags.replace('g', ''));
 
 	request(`http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league_page&page=team_page_schedule&teamid=${team.id}&leagueid=${league.id}&seasonid=${league.season}`, (err, res, html) => {
-		html = html.replace(/>\s+</g, '><');
-		let contentType = res.headers['content-type'];
-
-		if (res.statusCode != 200)
-			err = new Error(`Failed to fetch schedule for S${league.season} ${league.name} ${team.name} (status=${res.statusCode})`);
-		else if (!/^text\/html/.test(contentType))
-			err = new Error(`Failed to fetch schedule for S${league.season} ${league.name} ${team.name} (content-type=${contentType})`);
+		if (!err) {
+			if (res.statusCode != 200)
+				err = new Error(`Failed to fetch schedule for S${league.season} ${league.name} ${team.name} (status=${res.statusCode})`);
+			else if (!/^text\/html/.test(res.headers['content-type']))
+				err = new Error(`Failed to fetch schedule for S${league.season} ${league.name} ${team.name} (content-type=${res.headers['content-type']})`);
+		}
 
 		if (err) {
 			console.error(err.message);
-			process.exit();
+			return resolve();
 		}
 
-		let regex = new RegExp(`<tr(?:[^>]+)?><td(?:[^>]+)?>(.*?)</td><td(?:[^>]+)?>.*?</td><td(?:[^>]+)?><a(?:[^>]+)?page=game&(?:amp;)?gameid=(\\d+)&(?:amp;)?leagueid=${league.id}&(?:amp;)?seasonid=${league.season}(?:[^>]+)?><img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>(.*?)(?: - (\\d+))? @ <img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>(.*?)(?: - (\\d+))?</a></td></tr>`, 'ig'), data;
-		if (!(data = html.match(regex))) process.exit();
+		let data = html.replace(/>\s+</g, '><').match(regex0);
 
-		let prev = require(file), next = {}, regex1 = new RegExp(regex.source, regex.flags.replace('g', ''));
+		if (!data)
+			process.exit();
+
+		let oldSchedule = require(path), newSchedule = {}, updated = false, updating = !!Object.keys(oldSchedule).length;
 
 		for (let i = 0, end = data.length; i < end; i++) {
-			let game = data[i].match(regex1);
+			let gameData = data[i].match(regex1);
 
-			if (game) {
-				let id = parseInt(game[2]);
-				next[id] = {date: game[1].replace(' -  ', ' '), home: {id: parseInt(game[6]), name: game[7].trim(), score: !isNaN(game[8]) ? game[8] : null}, id: id, visitor: {id: parseInt(game[3]), name: game[4].trim(), score: !isNaN(game[5]) ? game[5] : null}};
+			if (!gameData)
+				continue;
 
-				if (prev[id]) {
-					delete prev[id].updated;
-					next[id].updated = (JSON.stringify(prev[id]) != JSON.stringify(next[id]));
-				} else
-					next[id].updated = !!Object.keys(prev).length;
-			}
+			let game = {date: gameData[1].replace(' -  ', ''), home: {id: parseInt(gameData[6]), name: gameData[7].trim(), score: !isNaN(gameData[8]) ? parseInt(gameData[8]) : null}, id: parseInt(gameData[2]), updated: false, visitor: {id: parseInt(gameData[3]), name: gameData[4].trim(), score: !isNaN(gameData[5]) ? parseInt(gameData[5]) : null}};
+
+			if (oldSchedule[game.id])
+				game.updated = JSON.stringify(oldSchedule[game.id]).replace(/,"updated":.*?/, '') != JSON.stringify(game).replace(/,"updated":.*?/, '');
+			else
+				game.updated = updating;
+
+			newSchedule[game.id] = game;
+			udpates = updated || game.updated;
 		}
 
-		fs.readFile(file, 'utf8', (err, json) => {
-			if (err) {
+		if (!updated)
+			process.exit();
+
+		fs.writeFile(path, JSON.stringify(newSchedule), err => {
+			if (err)
 				console.error(err.message);
-				process.exit();
-			}
 
-			let data = JSON.stringify(next);
-			if (json == data) process.exit();
-
-			fs.writeFile(file, data, err => {
-				if (err) console.error(err.message);
-				process.exit();
-			 });
-		});
+			process.exit();
+		 });
 	});
+}
+
+fs.stat(path, err => {
+	if (err)
+		fs.writeFile(path, '{}', downloadSchedule);
+	else
+		downloadSchedule();
 });

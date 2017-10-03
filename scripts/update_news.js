@@ -2,42 +2,62 @@ const child = require('child_process');
 const fs = require('fs');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
+const prefix = 'news-';
+
 const data = require(`${dir}/data/data.json`);
 const leagues = require(`${dir}/data/leagues.json`);
-const prefix = 'news-';
-const teams = require(`${dir}/data/teams.json`);
-
 let watched = {};
-data.watchers.forEach(w => {
-	if (!/^(bids|contracts|draft|news|trades|waivers)$/.test(w.type)) return;
-	watched[w.league] = watched[w.league] || {};
-	watched[w.league][w.team] = true;
-	try { fs.statSync(`${dir}/data/${prefix}${w.league}.json`); } catch (err) { fs.writeFileSync(`${dir}/data/${prefix}${w.league}.json`, '[]'); }
-});
 
-fs.readdir(`${dir}/data`, (err, files) => {
-	if (err) {
-		console.log(err.message);
-		process.exit();
-	}
+Promise.all(
+	data.watchers.map(watcher => {
+		return new Promise(resolve => {
+			if (!/^(bids|contracts|draft|news|trades|waivers)$/.test(watcher.type) || watched[watcher.league])
+				return resolve();
+	
+			watched[watcher.league] = true;
+	
+			fs.stat(`${dir}/data/${prefix}${watcher.league}.json`, err => {
+				if (!err)
+					return resolve();
 
-	let total = 0, finished = 0, regex = new RegExp(`^${prefix}(\\d+)(-(\\d+))?.json$`);
+				fs.writeFile(err.path, '[]', err => {
+					if (!err)
+						return resolve();
 
-	files.filter(function(f) {
-		return f.match(regex);
-	}).forEach(function(f) {
-		let [prefix, league, team] = f.replace(/\.json$/, '').split(/[-\.]/);
+					console.error(err.message);
+					process.exit();
+				});
+			});
+		});
+	})
+).then(() => {
+	fs.readdir(`${dir}/data`, (err, files) => {
+		if (err) {
+			console.error(err.message);
+			process.exit();
+		}
 
-		if (!(league = leagues[league]) || (team && !(team = teams[team])))
-			return;
+		let regex = new RegExp(`^${prefix}(\\d+).json$`);
 
-		if (!watched[league.id])
-			return fs.unlink(`${dir}/data/${prefix}${league.id}.json`);
+		Promise.all(
+			files.map(file => {
+				return new Promise(resolve => {
+					if (!file.match(regex))
+						return resolve();
 
-		if (team && !watched[league.id][team.id])
-			return fs.unlink(`${dir}/data/${prefix}${league.id}-${team.id}.json`);
-
-		child.fork(`${dir}/scripts/download_news.js`, [league.id, team ? team.id : '']).on('exit', () => { if (++finished >= total) process.exit(); });
-		total++;
+					let [a, league] = file.match(regex);
+			
+					if (!(league = leagues[league]))
+						return resolve();
+	
+					if (!watched[league.id])
+						return fs.unlink(`${dir}/data/${file}`, resolve);
+			
+					child.fork(`${dir}/scripts/download_news.js`, [league.id]).on('exit', resolve);
+				})
+			})
+		).then(() => {
+			process.exit();
+		});
 	});
 });

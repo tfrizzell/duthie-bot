@@ -3,8 +3,8 @@ const request = require('request');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
 const leagues = require(`${dir}/data/leagues.json`);
-let [league, date] = process.argv.slice(2);
-let thread;
+const prefix = 'daily-stars-';
+let [league, date, thread] = process.argv.slice(2, 4);
 
 if (!leagues[league]) {
 	console.error(`Invalid league: ${league}`);
@@ -29,76 +29,85 @@ if (!thread) {
 	process.exit();
 }
 
-const file = `${dir}/data/daily-stars-${league.id}.json`;
+const path = `${dir}/data/daily-stars-${league.id}.json`;
 date = date.toJSON().substr(0, 10);
 console.log(`Downloading ${thread}`);
 
-fs.stat(file, (err, stats) => {
-	if (err) fs.writeFileSync(file, '{}');
-
-	let stars = require(file);
-	if (stars.date == date) process.exit();
+function downloadDailyStars() {
+	let regex0 = new RegExp('<h3(?:[^>]+)?><a(?:[^>]+)?href="(.*?)"(?:[^>]+)?>(.*?)</a></h3>', 'i');
+	let regex1 = new RegExp('<tr(?:[^>]+)?>(<td(?:[^>]+)?>.*?){7,8}</tr>', 'ig');
 
 	request(`http://www.leaguegaming.com/forums/index.php?search/1/&q=${thread}&o=date&c[node]=586`, (err, res, html) => {
-		html = html.replace(/>\s+</g, '><');
-		let contentType = res.headers['content-type'];
-
-		if (res.statusCode != 200)
-			err = new Error(`Failed to fetch ${league.name} daily stars for ${date} (status=${res.statusCode})`);
-		else if (!/^text\/html/.test(contentType))
-			err = new Error(`Failed to fetch ${league.name} daily stars for ${date} (content-type=${contentType})`);
+		if (!err) {
+			if (res.statusCode != 200)
+				err = new Error(`Failed to fetch ${league.name} daily stars for ${date} (status=${res.statusCode})`);
+			else if (!/^text\/html/.test(res.headers['content-type']))
+				err = new Error(`Failed to fetch ${league.name} daily stars for ${date} (content-type=${res.headers['content-type']})`);
+		}
 
 		if (err) {
 			console.error(err.message);
-			process.exit();
+			return resolve();
 		}
 
-		let regex = new RegExp('<h3(?:[^>]+)?><a(?:[^>]+)?href="(.*?)"(?:[^>]+)?>(.*?)</a></h3>', 'i'), data;
-		if (!(data = html.match(regex))) process.exit();
+		let data = html.replace(/>\s+</g, '><').match(regex0);
+
+		if (!data)
+			process.exit();
 
 		request(`http://www.leaguegaming.com/forums/${data[1]}`, (err, res, html) => {
-			html = html.replace(/>\s+</g, '><');
-			let contentType = res.headers['content-type'];
-
-			if (res.statusCode != 200)
-				err = new Error(`Failed to fetch ${league.name} daily stars for ${date} (status=${res.statusCode})`);
-			else if (!/^text\/html/.test(contentType))
-				err = new Error(`Failed to fetch ${league.name} daily stars for ${date} (content-type=${contentType})`);
+			if (!err) {
+				if (res.statusCode != 200)
+					err = new Error(`Failed to fetch ${league.name} daily stars for ${date} (status=${res.statusCode})`);
+				else if (!/^text\/html/.test(res.headers['content-type']))
+					err = new Error(`Failed to fetch ${league.name} daily stars for ${date} (content-type=${res.headers['content-type']})`);
+			}
 
 			if (err) {
 				console.error(err.message);
-				process.exit();
+				return resolve();
 			}
 
-			let regex = new RegExp('<tr(?:[^>]+)?>(<td(?:[^>]+)?>.*?){7,8}</tr>', 'ig'), data;
-			if (!(data = html.match(regex))) process.exit();
+			let data = html.replace(/>\s+</g, '><').match(regex1);
+
+			if (!data)
+				process.exit();
 
 			let stars = {data: date, forwards: [], defenders: [], goalies: []}, group;
 
 			for (let i = 0, end = data.length; i < end; i++) {
-				let star = data[i].match(/<td(?:[^>]+)?>(.*?)<\/td>/ig).map(v => {return v.replace(/<\/?td(?:[^>]+)?>/ig, '')});
+				let starData = data[i].match(/<td(?:[^>]+)?>(.*?)<\/td>/ig).map(v => {return v.replace(/<\/?td(?:[^>]+)?>/ig, '')});
 
-				if (star) {
-					let rank = parseInt(star[0]) || star[0].match(/\/star\.gif/g).length;
+				if (!starData)
+					continue;
 
-					if (rank == 1)
-						group = (!group ? stars.forwards : (group == stars.forwards ? stars.defenders : stars.goalies));
+				let rank = parseInt(starData[0]) || starData[0].match(/\/star\.gif/g).length;
 
-					group.push({
-						rank: parseInt(star[0]) || star[0].match(/\/star\.gif/g).length,
-						team: parseInt(star[rank<4?3:1].match(/\/team(\d+)\.(png|svg)/)[1]),
-						name: star[rank<4?2:1].replace(/(<.*?>|\(\w{1,2}\))/ig, '').trim(),
-						stats: star.slice(-4).map(v => {return parseFloat(v)})
-					});
-				}
+				if (rank == 1)
+					group = (!group ? stars.forwards : (group == stars.forwards ? stars.defenders : stars.goalies));
+
+				group.push({
+					rank: rank,
+					team: parseInt(starData[rank<4?3:1].match(/\/team(\d+)\.(png|svg)/)[1]),
+					name: starData[rank<4?2:1].replace(/(<.*?>|\(\w{1,2}\))/ig, '').trim(),
+					stats: starData.slice(-4).map(v => {return parseFloat(v)})
+				});
 			}
 
-			data = JSON.stringify(stars);
+			fs.writeFile(path, JSON.stringify(stars), err => {
+				if (err)
+					console.error(err.message);
 
-			fs.writeFile(file, data, err => {
-				if (err) console.error(err.message);
 				process.exit();
 			});
 		});
 	});
+}
+
+
+fs.stat(path, err => {
+	if (err)
+		fs.writeFile(path, '[]', downloadDailyStars);
+	else
+		downloadDailyStars();
 });

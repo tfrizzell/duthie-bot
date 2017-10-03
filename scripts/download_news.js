@@ -3,8 +3,9 @@ const request = require('request');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
 const leagues = require(`${dir}/data/leagues.json`);
+const prefix = 'news-';
 const teams = require(`${dir}/data/teams.json`);
-let [league, team] = process.argv.slice(2);
+let [league] = process.argv.slice(2);
 
 if (!leagues[league]) {
 	console.error(`Invalid league: ${league}`);
@@ -12,88 +13,104 @@ if (!leagues[league]) {
 } else
 	league = leagues[league];
 
-if (teams[team])
-	team = teams[team];
-else
-	team = null;
+const path = `${dir}/data/${prefix}${league.id}.json`;
+console.log(`Downloading news for S${league.season} ${league.name}...`);
 
-const file = `${dir}/data/news-${league.id}${team ? '-' + team.id : ''}.json`;
-console.log(`Downloading news for S${league.season} ${league.name}${team ? ' ' + team.name : ''}`);
+function downloadNews() {
+	let regex0 = new RegExp('<li(?:[^>]+)? NewsFeedItem(?:[^>]+)?>(?:<a(?:[^>]+)?><img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>)?(?:<a(?:[^>]+)?><img(?:[^>]+)?/feed/(.*?).png(?:[^>]+)?>)?(?:<a(?:[^>]+)?><img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>)?</a><div(?:[^>]+)?><h3(?:[^>]+)?>(.*?)</h3><abbr(?:[^>]+)?>(.*?)</abbr></div></li>', 'ig');
+	let regex1 = new RegExp(regex0.source, regex0.flags.replace('g', ''));
 
-fs.stat(file, (err, stats) => {
-	if (err) fs.writeFileSync(file, '[]');
-
-	request(`http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=team_news&teamid=${team ? team.id : 0}&typeid=0&displaylimit=${team ? 250 : 500}&leagueid=${league.id}&seasonid=${league.season}`, (err, res, html) => {
-		html = html.replace(/>\s+</g, '><');
-		let contentType = res.headers['content-type'];
-
-		if (res.statusCode != 200)
-			err = new Error(`Failed to fetch news for S${league.season} ${league.name}${team ? ' ' + team.name : ''} (status=${res.statusCode})`);
-		else if (!/^text\/html/.test(contentType))
-			err = new Error(`Failed to fetch schedule for S${league.season} ${league.name}${team ? ' ' + team.name : ''} (content-type=${contentType})`);
+	request(`http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=team_news&teamid=0&typeid=0&displaylimit=500&leagueid=${league.id}&seasonid=${league.season}`, (err, res, html) => {
+		if (!err) {
+			if (res.statusCode != 200)
+				err = new Error(`Failed to fetch news for S${league.season} ${league.name} (status=${res.statusCode})`);
+			else if (!/^text\/html/.test(res.headers['content-type']))
+				err = new Error(`Failed to fetch news for S${league.season} ${league.name} (content-type=${res.headers['content-type']})`);
+		}
 
 		if (err) {
 			console.error(err.message);
-			process.exit();
+			return resolve();
 		}
 
-		let regex = new RegExp('<li(?:[^>]+)? NewsFeedItem(?:[^>]+)?>(?:<a(?:[^>]+)?><img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>)?(?:<a(?:[^>]+)?><img(?:[^>]+)?/feed/(.*?).png(?:[^>]+)?>)?(?:<a(?:[^>]+)?><img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>)?</a><div(?:[^>]+)?><h3(?:[^>]+)?>(.*?)</h3><abbr(?:[^>]+)?>(.*?)</abbr></div></li>', 'ig'), data;
-		if (!(data = html.match(regex))) process.exit();
+		let data = html.replace(/>\s+</g, '><').match(regex0);
 
-		let prev = require(file), next = [], regex1 = new RegExp(regex.source, regex.flags.replace('g', ''));
+		if (!data)
+			process.exit();
+
+		let oldItems = require(path), newItems = [], updated = false;
 
 		for (let i = 0, end = data.length; i < end; i++) {
-			let news = data[i].match(regex1);
+			let itemData = data[i].match(regex1);
 
-			if (news) {
-				let _teams = [], team;
+			if (!itemData)
+				continue;
 
-				if ((team = teams[news[1]]) && team.leagues.indexOf(league.id) != -1)
-					_teams.push(team.id);
+			let item = {league: league.id, message: '', new: true, teams: [], timestamp: itemData[5].trim(), type: (itemData[2] || '').trim()}, oldItem, team;
 
-				if ((team = teams[news[3]]) && team.leagues.indexOf(league.id) != -1)
-					_teams.push(team.id);
+			[1, 3].forEach(i => {
+				if ((team = teams[itemData[i]]) && team.leagues.indexOf(league.id) != -1)
+					item.teams.push(team.id);
+			});
 
-				let item = {league: league.id, message: news[4].replace(/<img(?:[^>]+)?\/team(\d+)\.png(?:[^>]+)?><span(?:[^>]+)?>(.*?)<\/span>/g, (a,b) => {
-					let team;
+			item.message = itemData[4].replace(/<img(?:[^>]+)?\/team(\d+)\.png(?:[^>]+)?><span(?:[^>]+)?>(.*?)<\/span>/g, (a, b) => {
+				if (team = teams[b]) {
+					if (team.leagues.indexOf(league.id) != -1)
+						item.teams.push(team.id);
 
-					if (team = teams[b]) {
-						if (team.leagues.indexOf(league.id) != -1)
-							_teams.push(team.id);
+					return team.name;
+				} else
+					return a;
+			}).replace(/<(?:[^>]+)?>/g, '').replace(/[ ]+/g, ' ').trim();
 
-						return team.name;
-					} else
-						return a;
-				}).replace(/<(?:[^>]+)?>/g, '').replace(/[ ]+/g, ' ').trim(), new: false, teams: _teams.filter((v,i,a) => {return a.indexOf(v)==i}).sort((a,b) => {return a-b}), timestamp: news[5].trim(), type: (news[2] || '').trim()};
+			item.teams = item.teams.filter((v, i, a) => {return a.indexOf(v)==i}).sort();
 
-				if (!item.type) {
-					if (item.message.match(/.* have earned the player rights for .*? with a bid/i))
-						item.type = 'bids';
-					else if (item.message.match(/.*? have agreed to a \d+ season deal/i))
-						item.type = 'contracts';
-					else if (item.message.match(/.*? have drafted .*? \d+\w{2} overall/i))
-						item.type = 'draft';
-					else
-						item.type = 'news';
-				} else if (/^arrow\d+$/.test(item.type))
-					item.type = 'roster';
+			if (item.message.match(/ have (placed .*? on|claimed .*? off of) waivers /i))
+				item.type = 'waiver';
+			else if (item.message.match(/ have traded /i))
+				item.type = 'trade'
+			else if (/^arrow\d+$/.test(item.type))
+				item.type = 'roster';
+			else if (item.message.match(/ have drafted /i))
+				item.type = 'draft';
+			else if (item.message.match(/ have agreed to a \d+ season deal /i))
+				item.type = 'contract';
+			else if (item.message.match(/ have earned the player rights for .*? with a bid /i))
+				item.type = 'bid';
+			else if (!item.type)
+				item.type = '';
 
-				if (/^(?!draft|roster).*?[^s]$/.test(item.type))
-					item.type += 's';
+			/**************************** workaround *****************************/
+			/** This is a temporary workaround until sportscentre.js is updated **/
+			if (!item.type)
+				item.type = 'news';
 
-				if (prev.length && !prev.filter(function(p){return p.league==item.league && p.message==item.message && p.teams.toString()==item.teams.toString() && p.timestamp==item.timestamp && p.type==item.type}).length)
-					item.new = true;
+			if (/^(?!draft|roster).*?[^s]$/.test(item.type))
+				item.type += 's';
+			/**************************** /workaround ****************************/
 
-				next.push(item);
-			}
+			if (oldItem = oldItems.filter(i => {return i.league==item.league && i.message==item.message && i.teams.toString()==item.teams.toString() && i.timestamp==item.timestamp && i.type==item.type}).pop())
+				item.new = oldItem.new;
+
+			newItems.unshift(item);
+			updated = updated || item.new;
 		}
 
-		data = JSON.stringify(next.filter((v,i,a) => {return a.indexOf(v)==i}).reverse());
-		if (JSON.stringify(prev) == data) process.exit();
+		if (!updated)
+			process.exit();
 
-		fs.writeFile(file, data, err => {
-			if (err) console.error(err.message);
+		fs.writeFile(path, JSON.stringify(newItems), err => {
+			if (err)
+				console.error(err.message);
+
 			process.exit();
 		});
 	});
+}
+
+fs.stat(path, err => {
+	if (err)
+		fs.writeFile(path, '[]', downloadNews);
+	else
+		downloadNews();
 });
