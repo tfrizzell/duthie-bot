@@ -6,9 +6,9 @@ Originally written as a [Discord](https://discordapp.com/) webhook powered by a 
 Dependencies
 ============
  * [node.js](https://nodejs.org/) >= 6.11.3
- * [discord.js](hydrabolt/discord.js) >= 11.2.1
- * [request](request/request) >= 2.83.0
- * [node-cron](kelektiv/node-cron) >= 1.3.0
+ * [discord.js](/hydrabolt/discord.js) >= 11.2.1
+ * [request](/request/request) >= 2.83.0
+ * [node-cron](/kelektiv/node-cron) >= 1.3.0
 
 How to Use
 ==========
