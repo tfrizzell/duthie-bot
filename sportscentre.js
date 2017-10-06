@@ -43,25 +43,25 @@ client.once('ready', () => {
 	 	client.user.setGame('in testing...');
 
 		let news = {}, schedule = {}, stars = {};
-	
+
 		data.watchers.forEach(w => {
 			if (w.type == 'daily-stars') {
 				if (stars[w.league])
 					return;
-	
+
 				stars[w.league] = true;
 				sendDailyStarUpdates(w.league);
 			} else if (w.type == 'games') {
 				if (schedule[w.league] && schedule[w.league][w.team])
 					return;
-	
+
 				schedule[w.league] = schedule[w.league] || {};
 				schedule[w.league][w.team] = true;
 				sendScheduleUpdates(w.league, w.team);
 			} else if (w.type == 'news') {
 				if (news[w.league])
 					return;
-	
+
 				news[w.league] = true;
 				sendNewsUpdates(w.league);
 			}
@@ -208,7 +208,7 @@ client.on('message', message => {
 			message.channel.send(`I'm sorry, ${message.author.username}, but "${tokens[3]}" is not a valid league. See ${config.prefix} ${command} help for more information.`);
 			break;
 		}
-		
+
 		let team = getTeam(tokens[4], league);
 
 		if (type == 'games' && !team) {
@@ -540,31 +540,29 @@ function sendScheduleUpdates(league, team, schedule) {
 		if (game.home.score === null || game.visitor.score === null)
 			return;
 
-		let channels = [], message, us, them;
-
-		if (game.home.id == w.team) {
-			us = game.home;
-			them = game.visitor;
-		} else {
-			us = game.visitor;
-			them = game.home;
-		}
-
-		if (us.score > them.score)
-			message = `**The ${us.name} have defeated the ${them.name} by the score of ${us.score} to ${them.score}!**`;
-		else if (us.score < them.score)
-			message = `The _${us.name}_ have been defeated by the _${them.name}_ by the score of _${them.score} to ${us.score}_.`;
-		else
-			message = `The ${us} have tied the ${them.name} by the score of ${us.score} to ${them.score}.`;
+		let output = [];
 
 		watchers.forEach(w => {
-			let guild = client.guilds.get(w.guild), channel = getDefaultChannel(guild, w.channel);
+			let guild = client.guilds.get(w.guild), channel = getDefaultChannel(guild, w.channel), us, them;
 
-			if (channel)
-				channels.push(channel);
+			if (game.home.id == w.team) {
+				us = game.home;
+				them = game.visitor;
+			} else {
+				us = game.visitor;
+				them = game.home;
+			}
+
+			if (us.score > them.score)
+				output.push([channel, `The **${us.name}** have defeated the **${them.name}** by the score of **${us.score} to _${them.score}**!`]);
+			else if (us.score < them.score)
+				output.push([channel, `The _${us.name}_ have been defeated by the _${them.name}_ by the score of _${them.score} to ${us.score}_.`]);
+			else
+				output.push([channel, `The ${us} have tied the ${them.name} by the score of ${us.score} to ${them.score}.`]);
 		});
 
-		channels.filter((v,i,a) => {return a.indexOf(v)==i}).forEach(channel => {
+		output.filter((v,i,a) => {return a.indexOf(v)==i}).forEach(out => {
+			let [channel, message] = out;
 			log(`Sending message to ${channel.guild.name}#${channel.name}: ${message}`);
 			channel.send(message)
 		});
