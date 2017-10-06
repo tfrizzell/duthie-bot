@@ -313,7 +313,7 @@ process.on('uncaughtException', err => {
 });
 
 process.on('exit', () => {
-	console.log(`Shutting down ${config.name} v${pkg.version.replace(/^v+/g, '')}...`);
+	log(`Shutting down ${config.name} v${pkg.version.replace(/^v+/g, '')}...`);
 	client.destroy();
 });
 
