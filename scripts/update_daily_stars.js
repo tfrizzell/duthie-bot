@@ -3,19 +3,19 @@ const fs = require('fs');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
 const prefix = 'daily-stars-';
+let watched = {};
 
 const data = require(`${dir}/data/data.json`);
 const leagues = require(`${dir}/data/leagues.json`);
-let watched = {};
 
 Promise.all(
 	data.watchers.map(watcher => {
 		return new Promise(resolve => {
 			if (watcher.type != 'daily-stars' || watched[watcher.league])
 				return resolve();
-	
+
 			watched[watcher.league] = true;
-	
+
 			fs.stat(`${dir}/data/${prefix}${watcher.league}.json`, err => {
 				if (!err)
 					return resolve();
@@ -46,15 +46,20 @@ Promise.all(
 						return resolve();
 
 					let [a, league] = file.match(regex);
-			
+
 					if (!(league = leagues[league]))
 						return resolve();
-	
+
 					if (!watched[league.id])
 						return fs.unlink(`${dir}/data/${file}`, resolve);
-			
-					child.fork(`${dir}/scripts/download_daily_stars.js`, [league.id]).on('exit', resolve);
-				})
+
+					child.fork(`${dir}/scripts/download_daily_stars.js`, [league.id])
+						.on('message', message => {
+							if (process.send)
+								process.send(message);
+						})
+						.on('exit', resolve);
+				});
 			})
 		).then(() => {
 			process.exit();

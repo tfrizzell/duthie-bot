@@ -11,10 +11,10 @@ function updateLeagues() {
 	Promise.all(
 		Object.keys(leagues).map(id => {
 			return new Promise(resolve => {
-				let league = leagues[id] || (leagues[id] = {});
-				let regex0 = new RegExp(`<li(?:[^>]+)? custom-tab-${league.id} (?:[^>]+)?><a(?:[^>]+)?/league\\.(\\d+)/(?:[^>]+)?>.*?<span(?:[^>]+)?>(.*?)</span></a>`, 'i');
-				let regex1 = new RegExp(`<a(?:[^>]+)?leagueid=${league.id}&(?:amp;)?seasonid=(\\d+)(?:[^>]+)?>Standings</a>`, 'i');
-	
+				let league = leagues[id] || (leagues[id] = {}),
+				    regex0 = new RegExp(`<li(?:[^>]+)? custom-tab-${league.id} (?:[^>]+)?><a(?:[^>]+)?/league\\.(\\d+)/(?:[^>]+)?>.*?<span(?:[^>]+)?>(.*?)</span></a>`, 'i'),
+				    regex1 = new RegExp(`<a(?:[^>]+)?leagueid=${league.id}&(?:amp;)?seasonid=(\\d+)(?:[^>]+)?>Standings</a>`, 'i');
+
 				request(`http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=standing&leagueid=${id}&seasonid=1`, (err, res, html) => {
 					if (!err) {
 						if (res.statusCode != 200)
@@ -22,25 +22,25 @@ function updateLeagues() {
 						else if (!/^text\/html/.test(res.headers['content-type']))
 							err = new Error(`Failed to fetch information for league ${id} (content-type=${res.headers['content-type']})`);
 					}
-	
+
 					if (err) {
 						console.error(err.message);
 						return resolve();
 					}
-	
+
 					html = html.replace(/>\s+</g, '><');
 					let data;
-	
+
 					if (data = html.match(regex0)) {
 						league.code = data[2].trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 						league.forum = parseInt(data[1]);
 						league.id = parseInt(id);
 						league.name = data[2].trim();
-	
+
 						if (data = html.match(regex1))
 							league.season = parseInt(data[1]);
 					}
-	
+
 					resolve();
 				});
 			});
@@ -60,8 +60,11 @@ function updateLeagues() {
 			fs.writeFile(path, data, err => {
 				if (err)
 					console.error(err.message);
+				else if (process.send)
+					process.send(leagues, () => {process.exit()});
 
-				process.exit();
+				if (!process.send)
+					process.exit();
 			});
 		});
 	});

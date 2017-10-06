@@ -2,9 +2,11 @@ const fs = require('fs');
 const request = require('request');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
-const leagues = require(`${dir}/data/leagues.json`);
 const prefix = 'daily-stars-';
-let [league, date, thread] = process.argv.slice(2, 4);
+
+const leagues = require(`${dir}/data/leagues.json`);
+let [league, date] = process.argv.slice(2);
+let thread;
 
 if (!leagues[league]) {
 	console.error(`Invalid league: ${league}`);
@@ -19,8 +21,8 @@ if (process.argv.length < 4) {
 	date = new Date(`${date} GMT-0400`);
 
 try {
-	let [tday, tmonth, tdate, tyear] = date.toLocaleDateString('nu-fullwide', {day:'numeric', month:'long', weekday:'long', year:'numeric'}).split(/\s+,?|,?\s+/);
-	let tord = (() => {return tdate<11||tdate>13?['st','nd','rd','th'][Math.min((tdate-1)%10,3)]:'th'})();
+	let [tday, tmonth, tdate, tyear] = date.toLocaleDateString('nu-fullwide', {day: 'numeric', month: 'long', weekday: 'long', year: 'numeric'}).split(/\s+,?|,?\s+/),
+	    tord = (() => {return tdate < 11 || tdate > 13 ? ['st','nd','rd','th'][Math.min((tdate - 1) % 10,3)] : 'th'})();
 	thread = `${league.name} Daily 3 Stars For ${tday} ${tmonth} ${tdate}${tord}, ${tyear}`;
 } catch (x) {}
 
@@ -29,13 +31,13 @@ if (!thread) {
 	process.exit();
 }
 
-const path = `${dir}/data/daily-stars-${league.id}.json`;
 date = date.toJSON().substr(0, 10);
+const path = `${dir}/data/${prefix}${league.id}.json`;
 console.log(`Downloading ${thread}`);
 
 function downloadDailyStars() {
-	let regex0 = new RegExp('<h3(?:[^>]+)?><a(?:[^>]+)?href="(.*?)"(?:[^>]+)?>(.*?)</a></h3>', 'i');
-	let regex1 = new RegExp('<tr(?:[^>]+)?>(<td(?:[^>]+)?>.*?){7,8}</tr>', 'ig');
+	let regex0 = new RegExp('<h3(?:[^>]+)?><a(?:[^>]+)?href="(.*?)"(?:[^>]+)?>(.*?)</a></h3>', 'i'),
+	    regex1 = new RegExp('<tr(?:[^>]+)?>(<td(?:[^>]+)?>.*?){7,8}</tr>', 'ig');
 
 	request(`http://www.leaguegaming.com/forums/index.php?search/1/&q=${thread}&o=date&c[node]=586`, (err, res, html) => {
 		if (!err) {
@@ -97,17 +99,25 @@ function downloadDailyStars() {
 			fs.writeFile(path, JSON.stringify(stars), err => {
 				if (err)
 					console.error(err.message);
+				else if (process.send)
+					process.send([league.id, stars], () => {process.exit()});
 
-				process.exit();
+				if (!process.send)
+					process.exit();
 			});
 		});
 	});
 }
 
 
-fs.stat(path, err => {
-	if (err)
-		fs.writeFile(path, '[]', downloadDailyStars);
-	else
+fs.readFile(path, (err, data) => {
+	if (!err) {
+		let current = JSON.parse(data);
+
+		if (data.date == date)
+			process.exit();
+
 		downloadDailyStars();
+	} else
+		fs.writeFile(path, '{}', downloadDailyStars);
 });

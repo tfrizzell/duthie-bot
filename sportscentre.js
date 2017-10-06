@@ -1,442 +1,263 @@
-/*m.*
+/**
  * Load dependencies
  */
 const child = require('child_process');
+const cron = require('cron');
 const Discord = require('discord.js');
 const fs = require('fs');
-
-/*
- * Load application data
- */
-let data = JSON.parse(fs.readFileSync('./data/data.json', 'utf8')) || {};
-let leagues = JSON.parse(fs.readFileSync('./data/leagues.json', 'utf8')) || {};
-let teams = JSON.parse(fs.readFileSync('./data/teams.json', 'utf8')) || {};
 
 const client = new Discord.Client();
 const config = require('./config.json');
 const pkg = require('./package.json');
 
 /**
- * Common functionality for easy reuasbility
+ * Load application data
  */
-function getDefaultChannel(guild, defaultChannel) {
-	let channel;
+let data = require('./data/data.json');
+let leagues = require('./data/leagues.json');
+let teams = require('./data/teams.json');
 
-	if (defaultChannel && (channel = guild.channels.get(defaultChannel)))
-		return channel;
-
-	if (guild.defaultChannel)
-		return guild.defaultChannel;
-
-	return guild.channels.filter(c => {
-		return c.type == 'text';
-	}).sort((a, b) => {
-		return a.calculatedPosition - b.calculatedPosition;
-	}).first();
-}
-
-function getLeague(league) {
-	let lstring = String(league).toUpperCase().replace(/[^A-Z0-9]+/g, '');
-
-	return Object.keys(leagues).filter(id => {
-		var l = leagues[id];
-		return l == league || l.id == league || l.code.toUpperCase().replace(/[^A-Z0-9]+/g, '') == lstring || l.name.toUpperCase().replace(/[^A-Z0-9]+/g, '') == lstring;
-	}).map(id => {
-		return leagues[id];
-	}).shift();
-}
-
-function getTeam(team, league) {
-	let _league = arguments[2];
-	league = getLeague(league);
-
-	if (_league && !league)
-		return undefined;
-
-	let tstring = String(team).toUpperCase().replace(/[^A-Z0-9]+/g, '');
-
-	return Object.keys(teams).filter(id => {
-		var t = teams[id];
-		return (t == team || t.id == team || t.name.toUpperCase().replace(/[^A-Z0-9]+/g, '') == tstring || t.shortname.toUpperCase().replace(/[^A-Z0-9]+/g, '') == tstring) && (!league || t.leagues.indexOf(league.id) != -1);
-	}).map(id => {
-		return teams[id];
-	}).shift();
-}
-
-function isNewsWatcher(watcher) {
-	return /^(bids|contracts|draft|news|trades|waivers)$/.test(watcher instanceof Object ? watcher.type : watcher);
-}
-
-function isValidWatcherType(type) {
-	return /^(all|all.?news|games)$/i.test(type) || isNewsWatcher(type);
-}
-
-function saveData() {
-	fs.writeFile('./data/data.json', JSON.stringify(data), err => {
-		if (err)
-			console.error(err.message)
-	});
-}
-
-function tokenize(string) {
-	let tokens = [], t;
-	return string.replace(/(["'])(.*?[^\\])\1/g, (substr, token, value) => {
-		tokens.push(value);
-		return '${' + (tokens.length - 1) + '}';
-	}).split(/\s+/).map(token => {
-		return (t = token.match(/^\${(\d+)}$/)) ? tokens[t[1]] : token;
-	});
-}
-
-function updateDailyStarsSubscribers(league, team) {
-
-}
-
-function updateNewsSubscribers(league, team) {
-	if (!(league = getLeague(league)) || (team && !(team = getTeam(team, league))))
-		return;
-
-	let path = `./data/news-${league.id}${team ? '-' + team.id : ''}.json`;
-	let subs = data.watchers.filter(s => {return s.league==league.id && (!team || s.teams.indexOf(team.id) != -1) && isNewsWatcher(s)});
-
-	if (!subs.length)
-		return fs.unlink(path);
-
-	try {
-		let news = require(path), count = 0;
-
-		news.filter(item => {
-			return item.new;
-		}).forEach(item => {
-			let data, message, team = getTeam(item.teams[0], league);
-			item.new = false;
-			count++;
-
-			if (item.type == 'bids') {
-				if (!(data = item.message.match(/have earned the player rights for (.*?) with a bid amount of (\S+)/i)))
-					return;
-
-				let player = {name: data[1].trim()}, bid = {amount: data[2].trim()};
-				message = `The ${team.name} have won bidding rights to ${player.name} with a bid of ${bid.amount}!`;
-			} else if (item.type == 'contracts') {
-				if (!(data = item.message.match(/^(.*?) and the .*? have agreed to a (\d+) season deal at (.*?) per season$/i)))
-					return;
-
-				let player = {name: data[1].trim()}, contract = {length: data[2].trim(), salary: data[3].trim()};
-				message = `The ${team.name} have signed ${player.name} to a ${contract.length} season contract worth ${contract.salary} per season!`;
-			} else if (/^(draft|trades|waivers)$/.test(item.type) || (item.type == 'news' && item.message.match(/have (been eliminated|claimed|clinched|drafted|placed|traded)/i)))
-				message = item.message;
-
-			if (!message)
-				return;
-
-			subs.filter(sub => {
-				return (!sub.team || item.teams.indexOf(sub.team) != -1) && (sub.type == 'news' || sub.type == item.type);
-			}).forEach(sub => {
-				let guild = client.guilds.get(sub.guild);
-				getDefaultChannel(guild, sub.channel).send(message);
-			});
-		});
-
-		if (count)
-			fs.writeFile(path, JSON.stringify(news));
-	} catch (e) {
-		console.error(e);
-	}
-}
-
-function updateScheduleSubscribers(league, team) {
-	if (!(league = getLeague(league)) || (team && !(team = getTeam(team, league))))
-		return;
-
-	let path = `./data/schedule-${league.id}${team ? '-' + team.id : ''}.json`;
-	let subs = data.watchers.filter(s => {return s.league==league.id && (!team || s.team==team.id) && s.type=='games'});
-
-	if (!subs.length)
-		return fs.unlink(path);
-
-	try {
-		let games = require(path), count = 0;
-
-		Object.keys(games).filter(id => {
-			return games[id].updated;
-		}).forEach(id => {
-			let game = games[id];
-			game.updated = false;
-			count++;
-
-			if (game.home.score === null || game.visitor.score === null)
-				 return;
-
-			subs.forEach(function(s) {
-				let guild = client.guilds.get(s.guild), channel = getDefaultChannel(guild, s.channel), our = game.home.id == s.team ? game.home : game.visitor, their = our == game.home ? game.visitor : game.home;
-
-				if (our.score > their.score)
-					channel.send(`**The ${our.name} have defeated the ${their.name} by the score of ${our.score} to ${their.score}!**`);
-				else if (our.score < their.score)
-					channel.send(`The _${our.name}_ have been defeated by the _${their.name}_ by the score of _${their.score} to ${our.score}_.`);
-				else
-					channel.send(`The ${our.name} have tied the ${their.name} by the score of ${our.score} to ${their.score}.`);
-			});
-		});
-
-		if (count)
-			fs.writeFile(path, JSON.stringify(games));
-	} catch (e) {
-		console.log(e);
-	}
-}
+/**
+ * Log startup message
+ */
+log(`Starting ${config.name} v${pkg.version.replace(/^v+/g,'')}...\n                               node.js v${process.version.replace(/^v+/g,'')}, discord.js v${Discord.version.replace(/^v+/g,'')}\n`);
 
 /**
  * Set up the Discord client event handlers, and log in
  */
-client.on('ready', () => {
-	console.log(`node.js v${process.version.replace(/^v+/g, '')}\ndiscord.js v${Discord.version.replace(/^v+/g, '')}\n\nStarted ${config.name} v${pkg.version.replace(/^v+/g, '')}, active on ${client.guilds.size} guild${client.guilds.size != 1 ? 's' : ''}`);
-	client.user.setGame('in testing...');
+client.once('ready', () => {
+	log(`${config.name} has logged in to Discord and is performing startup checks...`);
+	client.user.setGame('initializing...');
 
-	client.guilds.forEach(guild => {
-		data.guilds[guild.id] = data.guilds[guild.id] || {};
-		data.guilds[guild.id].admins = data.guilds[guild.id].admins || [guild.ownerId];
-		data.guilds[guild.id].defaultChannel = data.guilds[guild.id].defaultChannel || getDefaultChannel(guild).id;
+	client.guilds.forEach(g => {
+		joinGuild(g, false);
 	});
 
-	saveData();
+	Object.keys(data.guilds).forEach(id => {
+		if (!client.guilds.get(id))
+			leaveGuild({id: id}, false);
+	});
+
+	saveData().then(() => {
+		log(`${config.name} now ready and active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}!`);
+	 	client.user.setGame('in testing...');
+
+		let news = {}, schedule = {}, stars = {};
+	
+		data.watchers.forEach(w => {
+			if (w.type == 'daily-stars') {
+				if (stars[w.league])
+					return;
+	
+				stars[w.league] = true;
+				sendDailyStarUpdates(w.league);
+			} else if (w.type == 'games') {
+				if (schedule[w.league] && schedule[w.league][w.team])
+					return;
+	
+				schedule[w.league] = schedule[w.league] || {};
+				schedule[w.league][w.team] = true;
+				sendScheduleUpdates(w.league, w.team);
+			} else if (w.type == 'news') {
+				if (news[w.league])
+					return;
+	
+				news[w.league] = true;
+				sendNewsUpdates(w.league);
+			}
+		});
+	});
 });
 
 client.on('guildCreate', guild => {
-	console.log(`Joining ${guild.name}, now active on ${client.guilds.size} guild${client.guilds.size != 1 ? 's' : ''}`);
+	if (!data.guilds[guild.id])
+		log(`${config.name} has joined guild ${guild.name}, and is now active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}`);
 
-	if (data.guilds[guild.id])
-		return;
-
-	data.guilds[guild.id] = {
-		admins: [guild.ownerId],
-		defaultChannel: getDefaultChannel(guild).id
-	};
-
-	saveData();
+	joinGuild(guild);
 });
 
 client.on('guildDelete', guild => {
-	console.log(`Leaving ${guild.name}, now active on ${client.guilds.size} guild${client.guilds.size != 1 ? 's' : ''}`);
-	delete data.guilds[guild.id];
-	data.watchers = data.watchers.filter(w => {return w.guild!=guild.id});
-	saveData();
+	if (data.guilds[guild.id])
+		log(`${config.name} has left guild ${guild.name || guild.id}, and is now active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}`);
+
+	leaveGuild(guild);
 });
 
+// TODO: Clean up client.on('message', ...) handler
 client.on('message', message => {
-	if (message.author.bot) return;
-	let tokens = tokenize(message.content.trim());
-	if (tokens[0] != config.prefix) return;
-	if (message.channel.type == 'voice') return message.channel.send(`I'm sorry, ${message.author.username}, but you can't do that here`);
+	if (message.author.bot || message.content.trim().substr(0, config.prefix.length) != config.prefix)
+		return;
 
-	switch (tokens[1].toLowerCase()) {
+	let guild = message.guild ? data.guilds[message.guild.id] : null;
+
+	if (message.channel.type == 'voice')
+		return message.channel.send(`I'm sorry, ${message.author.username}, but you can't do that here!`);
+
+	let tokens = tokenize(message.content.trim()), command = tokens[1].toLowerCase();
+
+	switch (command) {
 	  case 'help': {
-		message.channel.send(eval('`'+fs.readFileSync('./help/main.tpl')+'`'), {code: config.help.code, split: config.help.split});
+		  fs.readFile('./help/main.txt', 'utf8', (err, text) => {
+			  if ((tokens[2] || '').toLowerCase() == 'me')
+				  message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+			  else
+				  message.channel.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+		  });
 		break;
 	  }
 	  case 'ping': {
-		var time = Date.now() - message.createdAt.valueOf();
-		message.channel.send(`PONG! Your ping time is ${time}ms`);
+		message.channel.send(`PONG!`);
 		break;
 	  }
 	  case 'unwatch': {
-		if (data.guilds[message.guild.id].admins.indexOf(message.author.id) == -1 || !message.guild.id) return message.channel.send(`I'm sorry, ${message.author.username}, but you aren't allowed to do that`);
-		let channel, err, league = {}, team = {}, type = tokens[2].trim().toLowerCase();
+		let type = tokens[2].trim().toLowerCase();
 
-		if (tokens[3]) {
-			if (tmp = tokens[3].match(/^<\#(\d+)>$/))
-				channel = message.guild.channels.get(tmp[1]) || null;
-			else
-				league = getLeague(tokens[3]) || {id: null, name: ''};
+		if ((!guild && type != 'help') || (guild && guild.admins.indexOf(message.author.id) == -1)) {
+			message.channel.send(`I'm sorry, ${message.author.username}, but you aren't allowed to do that!`);
+			break;
 		}
-
-		if (tokens[4]) {
-			if (tmp = tokens[4].match(/^<\#(\d+)>$/))
-				channel = message.guild.channels.get(tmp[1]) || null;
-			else
-				team = getTeam(tokens[4], league) || {id: null, name: ''};
-		}
-
-		if (tokens[5] && (tmp = tokens[5].match(/^<\#(\d+)>$/)))
-			channel = message.guild.channels.get(tmp[1]) || null;
 
 		if (type == 'help') {
-			message.channel.send(eval('`'+fs.readFileSync('./help/unwatch.tpl')+'`'), {code: config.help.code, split: config.help.split});
+			fs.readFile('./help/unwatch.txt', 'utf8', (err, text) => {
+				if ((tokens[3] || '').toLowerCase() == 'me')
+					  message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+				  else
+					  message.channel.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+			});
+
 			break;
 		}
 
-		if (!isValidWatcherType(type))
-			err = new Error(`${type} is not a valid watcher type. See ${config.prefix} ${tokens[1].toLowerCase()} help for more information`);
-		else if (tokens[3] && !league)
-			err = new Error(`${tokens[3]} is not a valid league`);
-		else if (type == 'games' && !team)
-			err = new Error(`${tokens[4]} is not a valid team in ${league.name}`);
-		else if (channel === null)
-			err = new Error(`The channel you requested could not be found in your server`);
-
-		if (err) {
-			message.channel.send(err.message);
+		if (!isValidWatcher(type)) {
+			message.channel.send(`"${tokens[2]}" is not a valid watcher type. See ${config.prefix} ${command} help for more information.`);
 			break;
 		}
 
-		let strType = type.replace(/([^w])s$/, '$1'), len = data.watchers.length, cmessage, lmessage;
+		let league = getLeague(tokens[3]), team = getTeam(tokens[4], league);
+
+		if (type == 'games' && !team) {
+			message.channel.send(`I'm sorry, ${message.author.username}, but "${tokens[4]}" is not a valid team. See ${config.prefix} ${command} help for more information.`);
+			break;
+		}
+
+		let channel = null;
+
+		if (channel = tokens[tokens.length - 1].match(/^<\#(\d+)>$/))
+			channel = message.guild.channels.get(channel[1]);
+
+		if (channel === undefined) {
+			message.channel.send(`The channel you requested could not be round in your server.`);
+			break;
+		}
+
+		let _message = {channel: '', log: ''}, oldLength = data.watchers.length;
 
 		if (type == 'all') {
-			if (team.id !== undefined) {
-				if (league.id !== undefined) {
-					data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id || w.league!=league.id || w.team!=team.id});
-					cmessage = `Ok! You are no longer watching for any updates from the ${league.name} ${team.name}.`;
-					lmessage = `${message.author.username} has stopped watching all events from the ${league.name} ${team.name} on server ${message.guild.name}`;
-				} else {
-					data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id || w.team!=team.id});
-					cmessage = `Ok! You are no longer watching for any updates from the ${team.name}.`;
-					lmessage = `${message.author.username} has stopped watching all events from the ${team.name} on server ${message.guild.name}`;
-				}
-			} else if (league.id !== undefined) {
-				data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id || w.league!=league.id});
-				cmessage = `Ok! You are no longer watching for any updates from ${league.name}.`;
-				lmessage = `${message.author.username} has stopped watching all events from ${league.name} on server ${message.guild.name}`;
-			} else {
-				data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id});
-				cmessage = `Ok! You are no longer watching for any updates.`;
-				lmessage = `${message.author.username} has stopped watching all events on server ${message.guild.name}`;
-			}
+			data.watchers = data.watchers.filter(w => {return (w.guild!=message.guild.id) || (league && w.league!=league.id) || (team && w.team!=team.id) || (channel && w.channel!=channel.id)});
+			_message.channel = `Ok! You are no longer watching any updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
+			_message.log = `${message.author.tag} has stopped watching all events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
 		} else if (/^all.?news$/.test(type)) {
-			if (team.id !== undefined) {
-				if (league.id !== undefined) {
-					data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id || w.league!=league.id || w.team!=team.id || w.type=='games'});
-					cmessage = `Ok! You are no longer watching for news updates from the ${league.name} ${team.name}.`;
-					lmessage = `${message.author.username} has stopped watching all news events from the ${league.name} ${team.name} on server ${message.guild.name}`;
-				} else {
-					data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id || w.team!=team.id || w.type=='games'});
-					cmessage = `Ok! You are no longer watching for news updates from the ${team.name}.`;
-					lmessage = `${message.author.username} has stopped watching all news events from the ${team.name} on server ${message.guild.name}`;
-				}
-			} else if (league.id !== undefiend) {
-				data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id || w.league!=league.id || w.type=='games'});
-				cmessage = `Ok! You are no longer watching for news updates from ${league.name}.`;
-				lmessage = `${message.author.username} has stopped watching all news events from ${league.name} on server ${message.guild.name}`;
-			} else {
-				data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id || w.type=='games'});
-				cmessage = `Ok! You are no longer watching for news updates.`;
-				lmessage = `${message.author.username} has stopped watching all news events on server ${message.guild.name}`;
-			}
+			data.watchers = data.watchers.filter(w => {return (w.guild!=message.guild.id) || (league && w.league!=league.id) || (team && w.team!=team.id) || (channel && w.channel!=channel.id) || !isNewsWatcher(w)});
+			_message.channel = `Ok! You are no longer watching any news updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
+			_message.log = `${message.author.tag} has stopped watching all news events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
 		} else {
-			if (team.id !== undefined) {
-				if (league.id !== undefined) {
-					data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id || w.league!=league.id || w.team!=team.id || w.type!=type});
-					cmessage = `Ok! You are no longer watching for ${strType} updates from the ${league.name} ${team.name}.`;
-					lmessage = `${message.author.username} has stopped watching ${strType} events from the ${league.name} ${team.name} on server ${message.guild.name}`;
-				} else {
-					data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id || w.team!=team.id || w.type!=type});
-					cmessage = `Ok! You are no longer watching for ${strType} updates from the ${team.name}.`;
-					lmessage = `${message.author.username} has stopped watching ${strType} events from the ${team.name} on server ${message.guild.name}`;
-				}
-			} else if (league.id !== undefined) {
-				data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id || w.league!=league.id || w.type!=type});
-				cmessage = `Ok! You are no longer watching for ${strType} updates from ${league.name}.`;
-				lmessage = `${message.author.username} has stopped watching ${strType} events from ${league.name} on server ${message.guild.name}`;
-			} else {
-				data.watchers = data.watchers.filter(w => {return w.guild!=message.guild.id || w.type!=type});
-				cmessage = `Ok! You are no longer watching for ${strType} updates.`;
-				lmessage = `${message.author.username} has stopped watching ${strType} events on server ${message.guild.name}`;
-			}
+			data.watchers = data.watchers.filter(w => {return (w.guild!=message.guild.id) || (league && w.league!=league.id) || (team && w.team!=team.id) || (channel && w.channel!=channel.id) || w.type!=type});
+			_message.channel = `Ok! You are no longer watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
+			_message.log = `${message.author.tag} has stopped watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
 		}
 
-		if (data.watchers.length != len) {
-			message.channel.send(cmessage.trim().replace(/ +/g, ' '));
-			console.log(lmessage.trim().replace(/ +/g, ' '));
+		if (data.watchers.length != oldLength) {
+			if (_message.channel)
+				message.channel.send(_message.channel.trim().replace(/ +/g, ' '));
+
+			if (_message.log)
+				log(_message.log.trim().replace(/ +/g, ' '));
+
 			saveData();
 		} else
-			message.channel.send('There were no watchers found to be removed');
+			message.channel.send(`Ok! I checked over your watcher data, and there was nothing to remove.`);
 		break;
 	  }
 	  case 'watch': {
-		if (data.guilds[message.guild.id].admins.indexOf(message.author.id) == -1 || !message.guild.id) return message.channel.send(`I'm sorry, ${message.author.username}, but you aren't allowed to do that`);
-		let channel = null, err, league, team, tmp, type = tokens[2].trim().toLowerCase();
+		let type = tokens[2].trim().toLowerCase();
 
-		if (tokens[3]) {
-			if (tmp = tokens[3].match(/^<\#(\d+)>$/))
-				channel = message.guild.channels.get(tmp[1]);
-			else
-				league = getLeague(tokens[3]);
+		if ((!guild && type != 'help') || (guild && guild.admins.indexOf(message.author.id) == -1)) {
+			message.channel.send(`I'm sorry, ${message.author.username}, but you aren't allowed to do that!`);
+			break;
 		}
-
-		if (tokens[4]) {
-			if (tmp = tokens[4].match(/^<\#(\d+)>$/))
-				channel = message.guild.channels.get(tmp[1]);
-			else
-				team = getTeam(tokens[4], league);
-		}
-
-		if (tokens[5] && (tmp = tokens[5].match(/^<\#(\d+)>$/)))
-			channel = message.guild.channels.get(tmp[1]);
-
-		if (channel === null)
-			channel = getDefaultChannel(message.guild, data.guilds[message.guild.id].defaultChannel);
 
 		if (type == 'help') {
-			message.channel.send(eval('`'+fs.readFileSync('./help/watch.tpl')+'`'), {code: config.help.code, split: config.help.split});
+			fs.readFile('./help/watch.txt', 'utf8', (err, text) => {
+				if ((tokens[3] || '').toLowerCase() == 'me')
+					  message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+				  else
+					  message.channel.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+			});
+
 			break;
 		}
 
-		if (!isValidWatcherType(type))
-			err = new Error(`${type} is not a valid watcher type. See ${config.prefix} ${tokens[1].toLowerCase()} help for more information`);
-		else if (!league && !tokens[3].match(/^<\#(\d+)>$/))
-			err = new Error(`${tokens[3]} is not a valid league`);
-		else if (type == 'games' && !team && !tokens[4].match(/^<\#(\d+)>$/))
-			err = new Error(`${tokens[4]} is not a valid team in ${league.name}`);
-		else if (!channel)
-			err = new Error(`The channel you requested could not be found in your server`);
-
-		if (err) {
-			message.channel.send(err.message);
+		if (!isValidWatcher(type)) {
+			message.channel.send(`I'm sorry, ${message.author.username}, but "${tokens[2]}" is not a valid watcher type. See ${config.prefix} ${command} help for more information.`);
 			break;
 		}
 
-		var types = [], updated = false;
+		let league = getLeague(tokens[3]);
+
+		if (!league) {
+			message.channel.send(`I'm sorry, ${message.author.username}, but "${tokens[3]}" is not a valid league. See ${config.prefix} ${command} help for more information.`);
+			break;
+		}
+		
+		let team = getTeam(tokens[4], league);
+
+		if (type == 'games' && !team) {
+			message.channel.send(`I'm sorry, ${message.author.username}, but "${tokens[4]}" is not a valid team. See ${config.prefix} ${command} help for more information.`);
+			break;
+		}
+
+		let channel = null;
+
+		if (channel = tokens[tokens.length - 1].match(/^<\#(\d+)>$/))
+			channel = message.guild.channels.get(channel[1]);
+
+		if (channel === undefined) {
+			message.channel.send(`I'm sorry, ${message.author.username}, but the channel you requested could not be found in your server.`);
+			break;
+		} else if (!channel)
+			channel = getDefaultChannel(message.guild, guild.defaultChannel);
+
+		let _message = '', oldLength = data.watchers.length, types = [];
 
 		if (type == 'all')
-			types.push('bids', 'contracts', 'draft', 'games', 'news', 'trades', 'waivers');
+			types.push('bids', 'contracts', 'daily-stars', 'draft', 'games', 'news', 'trades', 'waivers');
 		else if (/^all.?news$/.test(type))
 			types.push('bids', 'contracts', 'draft', 'news', 'trades', 'waivers');
 		else
 			types.push(type);
 
 		types.forEach(type => {
-			let watcher = {guild: message.guild.id, channel: channel.id, league: league.id, team: team ? team.id : null, type: type}, _watcher = data.watchers.filter(w => {return w.guild==watcher.guild && w.league==watcher.league && w.team==watcher.team && w.type==watcher.type}).shift(), strType = type.replace(/([^w])s$/, '$1'), cmessage, lmessage;
+			let watcher = {guild: message.guild.id, channel: channel.id, league: league.id, team: team ? team.id : null, type: type},
+				_watcher = data.watchers.filter(w => {return (w.guild==watcher.guild) && (w.channel==watcher.channel) && (w.league==watcher.league) && (w.team==watcher.team) && (w.type==watcher.type)}).shift();
 
-			if (_watcher) {
-				if (_watcher.channel != watcher.channel) {
-					_watcher.channel = watcher.channel;
-					updated = true;
+			if (_watcher)
+				return;
 
-					cmessage = `Ok! Your ${strType} update watcher for the ${league.name}${team.name ? ' ' + team.name : ''} will now send messages to channel #${channel.name}`;
-					lmessage = `${message.author.username} has updated the ${strType} watcher for the ${league.name}${team.name ? ' ' + team.name : ''} to use ${message.guild.name}#${channel.name}`;
-				} else if (types.length == 1)
-					cmessage = team ? `You are already watching for ${strType} updates from the ${league.name} ${team.name} on channel #${channel.name}` : `You are already watching for ${strType} updates from ${league.name} on channel #${channel.name}`
-			} else {
-				data.watchers.push(watcher);
-				updated = true;
-
-				if (team) {
-					cmessage = `Ok! You are now watching for ${strType} updates from the ${league.name} ${team.name}!`;
-					lmessage = `${message.author.username} has started watching ${strType} events from the ${league.name} ${team.name} on channel ${message.guild.name}#${channel.name}`;
-				} else {
-					cmessage = `Ok! You are now watching for ${strType} updates from ${league.name}!`;
-					lmessage = `${message.author.username} has started watching ${strType} events from ${league.name} on channel ${message.guild.name}#{$channel.name}`;
-				}
-			}
-
-			if (cmessage) message.channel.send(cmessage);
-			if (lmessage) console.log(lmessage);
+			data.watchers.push(watcher);
+			log(`${message.author.tag} has started watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`);
 		});
 
-		if (updated)
+		if (oldLength != data.watchers.length) {
+			if (type == 'all')
+				message.channel.send(`Ok! You are now watching all updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`);
+			else if (/^all.?news$/.test(type))
+				message.channel.send(`Ok! You are now watching all news updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`);
+			else
+				message.channel.send(`Ok! You are now watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`);
+
 			saveData();
-		else if (types.length > 1)
-			message.channel.send('Great news! You were already watching for everything you wanted!');
+		} else
+			message.channel.send(`Ok! I checked over your watcher data, and there was nothing new to add.`);
 		break;
 	  }
 	}
@@ -445,61 +266,42 @@ client.on('message', message => {
 client.login(config.token);
 
 /**
- * Set up filesystem data watchers
+ * Set up the cron tasks
+ */
+const jobs = [
+	new cron.CronJob('0  0     */8    *  *  *  ', updateLeagues, null, true, 'America/New_York'),
+	new cron.CronJob('0  15    */8    *  *  *  ', updateTeams, null, true, 'America/New_York'),
+	new cron.CronJob('0  */10  15-16  *  *  *  ', updateDailyStars, null, true, 'America/New_York'),
+	new cron.CronJob('0  */10  *      *  *  *  ', updateNews, null, true, 'America/New_York'),
+	new cron.CronJob('0  */5   20-23  *  *  *  ', updateNews, null, true, 'America/New_York'),
+	new cron.CronJob('0  0     0-19   *  *  *  ', updateSchedules, null, true, 'America/New_York'),
+	new cron.CronJob('0  */5   20-23  *  *  0-4', updateSchedules, null, true, 'America/New_York'),
+	new cron.CronJob('0  */30  0-19   *  *  5-6', updateSchedules, null, true, 'America/New_York')
+];
+
+/**
+ * Set up file watchers
  */
 fs.watch('./data', (ev, filename) => {
-	if (ev != 'change') return;
+	if (ev != 'change')
+		return;
+
 	let data;
 
-	if (filename == 'leagues.json')
+	if ((data = filename.match(/^daily-stars-(\d+)\.json$/)) && !updateDailyStars.$running)
+		sendDailyStarUpdates.apply(null, data.slice(1));
+	else if (filename.match(/^leagues\.json$/) && !updateLeagues.$running)
 		leagues = require('./data/leagues.json');
-	else if (filename == 'teams.json')
-		teams = require('teams.json');
-	else if (data = filename.match(/^daily-stars-(\d+)(?:-(\d+))?\.json$/))
-		updateDailyStarsSubscribers(data[1], data[2]);
-	else if (data = filename.match(/^news-(\d+)(?:-(\d+))?\.json$/))
-		updateNewsSubscribers(data[1], data[2]);
-	else if (data = filename.match(/^schedule-(\d+)(?:-(\d+))?\.json$/))
-		updateScheduleSubscribers(data[1], data[2]);
+	else if ((data = filename.match(/^news-(\d+)\.json$/)) && !updateNews.$running)
+		sendNewsUpdates.apply(null, data.slice(1));
+	else if ((data = filename.match(/^schedule-(\d+)-(\d+)\.json$/)) && !updateSchedules.$running)
+		sendScheduleUpdates.apply(null, data.slice(1));
+	else if (filename.match(/^teams\.json$/) && !updateTeams.$running)
+		teams = require('./data/teams.json');
 });
 
 /**
- * Set up the pseudo-cron task runner
- */
-let cron;
-
-setTimeout(cron = () => {
-	if (typeof cron == 'function') {
-		var _cron = cron;
-		cron = setInterval(_cron, 60000);
-	}
-
-	let date = new Date(), dst = date.getTimezoneOffset() < new Date(date.valueOf() - (date.valueOf() % 31557600000)).getTimezoneOffset();
-	date.setUTCHours(date.getUTCHours() - (dst ? 4 : 5));
-
-	if (date.getUTCHours() % 8 == 0) {
-		if (date.getUTCMinutes() == 0)
-			child.fork(`${__dirname}/scripts/update_leagues.js`, {silent:true});
-		else if (date.getUTCMinutes() == 15)
-			child.fork(`${__dirname}/scripts/update_teams.js`, {silent:true});
-	}
-
-	if (date.getUTCHours() > 14 && date.getUTCHours() < 17 && date.getUTCMinutes() % 10 == 0)
-		child.fork(`${__dirname}/scripts/update_daily_stars.js`, {silent:true});
-
-	if ((date.getUTCHours() > 19 && date.getUTCMinutes() % 5 == 0) || date.getUTCMinutes() % 30 == 0)
-		child.fork(`${__dirname}/scripts/update_news.js`, {silent:true});
-
-	if (date.getUTCHours() < 20 && date.getUTCMinutes() == 0)
-		child.fork(`${__dirname}/scripts/update_schedules.js`, {silent:true});
-	else if (date.getUTCDay() <= 4 && date.getUTCHours() > 19 && date.getUTCMinutes() % 10 == 0)
-		child.fork(`${__dirname}/scripts/update_schedules.js`, {silent:true});
-	else if ((date.getUTCDay() == 5 || date.getUTCDay() == 6) && date.getUTCHours() > 19 && date.getUTCMinutes() == 0)
-		child.fork(`${__dirname}/scripts/update_schedules.js`, {silent:true});
-}, first = 60000 - (Date.now() % 60000));
-
-/**
- * Set up the cleanup handlers
+ * Set up cleanup handlers
  */
 process.on('SIGINT', () => {
 	process.exit(2);
@@ -514,3 +316,311 @@ process.on('exit', () => {
 	console.log(`Shutting down ${config.name} v${pkg.version.replace(/^v+/g, '')}...`);
 	client.destroy();
 });
+
+/**
+ * Common functionality for easy reuasbility
+ */
+function getDefaultChannel(guild, channel) {
+	if (!(guild instanceof Discord.Guild))
+		guild = client.guilds.get(guild);
+
+    if (!guild)
+    	return;
+
+    if (channel) {
+    	if ((channel instanceof Discord.TextChannel) && guild.channels.get(channel.id))
+    		return channel;
+
+    	if (channel = guild.channels.get(channel))
+    		return channel;
+    }
+
+    if (guild.defaultChannel)
+    	return guild.defaultChannel;
+
+    return guild.channels.filter(c => {return (c.type=='text') && c.permissionsFor(client.user).has(Discord.Permissions.FLAGS.READ_MESSAGES)}).sort((a,b) => {return a.calculatedPosition-b.calculatedPosition}).first();
+}
+
+function getLeague(league) {
+	if (!league || !league.toString)
+		return;
+
+	let lstring = league.toString().toUpperCase().replace(/[^A-Z0-9]+/g,'');
+	return Object.keys(leagues).filter(i => {return (leagues[i]==league) || (leagues[i].id==league) || (leagues[i].code==lstring) || (leagues[i].name.toUpperCase().replace(/[^A-Z0-9]+/g,'')==lstring)}).map(i => {return leagues[i]}).shift();
+}
+
+function getTeam(team, league) {
+	if (!team || !team.toString)
+		return;
+
+	let tstring = team.toString().toUpperCase().replace(/[^A-Z0-9]+/g,'');
+
+	if (league && !(league = getLeague(league)))
+		return;
+
+	return Object.keys(teams).filter(i => {return ((teams[i]==team) || (teams[i].id==team) || (teams[i].name.toUpperCase().replace(/[^A-Z0-9]+/g,'')==tstring) || (teams[i].shortname.toUpperCase().replace(/[^A-Z0-9]+/g,'')==tstring)) && (!league || (teams[i].leagues.indexOf(league.id)!=-1))}).map(i => {return teams[i]}).shift();
+}
+
+function joinGuild(guild, save) {
+	if (!data.guilds[guild.id])
+		data.guilds[guild.id] = {};
+
+	if (!data.guilds[guild.id].admins || !data.guilds[guild.id].admins.length)
+		data.guilds[guild.id].admins = [guild.owner.id];
+
+	if (!data.guilds[guild.id].defaultChannel)
+		data.guilds[guild.id].defaultChannel = getDefaultChannel(guild).id;
+
+	if (save !== false)
+		saveData();
+}
+
+function leaveGuild(guild, save) {
+	delete data.guilds[guild.id];
+
+	data.watchers = data.watchers.filter(w => {return w.guild!=guild.id});
+
+	if (save !== false)
+		saveData();
+}
+
+function isNewsWatcher(watcher) {
+	return /^(bids|contracts|draft|news|trades|waivers)$/.test(watcher instanceof Object ? watcher.type : watcher);
+}
+
+function isValidWatcher(watcher) {
+	return /^(all|all.?news|games)$/i.test(watcher instanceof Object ? watcher.type : watcher) || isNewsWatcher(watcher);
+}
+
+function log() {
+	[].forEach.call(arguments, message => {
+		let date = new Date();
+		console.log(`[${('0000' + date.getFullYear()).substr(-4)}-${('00' + (date.getMonth() + 1)).substr(-2)}-${('00' + date.getDate()).substr(-2)} ${date.toTimeString().replace(/ \S+$/, '')}] ${message}`);
+	});
+}
+
+function saveData() {
+	return new Promise((resolve, reject) => {
+		fs.writeFile('./data/data.json', JSON.stringify(data), err => {
+			if (err) {
+				console.error(err);
+				reject(err.message);
+			} else
+				resolve();
+		});
+	});
+}
+
+function sendDailyStarUpdates(league, stars) {
+	if (!(league = getLeague(league)))
+		return;
+
+	let watchers = data.watchers.filter(w => {return (!w.league || (w.league==league.id)) && (w.type=='daily-stars')});
+
+	if (!watchers.length)
+		return;
+
+	let path = `./data/daily-stars-${league.id}.json`, update = false;
+
+	if (!(stars instanceof Object)) {
+		try {
+			stars = require(path);
+		} catch (e) {
+			if (!e.message.match(/Cannot find module/i))
+				console.error(e.stack);
+
+			return;
+		}
+	}
+
+	watchers.forEach(w => {
+		// TODO: Iterate over daily star data and send formatted message to channels
+	});
+
+	if (update)
+		fs.writeFileSync(path, JSON.stringify(stars));
+}
+
+function sendNewsUpdates(league, news) {
+	if (!(league = getLeague(league)))
+		return;
+
+	let watchers = data.watchers.filter(w => {return (!w.league || (w.league==league.id)) && isNewsWatcher(w)});
+
+	if (!watchers.length)
+		return;
+
+	let path = `./data/news-${league.id}.json`, update = false;
+
+	if (!(news instanceof Array)) {
+		try {
+			news = require(path);
+		} catch (e) {
+			if (!e.message.match(/Cannot find module/i))
+				console.error(e.stack);
+
+			return;
+		}
+	}
+
+	news.forEach(item => {
+		if (!item.new)
+			return;
+
+		let data, message;
+		item.new = false;
+		update = true;
+
+		if (item.type == 'bids') {
+			if (!(data = item.message.match(/have earned the player rights for (.*?) with a bid amount of (\S+)/i)))
+				return;
+
+			let player = {name: data[1].trim()}, bid = {amount: data[2].trim()}, team = getTeam(item.teams[0], league);
+			message = `The ${team.name} have won bidding rights to ${player.name} with a bid of ${bid.amount}!`;
+		} else if (item.type == 'contracts') {
+			if (!(data = item.message.match(/^(.*?) and the .*? have agreed to a (\d+) season deal at (.*?) per season$/i)))
+				return;
+
+			let player = {name: data[1].trim()}, contract = {length: data[2].trim(), salary: data[3].trim()}, team = getTeam(item.teams[0], league);
+			message = `The ${team.name} have signed ${player.name} to a ${contract.length} season contract worth ${contract.salary} per season!`;
+		} else if (/^(draft|trades|waivers)$/.test(item.type) || (item.type == 'news' && item.message.match(/have (been eliminated|claimed|clinched|drafted|placed|traded)/i)))
+			message = item.message;
+
+		if (!message)
+			return;
+
+		let channels = [];
+
+		watchers.filter(w => {return (!w.team || (item.teams.indexOf(w.team)!=-1)) && (w.type==item.type)}).forEach(w => {
+			let guild = client.guilds.get(w.guild), channel = getDefaultChannel(guild, w.channel);
+
+			if (channel)
+				channels.push(channel);
+		});
+
+		channels.filter((v,i,a) => {return a.indexOf(v)==i}).forEach(channel => {
+			log(`Sending message to ${channel.guild.name}#${channel.name}: ${message}`);
+			channel.send(message)
+		});
+	});
+
+	if (update)
+		fs.writeFileSync(path, JSON.stringify(news));
+}
+
+function sendScheduleUpdates(league, team, schedule) {
+	if (!(league = getLeague(league)) || !(team = getTeam(team, league)))
+		return;
+
+	let watchers = data.watchers.filter(w => {return (!w.league || w.league==league.id) && (!w.team || w.team==team.id) && (w.type=='games')});
+
+	if (!watchers.length)
+		return;
+
+	let path = `./data/schedule-${league.id}-${team.id}.json`, update = false;
+
+	if (!(schedule instanceof Array)) {
+		try {
+			schedule = require(path);
+		} catch (e) {
+			if (!e.message.match(/Cannot find module/i))
+				console.error(e.stack);
+
+			return;
+		}
+	}
+
+	schedule.forEach(game => {
+		if (!game.updated)
+			return;
+
+		game.updated = false;
+		update = true;
+
+		if (game.home.score === null || game.visitor.score === null)
+			return;
+
+		let channels = [], message, us, them;
+
+		if (game.home.id == w.team) {
+			us = game.home;
+			them = game.visitor;
+		} else {
+			us = game.visitor;
+			them = game.home;
+		}
+
+		if (us.score > them.score)
+			message = `**The ${us.name} have defeated the ${them.name} by the score of ${us.score} to ${them.score}!**`;
+		else if (us.score < them.score)
+			message = `The _${us.name}_ have been defeated by the _${them.name}_ by the score of _${them.score} to ${us.score}_.`;
+		else
+			message = `The ${us} have tied the ${them.name} by the score of ${us.score} to ${them.score}.`;
+
+		watchers.forEach(w => {
+			let guild = client.guilds.get(w.guild), channel = getDefaultChannel(guild, w.channel);
+
+			if (channel)
+				channels.push(channel);
+		});
+
+		channels.filter((v,i,a) => {return a.indexOf(v)==i}).forEach(channel => {
+			log(`Sending message to ${channel.guild.name}#${channel.name}: ${message}`);
+			channel.send(message)
+		});
+	});
+
+	if (update)
+		fs.writeFileSync(path, JSON.stringify(schedule));
+}
+
+function tokenize(string) {
+	return string.replace(/(["'])((?:(?=(\\?))\3.)*?)\1/g, (a,b,c) => {return c.replace(/\s/g, '\037')}).split(/\s+/).map(token => {return token.replace(/\037/g, ' ')});
+}
+
+function updateDailyStars() {
+	if (updateDailyStars.$running)
+		return;
+
+	child.fork(`${__dirname}/scripts/update_daily_stars.js`, {silent: true})
+		.on('message', message => {sendDailyStarsUpdates.apply(null,message)})
+		.on('exit', () => {delete updateDailyStars.$running});
+}
+
+function updateLeagues() {
+	if (updateLeagues.$running)
+		return;
+
+	updateLeagues.$running = true;
+
+	child.fork(`${__dirname}/scripts/update_leagues.js`, {silent: true})
+		.on('message', message => {leagues=message})
+		.on('exit', () => {delete updateLeagues.$running});
+}
+
+function updateNews() {
+	if (updateNews.$running)
+		return;
+
+	child.fork(`${__dirname}/scripts/update_news.js`, {silent: true})
+		.on('mesage', message => {sendNewsUpdates.apply(null,message)})
+		.on('exit', () => {delete updateNews.$running});
+}
+
+function updateSchedules() {
+	if (updateSchedules.$running)
+		return;
+
+	child.fork(`${__dirname}/scripts/update_schedules.js`, {silent: true})
+		.on('mesage', message => {sendScheduleUpdates.apply(null,message)})
+		.on('exit', () => {delete updateSchedules.$running});
+}
+
+function updateTeams() {
+	if (updateTeams.$running)
+		return;
+
+	child.fork(`${__dirname}/scripts/update_teams.js`, {silent: true})
+		.on('message', message => {teams=message})
+		.on('exit', () => {delete updateTeams.$running});
+}

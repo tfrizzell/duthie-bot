@@ -5,15 +5,16 @@ Hello ${message.author.username}! Here is what you need to know about ${config.p
 
 # TYPE (required)
   There are currently 9 valid types:
-      * all       - an alias for all other types: bidding, contract, draft, games, news, trades, waivers
-      * all-news  - an alias for all other news types: bidding, contract, draft, news, trades, waivers
-      * bids      - announces any winning bids that match your league and/or team filters
-      * contracts - announces any new contracts that match your league and/or team filters
-      * draft     - announces any new draft picks that match your league and/or team filters
-      * games     - announces any updated game scores that match your league and/or team filters
-      * news      - announces any news items that don't fit any other type, passes through the ${config.name} news filter, and that matches your league and/or team filters
-      * trades    - announces any trades that match your league and/or team filters
-      * waivers   - announces any players placed on or claimed off waivers that match your league and/or team filters
+      * all         - an alias for all other types: bidding, contract, draft, games, news, trades, waivers
+      * all-news    - an alias for all other news types: bidding, contract, draft, news, trades, waivers
+      * bids        - announces any winning bids that match your league and/or team filters
+      * contracts   - announces any new contracts that match your league and/or team filters
+      * daily-stars - announces any of the previous day's daily stars that match your league and/or team filters
+      * draft       - announces any new draft picks that match your league and/or team filters
+      * games       - announces any updated game scores that match your league and/or team filters
+      * news        - announces any news items that don't fit any other type, passes through the ${config.name} news filter, and that matches your league and/or team filters
+      * trades      - announces any trades that match your league and/or team filters
+      * waivers     - announces any players placed on or claimed off waivers that match your league and/or team filters
 
 # LEAGUE (optional*)
   The league argument is optional when deregistering a watcher. If omitted, all watchers that match the other arguments will be removed. To specify a league, simple enter the league's id or name found on LeagueGaming.com. The leagues currently supported by ${config.name} are:
