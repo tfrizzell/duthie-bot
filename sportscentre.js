@@ -240,7 +240,7 @@ client.on('message', message => {
 			let watcher = {guild: message.guild.id, channel: channel.id, league: league.id, team: team ? team.id : null, type: type},
 				_watcher = data.watchers.filter(w => {return (w.guild==watcher.guild) && (w.channel==watcher.channel) && (w.league==watcher.league) && (w.team==watcher.team) && (w.type==watcher.type)}).shift();
 
-			if (_watcher)
+			if (_watcher || (type == 'game' && !watcher.team))
 				return;
 
 			data.watchers.push(watcher);
