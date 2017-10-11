@@ -1,6 +1,6 @@
 {
   "name": "Duthie Bot",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "description": "Have a little added fun with this informative bot for LeagueGaming.com's EA NHL Discord servers!",
   "main": "sportscenter.js",
   "dependencies": {
