@@ -7,15 +7,15 @@ const Discord = require('discord.js');
 const fs = require('fs');
 
 const client = new Discord.Client();
-const config = require('./config.json');
-const pkg = require('./package.json');
+const config = require(`${__dirname}/config.json`);
+const pkg = require(`${__dirname}/package.json`);
 
 /**
  * Load application data
  */
-let data = require('./data/data.json');
-let leagues = require('./data/leagues.json');
-let teams = require('./data/teams.json');
+let data = require(`${__dirname}/data/data.json`);
+let leagues = require(`${__dirname}/data/leagues.json`);
+let teams = require(`${__dirname}/data/teams.json`);
 
 /**
  * Log startup message
@@ -91,7 +91,7 @@ client.on('message', message => {
 
 	switch (command) {
 	  case 'help': {
-		  fs.readFile('./help/main.txt', 'utf8', (err, text) => {
+		  fs.readFile(`${__dirname}/help/main.txt`, 'utf8', (err, text) => {
 			  if ((tokens[2] || '').toLowerCase() == 'me')
 				  message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
 			  else
@@ -112,7 +112,7 @@ client.on('message', message => {
 		}
 
 		if (type == 'help') {
-			fs.readFile('./help/unwatch.txt', 'utf8', (err, text) => {
+			fs.readFile(`${__dirname}/help/unwatch.txt`, 'utf8', (err, text) => {
 				if ((tokens[3] || '').toLowerCase() == 'me')
 					  message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
 				  else
@@ -154,15 +154,15 @@ client.on('message', message => {
 		let oldLength = data.watchers.length;
 
 		if (type == 'all') {
-			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id)});
+			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id));
 			_message.channel = `Ok! You are no longer watching any updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
 			_message.log = `${message.author.tag} has stopped watching all events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
 		} else if (/^all.?news$/.test(type)) {
-			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id) || !isNewsWatcher(watcher)});
+			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id) || !isNewsWatcher(watcher));
 			_message.channel = `Ok! You are no longer watching any news updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
 			_message.log = `${message.author.tag} has stopped watching all news events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
 		} else {
-			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id) || (watcher.type != type)});
+			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id) || (watcher.type != type));
 			_message.channel = `Ok! You are no longer watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
 			_message.log = `${message.author.tag} has stopped watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
 		}
@@ -188,7 +188,7 @@ client.on('message', message => {
 		}
 
 		if (type == 'help') {
-			fs.readFile('./help/watch.txt', 'utf8', (err, text) => {
+			fs.readFile(`${__dirname}/help/watch.txt`, 'utf8', (err, text) => {
 				if ((tokens[3] || '').toLowerCase() == 'me')
 					  message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
 				  else
@@ -246,7 +246,7 @@ client.on('message', message => {
 
 		types.forEach(type => {
 			let watcher = {guild: message.guild.id, channel: channel.id, league: league.id, team: team ? team.id : null, type: type};
-			let _watcher = data.watchers.filter(watcher => (watcher.guild == watcher.guild) && (watcher.channel == watcher.channel) && (watcher.league == watcher.league) && (watcher.team == watcher.team) && (watcher.type == watcher.type)}).shift();
+			let _watcher = data.watchers.filter(watcher => (watcher.guild == watcher.guild) && (watcher.channel == watcher.channel) && (watcher.league == watcher.league) && (watcher.team == watcher.team) && (watcher.type == watcher.type)).shift();
 
 			if (_watcher || (type == 'game' && !watcher.team))
 				return;
@@ -390,7 +390,7 @@ function ordinal(number) {
 }
 
 function saveData() {
-	fs.writeFileSync('./data/data.json', JSON.stringify(data));
+	fs.writeFileSync(`${__dirname}/data/data.json`, JSON.stringify(data));
 }
 
 function sendDailyStarUpdates(league, stars) {
@@ -404,7 +404,7 @@ function sendDailyStarUpdates(league, stars) {
 
 	if (!(stars instanceof Object)) {
 		try {
-			stars = require(`./data/daily-stars-${league.id}.json`);
+			stars = require(`${__dirname}/data/daily-stars-${league.id}.json`);
 		} catch (e) {
 			if (!e.message.match(/Cannot find module/i))
 				console.error(e.stack);
@@ -435,17 +435,17 @@ function sendDailyStarUpdates(league, stars) {
 		let team = getTeam(watcher.team, league);
 		let message = `**Congratulations to the ${team ? (team.name + "'s ").replace(/s's $/, "s' ") : ''}${league.name} Daily Stars for ${stars.date}:**`;
 
-		forwards.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Forward _(${star.stats[0]} Points, ${star.stats[1]} Goals, ${star.stats[2]} Assists, ${star.stats[3] > 0 ? '+' : (star.stars[3] < 0 ? '-' : '')}${star.stats[3]})_`});
+		forwards.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Forward _(${star.stats[0]} Points, ${star.stats[1]} Goals, ${star.stats[2]} Assists, ${star.stats[3] > 0 ? '+' : (star.stars[3] < 0 ? '-' : '')}${star.stats[3]})_`);
 
 		if (forwards.length)
 			message += `\n`;
 
-		defenders.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Forward _(${star.stats[0]} Points, ${star.stats[1]} Goals, ${star.stats[2]} Assists, ${star.stats[3] > 0 ? '+' : (star.stars[3] < 0 ? '-' : '')}${star.stats[3]})_`});
+		defenders.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Forward _(${star.stats[0]} Points, ${star.stats[1]} Goals, ${star.stats[2]} Assists, ${star.stats[3] > 0 ? '+' : (star.stars[3] < 0 ? '-' : '')}${star.stats[3]})_`);
 
 		if (defenders.length)
 			message += `\n`;
 
-		goalies.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Goalie _(${(star.stats[0] / 100).toFixed(3)} SV%, ${star.stats[1].toFixed(2)} GAA, ${star.stats[2]} Shots, ${star.stats[3]} Saves)_`});
+		goalies.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Goalie _(${(star.stats[0] / 100).toFixed(3)} SV%, ${star.stats[1].toFixed(2)} GAA, ${star.stats[2]} Shots, ${star.stats[3]} Saves)_`);
 		output.push([channel, message.trim()]);
 	});
 
@@ -465,7 +465,7 @@ function sendNewsUpdates(league, news) {
 	if (!watchers.length)
 		return;
 
-	let path = `./data/news-${league.id}.json`, update = false;
+	let path = `${__dirname}/data/news-${league.id}.json`, update = false;
 
 	if (!(news instanceof Array)) {
 		try {
@@ -508,15 +508,15 @@ function sendNewsUpdates(league, news) {
 				channels.push(channel);
 		});
 
-		channels.filter(value, index, array) => array.indexOf(value) == index).forEach(channel => {
+		channels.filter((value, index, array) => array.indexOf(value) == index).forEach(channel => {
 			log(`Sending message to ${channel.guild.name}#${channel.name}: ${message}`);
 
 			if (item.type == 'bid')
-				message = message.replace(/rights to (.*?) with a/, (a, b) => tagUser(b, channel.guild));
+				message = message.replace(/rights to (.*?) with a/, (a, b) => `rights to ${tagUser(b, channel.guild)} with a`);
 			else if (item.type == 'contract')
-				message = message.replace(/have signed (.*?) to a/, (a, b) => tagUser(b, channel.guild));
+				message = message.replace(/have signed (.*?) to a/, (a, b) => `have signed ${tagUser(b, channel.guild)} to a`);
 			else if (item.type == 'draft')
-				message = message.replace(/have drafted (.*?) \d+\w+ overall/, (a, b) => tagUser(b, channel.guild));
+				message = message.replace(/have drafted (.*?) (\d+\w+) overall/, (a, b, c) => `have drafted ${tagUser(b, channel.guild)} ${c} overall`);
 
 			channel.send(message)
 		});
@@ -535,7 +535,7 @@ function sendScheduleUpdates(league, team, schedule) {
 	if (!watchers.length)
 		return;
 
-	let path = `./data/schedule-${league.id}-${team.id}.json`, update = false;
+	let path = `${__dirname}/data/schedule-${league.id}-${team.id}.json`, update = false;
 
 	if (!(schedule instanceof Array)) {
 		try {
@@ -600,7 +600,7 @@ function tagUser(input, guild) {
 		user = input.user;
 
 	if (!user && guild instanceof Discord.Guild) {
-		let regex = new RegExp(user, 'i');
+		let regex = new RegExp(input, 'i');
 		let member = guild.members.find(member => (member.nickname && member.nickname.match(regex)) || member.user.username.match(regex));
 
 		if (member)
