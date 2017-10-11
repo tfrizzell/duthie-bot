@@ -2,7 +2,7 @@ const fs = require('fs');
 const request = require('request');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
-const prefix = 'news-';
+const pkg = require(`${dir}/package.json`);
 
 const leagues = require(`${dir}/data/leagues.json`);
 const teams = require(`${dir}/data/teams.json`);
@@ -14,14 +14,20 @@ if (!leagues[league]) {
 } else
 	league = leagues[league];
 
+const prefix = 'news-';
 const path = `${dir}/data/${prefix}${league.id}.json`;
 console.log(`Downloading news for S${league.season} ${league.name}...`);
 
 function downloadNews() {
-	let regex0 = new RegExp('<li(?:[^>]+)? NewsFeedItem(?:[^>]+)?>(?:<a(?:[^>]+)?><img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>)?(?:<a(?:[^>]+)?><img(?:[^>]+)?/(?:feed|icons?)/(.*?).png(?:[^>]+)?>)?(?:<a(?:[^>]+)?><img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>)?</a><div(?:[^>]+)?><h3(?:[^>]+)?>(.*?)</h3><abbr(?:[^>]+)?>(.*?)</abbr></div></li>', 'ig'),
-	    regex1 = new RegExp(regex0.source, regex0.flags.replace('g', ''));
+	let regex0 = new RegExp('<li(?:[^>]+)? NewsFeedItem(?:[^>]+)?>(?:<a(?:[^>]+)?><img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>)?(?:<a(?:[^>]+)?><img(?:[^>]+)?/(?:feed|icons?)/(.*?).png(?:[^>]+)?>)?(?:<a(?:[^>]+)?><img(?:[^>]+)?/team(\\d+).png(?:[^>]+)?>)?</a><div(?:[^>]+)?><h3(?:[^>]+)?>(.*?)</h3><abbr(?:[^>]+)?>(.*?)</abbr></div></li>', 'ig');
+	let regex1 = new RegExp(regex0.source, regex0.flags.replace('g', ''));
 
-	request(`http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=team_news&teamid=0&typeid=0&displaylimit=500&leagueid=${league.id}&seasonid=${league.season}`, (err, res, html) => {
+	request({
+		url: `http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=team_news&teamid=0&typeid=0&displaylimit=500&leagueid=${league.id}&seasonid=${league.season}`,
+		headers: {
+			'User-Agent': `${pkg.name}/${pkg.version.replace(/^v+/g,'')}`
+		}
+	}, (err, res, html) => {
 		if (!err) {
 			if (res.statusCode != 200)
 				err = new Error(`Failed to fetch news for S${league.season} ${league.name} (status=${res.statusCode})`);
@@ -39,7 +45,10 @@ function downloadNews() {
 		if (!data)
 			process.exit();
 
-		let oldItems = require(path), newItems = [], update = false, updating = !!oldItems.length;
+		let oldItems = require(path);
+		let newItems = [];
+		let update = false;
+		let updating = !!oldItems.length;
 
 		for (let i = 0, end = data.length; i < end; i++) {
 			let itemData = data[i].match(regex1);
@@ -47,7 +56,9 @@ function downloadNews() {
 			if (!itemData)
 				continue;
 
-			let item = {league: league.id, message: '', new: updating, teams: [], timestamp: itemData[5].trim(), type: (itemData[2] || '').trim()}, oldItem, team;
+			let item = {league: league.id, message: '', new: updating, teams: [], timestamp: itemData[5].trim(), type: (itemData[2] || '').trim()};
+			let oldItem;
+			let team;
 
 			[1, 3].forEach(i => {
 				if ((team = teams[itemData[i]]) && team.leagues.indexOf(league.id) != -1)
@@ -64,7 +75,7 @@ function downloadNews() {
 					return a;
 			}).replace(/<(?:[^>]+)?>/g, '').replace(/[ ]+/g, ' ').trim();
 
-			item.teams = item.teams.filter((v,i,a) => {return a.indexOf(v)==i}).sort();
+			item.teams = item.teams.filter((value, index, array) => array.indexOf(value) == index).sort();
 
 			if (item.message.match(/ have (placed .*? on|claimed .*? off of) waivers /i))
 				item.type = 'waiver';
@@ -81,16 +92,7 @@ function downloadNews() {
 			else if (!item.type)
 				item.type = '';
 
-			/**************************** workaround *****************************/
-			/** This is a temporary workaround until sportscentre.js is updated **/
-			if (!item.type)
-				item.type = 'news';
-
-			if (/^(?!draft|roster).*?[^s]$/.test(item.type))
-				item.type += 's';
-			/**************************** /workaround ****************************/
-
-			if (oldItem = oldItems.filter(i => {return (i.league==item.league) && (i.message==item.message) && (i.teams.toString()==item.teams.toString()) && (i.timestamp==item.timestamp) && (i.type==item.type)}).pop())
+			if (oldItem = oldItems.filter(old => (old.league == item.league) && (old.message == item.message) && (old.teams.toString() == item.teams.toString()) && (old.timestamp == item.timestamp) && (old.type == item.type)).pop())
 				item.new = oldItem.new;
 
 			newItems.unshift(item);
@@ -104,7 +106,7 @@ function downloadNews() {
 			if (err)
 				console.error(err.message);
 			else if (process.send)
-				process.send([league.id, newItems], () => {process.exit()});
+				process.send([league.id, newItems], () => process.exit());
 
 			if (!process.send)
 				process.exit();

@@ -20,65 +20,58 @@ let teams = require('./data/teams.json');
 /**
  * Log startup message
  */
-log(`Starting ${config.name} v${pkg.version.replace(/^v+/g,'')}...\n                               node.js v${process.version.replace(/^v+/g,'')}, discord.js v${Discord.version.replace(/^v+/g,'')}\n`);
+log(`Starting ${pkg.name} v${pkg.version.replace(/^v+/g,'')}...\n                               node.js v${process.version.replace(/^v+/g,'')}, discord.js v${Discord.version.replace(/^v+/g,'')}\n`);
 
 /**
  * Set up the Discord client event handlers, and log in
  */
 client.once('ready', () => {
-	log(`${config.name} has logged in to Discord and is performing startup checks...`);
+	log(`${pkg.name} has logged in to Discord and is performing startup checks...`);
 	client.user.setGame('initializing...');
 
-	client.guilds.forEach(g => {
-		joinGuild(g, false);
-	});
+	client.guilds.forEach(guild => joinGuild(guild, false));
 
 	Object.keys(data.guilds).forEach(id => {
 		if (!client.guilds.get(id))
 			leaveGuild({id: id}, false);
 	});
 
-	saveData().then(() => {
-		log(`${config.name} now ready and active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}!`);
-	 	client.user.setGame('in testing...');
+	log(`${pkg.name} now ready and active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}!`);
+ 	client.user.setGame('in testing...');
+	saveData();
+});
 
-		let news = {}, schedule = {}, stars = {};
+client.on('ready', () => {
+	let news = {}, schedule = {}, stars = {};
 
-		data.watchers.forEach(w => {
-			if (w.type == 'daily-stars') {
-				if (stars[w.league])
-					return;
+	data.watchers.forEach(watcher => {
+		if (watcher.type == 'games') {
+			if (schedule[watcher.league] && schedule[watcher.league][watcher.team])
+				return;
 
-				stars[w.league] = true;
-				sendDailyStarUpdates(w.league);
-			} else if (w.type == 'games') {
-				if (schedule[w.league] && schedule[w.league][w.team])
-					return;
+			schedule[watcher.league] = schedule[watcher.league] || {};
+			schedule[watcher.league][watcher.team] = true;
+			sendScheduleUpdates(watcher.league, watcher.team);
+		} else if (watcher.type == 'news') {
+			if (news[watcher.league])
+				return;
 
-				schedule[w.league] = schedule[w.league] || {};
-				schedule[w.league][w.team] = true;
-				sendScheduleUpdates(w.league, w.team);
-			} else if (w.type == 'news') {
-				if (news[w.league])
-					return;
-
-				news[w.league] = true;
-				sendNewsUpdates(w.league);
-			}
-		});
+			news[watcher.league] = true;
+			sendNewsUpdates(watcher.league);
+		}
 	});
 });
 
 client.on('guildCreate', guild => {
 	if (!data.guilds[guild.id])
-		log(`${config.name} has joined guild ${guild.name}, and is now active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}`);
+		log(`${pkg.name} has joined guild ${guild.name}, and is now active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}`);
 
 	joinGuild(guild);
 });
 
 client.on('guildDelete', guild => {
 	if (data.guilds[guild.id])
-		log(`${config.name} has left guild ${guild.name || guild.id}, and is now active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}`);
+		log(`${pkg.name} has left guild ${guild.name || guild.id}, and is now active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}`);
 
 	leaveGuild(guild);
 });
@@ -93,7 +86,8 @@ client.on('message', message => {
 	if (message.channel.type == 'voice')
 		return message.channel.send(`I'm sorry, ${message.author.username}, but you can't do that here!`);
 
-	let tokens = tokenize(message.content.trim()), command = tokens[1].toLowerCase();
+	let tokens = tokenize(message.content.trim());
+	let command = tokens[1].toLowerCase();
 
 	switch (command) {
 	  case 'help': {
@@ -133,7 +127,13 @@ client.on('message', message => {
 			break;
 		}
 
-		let league = getLeague(tokens[3]), team = getTeam(tokens[4], league);
+		if (tokens[4] == 'PSN') {
+			tokens[3] += tokens[4];
+			[].slice.apply(tokens, [4, 1].concat(tokens.slice(5)));
+		}
+
+		let league = getLeague(tokens[3]);
+		let team = getTeam(tokens[4], league);
 
 		if (type == 'games' && !team) {
 			message.channel.send(`I'm sorry, ${message.author.username}, but "${tokens[4]}" is not a valid team. See ${config.prefix} ${command} help for more information.`);
@@ -150,18 +150,19 @@ client.on('message', message => {
 			break;
 		}
 
-		let _message = {channel: '', log: ''}, oldLength = data.watchers.length;
+		let _message = {channel: '', log: ''};
+		let oldLength = data.watchers.length;
 
 		if (type == 'all') {
-			data.watchers = data.watchers.filter(w => {return (w.guild!=message.guild.id) || (league && w.league!=league.id) || (team && w.team!=team.id) || (channel && w.channel!=channel.id)});
+			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id)});
 			_message.channel = `Ok! You are no longer watching any updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
 			_message.log = `${message.author.tag} has stopped watching all events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
 		} else if (/^all.?news$/.test(type)) {
-			data.watchers = data.watchers.filter(w => {return (w.guild!=message.guild.id) || (league && w.league!=league.id) || (team && w.team!=team.id) || (channel && w.channel!=channel.id) || !isNewsWatcher(w)});
+			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id) || !isNewsWatcher(watcher)});
 			_message.channel = `Ok! You are no longer watching any news updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
 			_message.log = `${message.author.tag} has stopped watching all news events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
 		} else {
-			data.watchers = data.watchers.filter(w => {return (w.guild!=message.guild.id) || (league && w.league!=league.id) || (team && w.team!=team.id) || (channel && w.channel!=channel.id) || w.type!=type});
+			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id) || (watcher.type != type)});
 			_message.channel = `Ok! You are no longer watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
 			_message.log = `${message.author.tag} has stopped watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
 		}
@@ -202,6 +203,11 @@ client.on('message', message => {
 			break;
 		}
 
+		if (tokens[4] == 'PSN') {
+			tokens[3] += tokens[4];
+			[].slice.apply(tokens, [4, 1].concat(tokens.slice(5)));
+		}
+
 		let league = getLeague(tokens[3]);
 
 		if (!league) {
@@ -227,7 +233,9 @@ client.on('message', message => {
 		} else if (!channel)
 			channel = getDefaultChannel(message.guild, guild.defaultChannel);
 
-		let _message = '', oldLength = data.watchers.length, types = [];
+		let _message = '';
+		let oldLength = data.watchers.length;
+		let types = [];
 
 		if (type == 'all')
 			types.push('bids', 'contracts', 'daily-stars', 'draft', 'games', 'news', 'trades', 'waivers');
@@ -237,8 +245,8 @@ client.on('message', message => {
 			types.push(type);
 
 		types.forEach(type => {
-			let watcher = {guild: message.guild.id, channel: channel.id, league: league.id, team: team ? team.id : null, type: type},
-				_watcher = data.watchers.filter(w => {return (w.guild==watcher.guild) && (w.channel==watcher.channel) && (w.league==watcher.league) && (w.team==watcher.team) && (w.type==watcher.type)}).shift();
+			let watcher = {guild: message.guild.id, channel: channel.id, league: league.id, team: team ? team.id : null, type: type};
+			let _watcher = data.watchers.filter(watcher => (watcher.guild == watcher.guild) && (watcher.channel == watcher.channel) && (watcher.league == watcher.league) && (watcher.team == watcher.team) && (watcher.type == watcher.type)}).shift();
 
 			if (_watcher || (type == 'game' && !watcher.team))
 				return;
@@ -271,34 +279,13 @@ client.login(config.token);
 const jobs = [
 	new cron.CronJob('0  0     */8    *  *  *  ', updateLeagues, null, true, 'America/New_York'),
 	new cron.CronJob('0  15    */8    *  *  *  ', updateTeams, null, true, 'America/New_York'),
-	new cron.CronJob('0  */10  15-16  *  *  *  ', updateDailyStars, null, true, 'America/New_York'),
-	new cron.CronJob('0  */10  *      *  *  *  ', updateNews, null, true, 'America/New_York'),
+	new cron.CronJob('0  */10  14-15  *  *  *  ', updateDailyStars, null, true, 'America/New_York'),
+	new cron.CronJob('0  */10  0-19   *  *  *  ', updateNews, null, true, 'America/New_York'),
 	new cron.CronJob('0  */5   20-23  *  *  *  ', updateNews, null, true, 'America/New_York'),
 	new cron.CronJob('0  0     0-19   *  *  *  ', updateSchedules, null, true, 'America/New_York'),
 	new cron.CronJob('0  */5   20-23  *  *  0-4', updateSchedules, null, true, 'America/New_York'),
-	new cron.CronJob('0  */30  0-19   *  *  5-6', updateSchedules, null, true, 'America/New_York')
+	new cron.CronJob('0  30    0-19   *  *  5-6', updateSchedules, null, true, 'America/New_York')
 ];
-
-/**
- * Set up file watchers
- */
-fs.watch('./data', (ev, filename) => {
-	if (ev != 'change')
-		return;
-
-	let data;
-
-	if ((data = filename.match(/^daily-stars-(\d+)\.json$/)) && !updateDailyStars.$running)
-		sendDailyStarUpdates.apply(null, data.slice(1));
-	else if (filename.match(/^leagues\.json$/) && !updateLeagues.$running)
-		leagues = require('./data/leagues.json');
-	else if ((data = filename.match(/^news-(\d+)\.json$/)) && !updateNews.$running)
-		sendNewsUpdates.apply(null, data.slice(1));
-	else if ((data = filename.match(/^schedule-(\d+)-(\d+)\.json$/)) && !updateSchedules.$running)
-		sendScheduleUpdates.apply(null, data.slice(1));
-	else if (filename.match(/^teams\.json$/) && !updateTeams.$running)
-		teams = require('./data/teams.json');
-});
 
 /**
  * Set up cleanup handlers
@@ -313,7 +300,7 @@ process.on('uncaughtException', err => {
 });
 
 process.on('exit', () => {
-	log(`Shutting down ${config.name} v${pkg.version.replace(/^v+/g, '')}...`);
+	log(`Shutting down ${pkg.name} v${pkg.version.replace(/^v+/g, '')}...`);
 	client.destroy();
 });
 
@@ -338,7 +325,7 @@ function getDefaultChannel(guild, channel) {
     if (guild.defaultChannel)
     	return guild.defaultChannel;
 
-    return guild.channels.filter(c => {return (c.type=='text') && c.permissionsFor(client.user).has(Discord.Permissions.FLAGS.READ_MESSAGES)}).sort((a,b) => {return a.calculatedPosition-b.calculatedPosition}).first();
+    return guild.channels.filter(channel => (channel.type == 'text') && channel.permissionsFor(client.user).has(Discord.Permissions.FLAGS.READ_MESSAGES)).sort((a, b) => a.calculatedPosition-b.calculatedPosition).first();
 }
 
 function getLeague(league) {
@@ -346,7 +333,7 @@ function getLeague(league) {
 		return;
 
 	let lstring = league.toString().toUpperCase().replace(/[^A-Z0-9]+/g,'');
-	return Object.keys(leagues).filter(i => {return (leagues[i]==league) || (leagues[i].id==league) || (leagues[i].code==lstring) || (leagues[i].name.toUpperCase().replace(/[^A-Z0-9]+/g,'')==lstring)}).map(i => {return leagues[i]}).shift();
+	return Object.keys(leagues).filter(i => (leagues[i] == league) || (leagues[i].id == league) || (leagues[i].code == lstring) || (leagues[i].name.toUpperCase().replace(/[^A-Z0-9]+/g,'') == lstring)).map(i => leagues[i]).shift();
 }
 
 function getTeam(team, league) {
@@ -358,7 +345,7 @@ function getTeam(team, league) {
 	if (league && !(league = getLeague(league)))
 		return;
 
-	return Object.keys(teams).filter(i => {return ((teams[i]==team) || (teams[i].id==team) || (teams[i].name.toUpperCase().replace(/[^A-Z0-9]+/g,'')==tstring) || (teams[i].shortname.toUpperCase().replace(/[^A-Z0-9]+/g,'')==tstring)) && (!league || (teams[i].leagues.indexOf(league.id)!=-1))}).map(i => {return teams[i]}).shift();
+	return Object.keys(teams).filter(i => ((teams[i] == team) || (teams[i].id == team) || (teams[i].name.toUpperCase().replace(/[^A-Z0-9]+/g,'') == tstring) || (teams[i].shortname.toUpperCase().replace(/[^A-Z0-9]+/g,'') == tstring)) && (!league || (teams[i].leagues.indexOf(league.id) != -1))).map(i => teams[i]).shift();
 }
 
 function joinGuild(guild, save) {
@@ -377,8 +364,7 @@ function joinGuild(guild, save) {
 
 function leaveGuild(guild, save) {
 	delete data.guilds[guild.id];
-
-	data.watchers = data.watchers.filter(w => {return w.guild!=guild.id});
+	data.watchers = data.watchers.filter(watcher => watcher.guild != guild.id);
 
 	if (save !== false)
 		saveData();
@@ -399,32 +385,26 @@ function log() {
 	});
 }
 
+function ordinal(number) {
+	return (number < 11) || (number > 13) ? ['st','nd','rd','th'][Math.min((number - 1) % 10, 3)] : 'th';
+}
+
 function saveData() {
-	return new Promise((resolve, reject) => {
-		fs.writeFile('./data/data.json', JSON.stringify(data), err => {
-			if (err) {
-				console.error(err);
-				reject(err.message);
-			} else
-				resolve();
-		});
-	});
+	fs.writeFileSync('./data/data.json', JSON.stringify(data));
 }
 
 function sendDailyStarUpdates(league, stars) {
 	if (!(league = getLeague(league)))
 		return;
 
-	let watchers = data.watchers.filter(w => {return (!w.league || (w.league==league.id)) && (w.type=='daily-stars')});
+	let watchers = data.watchers.filter(watcher => (!watcher.league || (watcher.league == league.id)) && (watcher.type == 'daily-stars'));
 
 	if (!watchers.length)
 		return;
 
-	let path = `./data/daily-stars-${league.id}.json`, update = false;
-
 	if (!(stars instanceof Object)) {
 		try {
-			stars = require(path);
+			stars = require(`./data/daily-stars-${league.id}.json`);
 		} catch (e) {
 			if (!e.message.match(/Cannot find module/i))
 				console.error(e.stack);
@@ -433,19 +413,54 @@ function sendDailyStarUpdates(league, stars) {
 		}
 	}
 
-	watchers.forEach(w => {
-		// TODO: Iterate over daily star data and send formatted message to channels
+	if (!stars || (!stars.forwards && !stars.defenders && !stars.goalies))
+		return;
+
+	let output = [];
+
+	watchers.forEach(watcher => {
+		let forwards = stars.forwards.filter(star => !watcher.team || (watcher.team == star.team));
+		let defenders = stars.defenders.filter(star => !watcher.team || (watcher.team == s.team));
+		let goalies = stars.goalies.filter(star => !watcher.team || (watcher.team == s.team));
+
+		if (!(forwards.length + defense.length + goalies.length))
+			return;
+
+		let guild = client.guilds.get(watcher.guild);
+		let channel = getDefaultChannel(guild, watcher.channel);
+
+		if (!channel)
+			return;
+
+		let team = getTeam(watcher.team, league);
+		let message = `**Congratulations to the ${team ? (team.name + "'s ").replace(/s's $/, "s' ") : ''}${league.name} Daily Stars for ${stars.date}:**`;
+
+		forwards.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Forward _(${star.stats[0]} Points, ${star.stats[1]} Goals, ${star.stats[2]} Assists, ${star.stats[3] > 0 ? '+' : (star.stars[3] < 0 ? '-' : '')}${star.stats[3]})_`});
+
+		if (forwards.length)
+			message += `\n`;
+
+		defenders.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Forward _(${star.stats[0]} Points, ${star.stats[1]} Goals, ${star.stats[2]} Assists, ${star.stats[3] > 0 ? '+' : (star.stars[3] < 0 ? '-' : '')}${star.stats[3]})_`});
+
+		if (defenders.length)
+			message += `\n`;
+
+		goalies.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Goalie _(${(star.stats[0] / 100).toFixed(3)} SV%, ${star.stats[1].toFixed(2)} GAA, ${star.stats[2]} Shots, ${star.stats[3]} Saves)_`});
+		output.push([channel, message.trim()]);
 	});
 
-	if (update)
-		fs.writeFileSync(path, JSON.stringify(stars));
+	output.filter((value, index, array) => array.indexOf(value) == index).forEach(data => {
+		let [channel, message] = data;
+		log(`Sending message to ${channel.guild.name}#${channel.name}:\n\t${message.replace(/\n/g, '\n\t')}`);
+		channel.send(message)
+	});
 }
 
 function sendNewsUpdates(league, news) {
 	if (!(league = getLeague(league)))
 		return;
 
-	let watchers = data.watchers.filter(w => {return (!w.league || (w.league==league.id)) && isNewsWatcher(w)});
+	let watchers = data.watchers.filter(watcher => (!watcher.league || (watcher.league == league.id)) && isNewsWatcher(watcher));
 
 	if (!watchers.length)
 		return;
@@ -471,19 +486,13 @@ function sendNewsUpdates(league, news) {
 		item.new = false;
 		update = true;
 
-		if (item.type == 'bids') {
-			if (!(data = item.message.match(/have earned the player rights for (.*?) with a bid amount of (\S+)/i)))
-				return;
-
+		if (item.type == 'bid' && (data = item.message.match(/have earned the player rights for (.*?) with a bid amount of (\S+)/i))) {
 			let player = {name: data[1].trim()}, bid = {amount: data[2].trim()}, team = getTeam(item.teams[0], league);
 			message = `The ${team.name} have won bidding rights to ${player.name} with a bid of ${bid.amount}!`;
-		} else if (item.type == 'contracts') {
-			if (!(data = item.message.match(/^(.*?) and the .*? have agreed to a (\d+) season deal at (.*?) per season$/i)))
-				return;
-
+		} else if (item.type == 'contract' && (data = item.message.match(/^(.*?) and the .*? have agreed to a (\d+) season deal at (.*?) per season$/i))) {
 			let player = {name: data[1].trim()}, contract = {length: data[2].trim(), salary: data[3].trim()}, team = getTeam(item.teams[0], league);
 			message = `The ${team.name} have signed ${player.name} to a ${contract.length} season contract worth ${contract.salary} per season!`;
-		} else if (/^(draft|trades|waivers)$/.test(item.type) || (item.type == 'news' && item.message.match(/have (been eliminated|claimed|clinched|drafted|placed|traded)/i)))
+		} else if (/^(draft|trade|waiver)$/.test(item.type) || (!item.type && item.message.match(/have (been eliminated|claimed|clinched|drafted|placed|traded)/i)))
 			message = item.message;
 
 		if (!message)
@@ -491,15 +500,24 @@ function sendNewsUpdates(league, news) {
 
 		let channels = [];
 
-		watchers.filter(w => {return (!w.team || (item.teams.indexOf(w.team)!=-1)) && (w.type==item.type)}).forEach(w => {
-			let guild = client.guilds.get(w.guild), channel = getDefaultChannel(guild, w.channel);
+		watchers.filter(watcher => (!watcher.team || (item.teams.indexOf(watcher.team) != -1)) && (watcher.type.replace(/s$/, '') == item.type)).forEach(watcher => {
+			let guild = client.guilds.get(watcher.guild);
+			let channel = getDefaultChannel(guild, watcher.channel);
 
 			if (channel)
 				channels.push(channel);
 		});
 
-		channels.filter((v,i,a) => {return a.indexOf(v)==i}).forEach(channel => {
+		channels.filter(value, index, array) => array.indexOf(value) == index).forEach(channel => {
 			log(`Sending message to ${channel.guild.name}#${channel.name}: ${message}`);
+
+			if (item.type == 'bid')
+				message = message.replace(/rights to (.*?) with a/, (a, b) => tagUser(b, channel.guild));
+			else if (item.type == 'contract')
+				message = message.replace(/have signed (.*?) to a/, (a, b) => tagUser(b, channel.guild));
+			else if (item.type == 'draft')
+				message = message.replace(/have drafted (.*?) \d+\w+ overall/, (a, b) => tagUser(b, channel.guild));
+
 			channel.send(message)
 		});
 	});
@@ -512,7 +530,7 @@ function sendScheduleUpdates(league, team, schedule) {
 	if (!(league = getLeague(league)) || !(team = getTeam(team, league)))
 		return;
 
-	let watchers = data.watchers.filter(w => {return (!w.league || w.league==league.id) && (!w.team || w.team==team.id) && (w.type=='games')});
+	let watchers = data.watchers.filter(watcher => (!watcher.league || watcher.league == league.id) && (!watcher.team || watcher.team == team.id) && (watcher.type == 'games'));
 
 	if (!watchers.length)
 		return;
@@ -545,6 +563,9 @@ function sendScheduleUpdates(league, team, schedule) {
 		watchers.forEach(w => {
 			let guild = client.guilds.get(w.guild), channel = getDefaultChannel(guild, w.channel), us, them;
 
+			if (!channel)
+				return;
+
 			if (game.home.id == w.team) {
 				us = game.home;
 				them = game.visitor;
@@ -554,7 +575,7 @@ function sendScheduleUpdates(league, team, schedule) {
 			}
 
 			if (us.score > them.score)
-				output.push([channel, `The **${us.name}** have defeated the **${them.name}** by the score of **${us.score} to _${them.score}**!`]);
+				output.push([channel, `The **${us.name}** have defeated the **${them.name}** by the score of **${us.score} to ${them.score}**!`]);
 			else if (us.score < them.score)
 				output.push([channel, `The _${us.name}_ have been defeated by the _${them.name}_ by the score of _${them.score} to ${us.score}_.`]);
 			else
@@ -572,6 +593,23 @@ function sendScheduleUpdates(league, team, schedule) {
 		fs.writeFileSync(path, JSON.stringify(schedule));
 }
 
+function tagUser(input, guild) {
+	let user;
+
+	if (input instanceof Discord.GuildMember)
+		user = input.user;
+
+	if (!user && guild instanceof Discord.Guild) {
+		let regex = new RegExp(user, 'i');
+		let member = guild.members.find(member => (member.nickname && member.nickname.match(regex)) || member.user.username.match(regex));
+
+		if (member)
+			user = member.user;
+	}
+
+	return user ? `<@${user.id}>` : input;
+}
+
 function tokenize(string) {
 	return string.replace(/(["'])((?:(?=(\\?))\3.)*?)\1/g, (a,b,c) => {return c.replace(/\s/g, '\037')}).split(/\s+/).map(token => {return token.replace(/\037/g, ' ')});
 }
@@ -581,7 +619,7 @@ function updateDailyStars() {
 		return;
 
 	child.fork(`${__dirname}/scripts/update_daily_stars.js`, {silent: true})
-		.on('message', message => {sendDailyStarsUpdates.apply(null,message)})
+		.on('message', message => {sendDailyStarUpdates.apply(null,message)})
 		.on('exit', () => {delete updateDailyStars.$running});
 }
 
@@ -601,7 +639,7 @@ function updateNews() {
 		return;
 
 	child.fork(`${__dirname}/scripts/update_news.js`, {silent: true})
-		.on('mesage', message => {sendNewsUpdates.apply(null,message)})
+		.on('message', message => {sendNewsUpdates.apply(null,message)})
 		.on('exit', () => {delete updateNews.$running});
 }
 
@@ -610,7 +648,7 @@ function updateSchedules() {
 		return;
 
 	child.fork(`${__dirname}/scripts/update_schedules.js`, {silent: true})
-		.on('mesage', message => {sendScheduleUpdates.apply(null,message)})
+		.on('message', message => {sendScheduleUpdates.apply(null,message)})
 		.on('exit', () => {delete updateSchedules.$running});
 }
 

@@ -54,15 +54,10 @@ Promise.all(
 						return fs.unlink(`${dir}/data/${file}`, resolve);
 
 					child.fork(`${dir}/scripts/download_news.js`, [league.id])
-						.on('message', message => {
-							if (process.send)
-								process.send(message);
-						})
+						.on('message', message => process.send && process.send(message))
 						.on('exit', resolve);
 				});
 			})
-		).then(() => {
-			process.exit();
-		});
+		).then(() => process.exit());
 	});
 });

@@ -1,7 +1,7 @@
 {
-  "name": "lg-sportscentre",
-  "version": "0.1.0",
-  "description": "Duthie Bot: Spruce up your server with this informative bot for LeagueGaming.com's EA NHL leagues!",
+  "name": "Duthie Bot",
+  "version": "0.1.1",
+  "description": "Have a little added fun with this informative bot for LeagueGaming.com's EA NHL Discord servers!",
   "main": "sportscenter.js",
   "dependencies": {
     "cron": "^1.3.0",

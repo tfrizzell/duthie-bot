@@ -3,19 +3,26 @@ const request = require('request');
 const url = require('url');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
+const pkg = require(`${dir}/package.json`);
+
 const leagues = require(`${dir}/data/leagues.json`);
 const path = `${dir}/data/teams.json`;
-let ids = Object.keys(leagues), size = Math.ceil(ids.length / 2), teams = {};
+let ids = Object.keys(leagues);
+let size = Math.ceil(ids.length / 2);
+let teams = {};
 
 function updateTeams() {
 	Promise.all(
 		ids.splice(0, size).map(id => {
 			return new Promise(resolve => {
-				let league = leagues[id],
-				    regex0 = new RegExp(`<div(?:[^>]+)?class="team_box_icon"(?:[^>]+)?>.*?<a(?:[^>]+)?page=team_page&(?:amp;)?teamid=(\\d+)&(?:amp;)?leagueid=${league.id}&(?:amp;)?seasonid=${league.season}(?:[^>]+)?>(.*?)</a></div>`, 'ig'),
-				    regex1 = new RegExp(`<td(?:[^>]+)?><img(?:[^>]+)?/team\\d+.png(?:[^>]+)?> \\d+\\) <a(?:[^>]+)?page=team_page&(?:amp;)?teamid=(\\d+)&(?:amp;)?leagueid=${league.id}&(?:amp;)?seasonid=${league.season}(?:[^>]+)?>(.*?)</a></td>`, 'ig');
+				let league = leagues[id];
+				let regex0 = new RegExp(`<div(?:[^>]+)?class="team_box_icon"(?:[^>]+)?>.*?<a(?:[^>]+)?page=team_page&(?:amp;)?teamid=(\\d+)&(?:amp;)?leagueid=${league.id}&(?:amp;)?seasonid=${league.season}(?:[^>]+)?>(.*?)</a></div>`, 'ig');
+				let regex1 = new RegExp(`<td(?:[^>]+)?><img(?:[^>]+)?/team\\d+.png(?:[^>]+)?> \\d+\\) (?:<span(?:[^>]+)?>.*?</span> )?\\*?<a(?:[^>]+)?page=team_page&(?:amp;)?teamid=(\\d+)&(?:amp;)?leagueid=${league.id}&(?:amp;)?seasonid=${league.season}(?:[^>]+)?>(.*?)</a></td>`, 'ig');
 
-				request(`http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=standing&leagueid=${id}&seasonid=${league.season}`, (err, res, html) => {
+				request({
+					url: `http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=standing&leagueid=${id}&seasonid=${league.season}`,
+					headers: {'User-Agent': `${pkg.name}/${pkg.version.replace(/^v+/g,'')}`}
+				}, (err, res, html) => {
 					if (!err) {
 						if (res.statusCode != 200)
 							err = new Error(`Failed to fetch team list for ${league.name} (status=${res.statusCode})`);
@@ -47,11 +54,9 @@ function updateTeams() {
 								link = url.parse(link, true).query;
 
 								let id = parseInt(link.teamid);
-
-								if (teams[id]) {
-									teams[id].shortname = teams[id].shortname || name.trim();
-									teams[id].leagues.push(parseInt(link.leagueid));
-								}
+								teams[id] = teams[id] || {id: id, leagues: [], name: '', shortname: null};
+								teams[id].shortname = teams[id].shortname || name.trim();
+								teams[id].leagues.push(parseInt(link.leagueid));
 							}
 						}
 					}
@@ -70,7 +75,12 @@ function updateTeams() {
 				process.exit();
 			}
 
-			Object.keys(teams).forEach(i => {teams[i].leagues=teams[i].leagues.filter((v,i,a) => {return a.indexOf(v)==i}).sort()});
+			Object.keys(teams).forEach(i => {
+				teams[i].leagues = teams[i].leagues.filter((value, index, array) => {
+					return array.indexOf(value) == index;
+				}).sort();
+			});
+
 			var data = JSON.stringify(teams);
 
 			if (json == data)
@@ -80,7 +90,7 @@ function updateTeams() {
 				if (err)
 					console.error(err.message);
 				else if (process.send)
-					process.send(teams, () => {process.exit()});
+					process.send(teams, () => process.exit());
 
 				if (!process.send)
 					process.exit();

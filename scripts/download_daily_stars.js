@@ -2,7 +2,7 @@ const fs = require('fs');
 const request = require('request');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
-const prefix = 'daily-stars-';
+const pkg = require(`${dir}/package.json`);
 
 const leagues = require(`${dir}/data/leagues.json`);
 let [league, date] = process.argv.slice(2);
@@ -21,8 +21,8 @@ if (process.argv.length < 4) {
 	date = new Date(`${date} GMT-0400`);
 
 try {
-	let [tday, tmonth, tdate, tyear] = date.toLocaleDateString('nu-fullwide', {day: 'numeric', month: 'long', weekday: 'long', year: 'numeric'}).split(/\s+,?|,?\s+/),
-	    tord = (() => {return tdate < 11 || tdate > 13 ? ['st','nd','rd','th'][Math.min((tdate - 1) % 10,3)] : 'th'})();
+	let [tday, tmonth, tdate, tyear] = date.toLocaleDateString('nu-fullwide', {day: 'numeric', month: 'long', weekday: 'long', year: 'numeric'}).split(/\s+,?|,?\s+/);
+	let tord = (() => (tdate < 11) || (tdate > 13) ? ['st','nd','rd','th'][Math.min((tdate - 1) % 10, 3)] : 'th')();
 	thread = `${league.name} Daily 3 Stars For ${tday} ${tmonth} ${tdate}${tord}, ${tyear}`;
 } catch (x) {}
 
@@ -31,15 +31,21 @@ if (!thread) {
 	process.exit();
 }
 
-date = date.toJSON().substr(0, 10);
+const prefix = 'daily-stars-';
 const path = `${dir}/data/${prefix}${league.id}.json`;
+date = thread.split(' ').slice(5).join(' ');
 console.log(`Downloading ${thread}`);
 
 function downloadDailyStars() {
-	let regex0 = new RegExp('<h3(?:[^>]+)?><a(?:[^>]+)?href="(.*?)"(?:[^>]+)?>(.*?)</a></h3>', 'i'),
-	    regex1 = new RegExp('<tr(?:[^>]+)?>(<td(?:[^>]+)?>.*?){7,8}</tr>', 'ig');
+	let regex0 = new RegExp('<h3(?:[^>]+)?><a(?:[^>]+)?href="(.*?)"(?:[^>]+)?>(.*?)</a></h3>', 'i');
+	let regex1 = new RegExp('<tr(?:[^>]+)?>(<td(?:[^>]+)?>.*?</td>){7,8}</tr>', 'ig');
 
-	request(`http://www.leaguegaming.com/forums/index.php?search/1/&q=${thread}&o=date&c[node]=586`, (err, res, html) => {
+	request({
+		url: `http://www.leaguegaming.com/forums/index.php?search/1/&q=${thread}&o=date&c[node]=${league.forum}`,
+		headers: {
+			'User-Agent': `${pkg.name}/${pkg.version.replace(/^v+/g,'')}`
+		}
+	}, (err, res, html) => {
 		if (!err) {
 			if (res.statusCode != 200)
 				err = new Error(`Failed to fetch ${league.name} daily stars for ${date} (status=${res.statusCode})`);
@@ -57,7 +63,12 @@ function downloadDailyStars() {
 		if (!data)
 			process.exit();
 
-		request(`http://www.leaguegaming.com/forums/${data[1]}`, (err, res, html) => {
+		request({
+			url: `http://www.leaguegaming.com/forums/${data[1]}`,
+			headers: {
+				'User-Agent': `${pkg.name}/${pkg.version.replace(/^v+/g,'')}`
+			}
+		}, (err, res, html) => {
 			if (!err) {
 				if (res.statusCode != 200)
 					err = new Error(`Failed to fetch ${league.name} daily stars for ${date} (status=${res.statusCode})`);
@@ -75,24 +86,33 @@ function downloadDailyStars() {
 			if (!data)
 				process.exit();
 
-			let stars = {data: date, forwards: [], defenders: [], goalies: []}, group;
+			let stars = {date: date, forwards: [], defenders: [], goalies: []};
+			let group;
 
 			for (let i = 0, end = data.length; i < end; i++) {
-				let starData = data[i].match(/<td(?:[^>]+)?>(.*?)<\/td>/ig).map(v => {return v.replace(/<\/?td(?:[^>]+)?>/ig, '')});
+				let starData = data[i].match(/<td(?:[^>]+)?>(.*?)<\/td>/ig).map(v => v.replace(/<\/?td(?:[^>]+)?>/ig, ''));
 
-				if (!starData)
+				if (!starData || starData.length < 7)
 					continue;
 
 				let rank = parseInt(starData[0]) || starData[0].match(/\/star\.gif/g).length;
 
-				if (rank == 1)
-					group = (!group ? stars.forwards : (group == stars.forwards ? stars.defenders : stars.goalies));
+				if (rank == 1) {
+					if (!group)
+						group = stars.forwards;
+					else if (group == stars.forwards)
+						group = stars.defenders;
+					else if (group == stars.defenders)
+						group = stars.goalies;
+					else if (group == stars.goalies)
+						break;
+				}
 
 				group.push({
 					rank: rank,
-					team: parseInt(starData[rank<4?3:1].match(/\/team(\d+)\.(png|svg)/)[1]),
+					team: parseInt(starData[1].match(/\/team(\d+)\.(png|svg)/)[1]),
 					name: starData[rank<4?2:1].replace(/(<.*?>|\(\w{1,2}\))/ig, '').trim(),
-					stats: starData.slice(-4).map(v => {return parseFloat(v)})
+					stats: starData.slice(-4).map(v => parseFloat(v))
 				});
 			}
 
@@ -100,7 +120,7 @@ function downloadDailyStars() {
 				if (err)
 					console.error(err.message);
 				else if (process.send)
-					process.send([league.id, stars], () => {process.exit()});
+					process.send([league.id, stars], () => process.exit());
 
 				if (!process.send)
 					process.exit();
@@ -112,7 +132,7 @@ function downloadDailyStars() {
 
 fs.readFile(path, (err, data) => {
 	if (!err) {
-		let current = JSON.parse(data);
+		data = JSON.parse(data);
 
 		if (data.date == date)
 			process.exit();

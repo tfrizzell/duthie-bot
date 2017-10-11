@@ -3,7 +3,6 @@
     "code": "vb",
     "split": true
   },
-  "name": "Duthie Bot",
   "prefix": "-lg",
   "token": "<your token goes here>"
 }

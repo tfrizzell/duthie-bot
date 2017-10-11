@@ -2,6 +2,8 @@ const fs = require('fs');
 const request = require('request');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
+const pkg = require(`${dir}/package.json`);
+
 const path = `${dir}/data/leagues.json`;
 let leagues = {};
 
@@ -11,11 +13,14 @@ function updateLeagues() {
 	Promise.all(
 		Object.keys(leagues).map(id => {
 			return new Promise(resolve => {
-				let league = leagues[id] || (leagues[id] = {}),
-				    regex0 = new RegExp(`<li(?:[^>]+)? custom-tab-${league.id} (?:[^>]+)?><a(?:[^>]+)?/league\\.(\\d+)/(?:[^>]+)?>.*?<span(?:[^>]+)?>(.*?)</span></a>`, 'i'),
-				    regex1 = new RegExp(`<a(?:[^>]+)?leagueid=${league.id}&(?:amp;)?seasonid=(\\d+)(?:[^>]+)?>Standings</a>`, 'i');
+				let league = leagues[id] || (leagues[id] = {});
+				let regex0 = new RegExp(`<li(?:[^>]+)? custom-tab-${league.id} (?:[^>]+)?><a(?:[^>]+)?/league\\.(\\d+)/(?:[^>]+)?>.*?<span(?:[^>]+)?>(.*?)</span></a>`, 'i');
+				let regex1 = new RegExp(`<a(?:[^>]+)?leagueid=${league.id}&(?:amp;)?seasonid=(\\d+)(?:[^>]+)?>Standings</a>`, 'i');
 
-				request(`http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=standing&leagueid=${id}&seasonid=1`, (err, res, html) => {
+				request({
+					url: `http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=standing&leagueid=${id}&seasonid=1`,
+					headers: {'User-Agent': `${pkg.name}/${pkg.version.replace(/^v+/g,'')}`}
+				}, (err, res, html) => {
 					if (!err) {
 						if (res.statusCode != 200)
 							err = new Error(`Failed to fetch information for league ${id} (status=${res.statusCode})`);
@@ -61,7 +66,7 @@ function updateLeagues() {
 				if (err)
 					console.error(err.message);
 				else if (process.send)
-					process.send(leagues, () => {process.exit()});
+					process.send(leagues, () => process.exit());
 
 				if (!process.send)
 					process.exit();

@@ -12,7 +12,7 @@ const teams = require(`${dir}/data/teams.json`);
 Promise.all(
 	data.watchers.map(watcher => {
 		return new Promise(resolve => {
-			if (watcher.type != 'games' || (watched[watcher.league] && watched[watcher.league][watcher.team]))
+			if (watcher.type != 'games' || !watcher.team || (watched[watcher.league] && watched[watcher.league][watcher.team]))
 				return resolve();
 
 			if (!watched[watcher.league])
@@ -58,10 +58,7 @@ Promise.all(
 						return fs.unlink(`${dir}/data/${file}`, resolve);
 
 					child.fork(`${dir}/scripts/download_schedule.js`, [league.id, team.id])
-						.on('message', message => {
-							if (process.send)
-								process.send(message);
-						})
+						.on('message', message => process.send && process.send(message))
 						.on('exit', resolve);
 				});
 			})
