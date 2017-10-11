@@ -20,13 +20,13 @@ let teams = require('./data/teams.json');
 /**
  * Log startup message
  */
-log(`Starting ${pkg.name} v${pkg.version.replace(/^v+/g,'')}...\n                               node.js v${process.version.replace(/^v+/g,'')}, discord.js v${Discord.version.replace(/^v+/g,'')}\n`);
+log(`Starting ${config.name} v${pkg.version.replace(/^v+/g,'')}...\n                               node.js v${process.version.replace(/^v+/g,'')}, discord.js v${Discord.version.replace(/^v+/g,'')}\n`);
 
 /**
  * Set up the Discord client event handlers, and log in
  */
 client.once('ready', () => {
-	log(`${pkg.name} has logged in to Discord and is performing startup checks...`);
+	log(`${config.name} has logged in to Discord and is performing startup checks...`);
 	client.user.setGame('initializing...');
 
 	client.guilds.forEach(guild => joinGuild(guild, false));
@@ -36,7 +36,7 @@ client.once('ready', () => {
 			leaveGuild({id: id}, false);
 	});
 
-	log(`${pkg.name} now ready and active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}!`);
+	log(`${config.name} now ready and active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}!`);
  	client.user.setGame('in testing...');
 	saveData();
 });
@@ -64,14 +64,14 @@ client.on('ready', () => {
 
 client.on('guildCreate', guild => {
 	if (!data.guilds[guild.id])
-		log(`${pkg.name} has joined guild ${guild.name}, and is now active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}`);
+		log(`${config.name} has joined guild ${guild.name}, and is now active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}`);
 
 	joinGuild(guild);
 });
 
 client.on('guildDelete', guild => {
 	if (data.guilds[guild.id])
-		log(`${pkg.name} has left guild ${guild.name || guild.id}, and is now active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}`);
+		log(`${config.name} has left guild ${guild.name || guild.id}, and is now active on ${client.guilds.size} ${client.guilds.size != 1 ? 'guilds' : 'guild'}`);
 
 	leaveGuild(guild);
 });
@@ -300,7 +300,7 @@ process.on('uncaughtException', err => {
 });
 
 process.on('exit', () => {
-	log(`Shutting down ${pkg.name} v${pkg.version.replace(/^v+/g, '')}...`);
+	log(`Shutting down ${config.name} v${pkg.version.replace(/^v+/g, '')}...`);
 	client.destroy();
 });
 

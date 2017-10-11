@@ -2,6 +2,7 @@ const fs = require('fs');
 const request = require('request');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
+const config = require(`${dir}/config.json`);
 const pkg = require(`${dir}/package.json`);
 
 const leagues = require(`${dir}/data/leagues.json`);
@@ -43,7 +44,7 @@ function downloadDailyStars() {
 	request({
 		url: `http://www.leaguegaming.com/forums/index.php?search/1/&q=${thread}&o=date&c[node]=${league.forum}`,
 		headers: {
-			'User-Agent': `${pkg.name}/${pkg.version.replace(/^v+/g,'')}`
+			'User-Agent': `${config.name}/${pkg.version.replace(/^v+/g,'')}`
 		}
 	}, (err, res, html) => {
 		if (!err) {
@@ -66,7 +67,7 @@ function downloadDailyStars() {
 		request({
 			url: `http://www.leaguegaming.com/forums/${data[1]}`,
 			headers: {
-				'User-Agent': `${pkg.name}/${pkg.version.replace(/^v+/g,'')}`
+				'User-Agent': `${config.name}/${pkg.version.replace(/^v+/g,'')}`
 			}
 		}, (err, res, html) => {
 			if (!err) {

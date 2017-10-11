@@ -2,6 +2,7 @@ const fs = require('fs');
 const request = require('request');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
+const config = require(`${dir}/config.json`);
 const pkg = require(`${dir}/package.json`);
 
 const path = `${dir}/data/leagues.json`;
@@ -19,7 +20,9 @@ function updateLeagues() {
 
 				request({
 					url: `http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league&page=standing&leagueid=${id}&seasonid=1`,
-					headers: {'User-Agent': `${pkg.name}/${pkg.version.replace(/^v+/g,'')}`}
+					headers: {
+						'User-Agent': `${config.name}/${pkg.version.replace(/^v+/g,'')}`
+					}
 				}, (err, res, html) => {
 					if (!err) {
 						if (res.statusCode != 200)

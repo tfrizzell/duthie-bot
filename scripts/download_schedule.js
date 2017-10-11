@@ -2,6 +2,7 @@ const fs = require('fs');
 const request = require('request');
 
 const dir = __dirname.replace(/\/scripts\/?$/, '');
+const config = require(`${dir}/config.json`);
 const pkg = require(`${dir}/package.json`);
 
 const leagues = require(`${dir}/data/leagues.json`);
@@ -30,7 +31,9 @@ function downloadSchedule() {
 
 	request({
 		url: `http://www.leaguegaming.com/forums/index.php?leaguegaming/league&action=league_page&page=team_page_schedule&teamid=${team.id}&leagueid=${league.id}&seasonid=${league.season}`,
-		headers: {'User-Agent': `${pkg.name}/${pkg.version.replace(/^v+/g,'')}`}
+		headers: {
+			'User-Agent': `${config.name}/${pkg.version.replace(/^v+/g,'')}`
+		}
 	}, (err, res, html) => {
 		if (!err) {
 			if (res.statusCode != 200)
