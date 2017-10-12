@@ -4,7 +4,7 @@ Hello ${message.author.username}! Here is what you need to know about ${config.p
   ${config.prefix} unwatch <type>[ <league>[ <team>]]
 
 # TYPE (required)
-  There are currently 9 valid types:
+  There are currently nine valid types:
       * all         - an alias for all other types: bidding, contract, draft, games, news, trades, waivers
       * all-news    - an alias for all other news types: bidding, contract, draft, news, trades, waivers
       * bids        - announces any winning bids that match your league and/or team filters

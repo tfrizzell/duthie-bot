@@ -84,190 +84,302 @@ client.on('message', message => {
 	let guild = message.guild ? data.guilds[message.guild.id] : null;
 
 	if (message.channel.type == 'voice')
-		return message.channel.send(`I'm sorry, ${message.author.username}, but you can't do that here!`);
+		return message.channel.send(`I'm sorry, ${escapeMarkdown(message.author.username)}, but you can't do that here!`);
 
 	let tokens = tokenize(message.content.trim());
-	let command = tokens[1].toLowerCase();
+	let command = (tokens[1] || '').toLowerCase();
+	let [type, league, team, channel, _message, oldLength] = [];
 
 	switch (command) {
-	  case 'help': {
-		  fs.readFile(`${__dirname}/help/main.txt`, 'utf8', (err, text) => {
-			  if ((tokens[2] || '').toLowerCase() == 'me')
-				  message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
-			  else
-				  message.channel.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
-		  });
-		break;
-	  }
-	  case 'ping': {
-		message.channel.send(`PONG!`);
-		break;
-	  }
-	  case 'unwatch': {
-		let type = tokens[2].trim().toLowerCase();
-
-		if ((!guild && type != 'help') || (guild && guild.admins.indexOf(message.author.id) == -1)) {
-			message.channel.send(`I'm sorry, ${message.author.username}, but you aren't allowed to do that!`);
-			break;
-		}
-
-		if (type == 'help') {
-			fs.readFile(`${__dirname}/help/unwatch.txt`, 'utf8', (err, text) => {
-				if ((tokens[3] || '').toLowerCase() == 'me')
-					  message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
-				  else
-					  message.channel.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+		case 'help':
+			fs.readFile(`${__dirname}/help/main.txt`, 'utf8', (err, text) => {
+				if ((tokens[2] || '').toLowerCase() == 'me')
+					message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+				else
+					message.channel.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
 			});
-
 			break;
-		}
 
-		if (!isValidWatcher(type)) {
-			message.channel.send(`"${tokens[2]}" is not a valid watcher type. See ${config.prefix} ${command} help for more information.`);
-			break;
-		}
+		case 'list':
+			let mode = (tokens[2] || '').trim().toLowerCase();
+			let none = true;
 
-		if (tokens[4] == 'PSN') {
-			tokens[3] += tokens[4];
-			[].slice.apply(tokens, [4, 1].concat(tokens.slice(5)));
-		}
+			switch (mode) {
+				case 'help':
+				default:
+					fs.readFile(`${__dirname}/help/list.txt`, 'utf8', (err, text) => {
+						if ((tokens[3] || '').toLowerCase() == 'me')
+							message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+						else
+							message.channel.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+					});
+				break;
 
-		let league = getLeague(tokens[3]);
-		let team = getTeam(tokens[4], league);
+				case 'league':
+				case 'leagues':
+					_message = `${('ID' + ' '.repeat(5)).substr(0, 5)}   ${('NAME' + ' '.repeat(15)).substr(0, 15)}   ${('CODE' + ' '.repeat(10)).substr(0, 10)}\n${'-'.repeat(5)}   ${'-'.repeat(15)}   ${'-'.repeat(10)}`;
+		
+					Object.keys(leagues).forEach(i => {
+						_message += `\n${(i + ' '.repeat(5)).substr(0, 5)}   ${(leagues[i].name + ' '.repeat(15)).substr(0, 15)}   ${(leagues[i].code + ' '.repeat(10)).substr(0, 10)}`;
+						none = false;
+					});
 
-		if (type == 'games' && !team) {
-			message.channel.send(`I'm sorry, ${message.author.username}, but "${tokens[4]}" is not a valid team. See ${config.prefix} ${command} help for more information.`);
-			break;
-		}
+					if (none)
+						_message += `There are no leagues available`;
 
-		let channel = null;
+					message.channel.send(escapeMarkdown(_message), {code: config.help.code, split: config.help.split});
+				break;
+	
+				case 'team':
+				case 'teams':
+					if (tokens[4] == 'PSN') {
+						tokens[3] += tokens[4];
+						[].slice.apply(tokens, [4, 1].concat(tokens.slice(5)));
+					}
+		
+					league = getLeague(tokens[3]);
+					_message = `${('ID' + ' '.repeat(5)).substr(0, 5)}   ${('NAME' + ' '.repeat(30)).substr(0, 30)}   ${('SHORTNAME' + ' '.repeat(15)).substr(0, 15)}   ${('LEAGUES' + ' '.repeat(30)).substr(0, 30)}\n${'-'.repeat(5)}   ${'-'.repeat(30)}   ${'-'.repeat(15)}   ${'-'.repeat(30)}`;
+		
+					Object.keys(teams).forEach(i => {
+						if (league && teams[i].leagues.indexOf(league.id) == -1)
+							return;
+		
+						_message += `\n${(i + ' '.repeat(5)).substr(0, 5)}   ${(teams[i].name + ' '.repeat(30)).substr(0, 30)}   ${(teams[i].shortname + ' '.repeat(15)).substr(0, 15)}   ${(teams[i].leagues.map(i => leagues[i].name).join(', ') + ' '.repeat(30)).substr(0, 30)}`;
+						none = false;
+					});
 
-		if (channel = tokens[tokens.length - 1].match(/^<\#(\d+)>$/))
-			channel = message.guild.channels.get(channel[1]);
+					if (none)
+						_message += `There are no teams available${league ? ' for ' + league.name : ''}`;
+		
+					message.channel.send(escapeMarkdown(_message), {code: config.help.code, split: config.help.split});
+				break;
 
-		if (channel === undefined) {
-			message.channel.send(`The channel you requested could not be round in your server.`);
-			break;
-		}
+				case 'watcher':
+				case 'watchers':
+					type = (tokens[3] || '').trim().toLowerCase();
 
-		let _message = {channel: '', log: ''};
-		let oldLength = data.watchers.length;
+					if (tokens[5] == 'PSN') {
+						tokens[4] += tokens[5];
+						[].slice.apply(tokens, [5, 1].concat(tokens.slice(6)));
+					}
+					
+					league = getLeague(tokens[4]);
 
-		if (type == 'all') {
-			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id));
-			_message.channel = `Ok! You are no longer watching any updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
-			_message.log = `${message.author.tag} has stopped watching all events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
-		} else if (/^all.?news$/.test(type)) {
-			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id) || !isNewsWatcher(watcher));
-			_message.channel = `Ok! You are no longer watching any news updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
-			_message.log = `${message.author.tag} has stopped watching all news events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
-		} else {
-			data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id) || (watcher.type != type));
-			_message.channel = `Ok! You are no longer watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
-			_message.log = `${message.author.tag} has stopped watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
-		}
+					if (tokens[4] && !league) {
+						message.channel.send(`I'm sorry, ${escapeMarkdown(message.author.username)}, but "${escapeMarkdown(tokens[4])}" is not a valid league. See ${config.prefix} ${command} help for more information.`);
+						break;
+					}
 
-		if (data.watchers.length != oldLength) {
-			if (_message.channel)
-				message.channel.send(_message.channel.trim().replace(/ +/g, ' '));
+					team = getTeam(tokens[5], league);
 
-			if (_message.log)
-				log(_message.log.trim().replace(/ +/g, ' '));
+					if ((type == 'games' || (tokens[5] && !tokens[5].match(/^<\#(\d+)>$/))) && !team) {
+						message.channel.send(`I'm sorry, ${escapeMarkdown(message.author.username)}, but "${escapeMarkdown(tokens[5])}" is not a valid team. See ${config.prefix} ${command} help for more information.`);
+						break;
+					}
 
-			saveData();
-		} else
-			message.channel.send(`Ok! I checked over your watcher data, and there was nothing to remove.`);
+					channel = null;
+			
+					if (channel = tokens[tokens.length - 1].match(/^<\#(\d+)>$/))
+						channel = message.guild.channels.get(channel[1]);
+			
+					if (channel === undefined) {
+						message.channel.send(`The channel you requested could not be round in your server.`);
+						break;
+					}
+
+					_message = `${('TYPE' + ' '.repeat(15)).substr(0, 15)}   ${('LEAGUE' + ' '.repeat(15)).substr(0, 15)}   ${('TEAM' + ' '.repeat(30)).substr(0, 30)}   ${('CHANNEL' + ' '.repeat(25)).substr(0, 25)}\n${'-'.repeat(15)}   ${'-'.repeat(15)}   ${'-'.repeat(30)}   ${'-'.repeat(15)}`;
+					let types = [];
+					
+					if (type == 'all' || !type)
+						types.push('bids', 'contracts', 'daily-stars', 'draft', 'games', 'news', 'trades', 'waivers');
+					else if (/^all.?news$/.test(type))
+						types.push('bids', 'contracts', 'draft', 'news', 'trades', 'waivers');
+					else
+						types.push(type);
+
+					data.watchers.forEach(watcher => {
+						if (watcher.guild != message.guild.id || (types.indexOf(watcher.type) == -1) || (league && (watcher.league != league.id)) || (team && (watcher.team != team.id)) || (channel && (watcher.channel != channel.id)))
+							return;
+						
+						let _league = getLeague(watcher.league);
+						let _team = getTeam(watcher.team, _league);
+						let _channel = message.guild.channels.get(watcher.channel);
+						_message += `\n${(watcher.type + ' '.repeat(15)).substr(0, 15)}   ${((_league ? _league.name : 'All') + ' '.repeat(15)).substr(0, 15)}   ${((_team ? _team.name : 'All') + ' '.repeat(30)).substr(0, 30)}   ${(_channel.name + ' '.repeat(15)).substr(0, 15)}`;
+						none = false;
+					});
+
+					if (none)
+						_message += `\nThere are no watchers matching your criteria`;
+		
+					message.channel.send(escapeMarkdown(_message), {code: config.help.code, split: config.help.split});
+				break;
+			}
 		break;
-	  }
-	  case 'watch': {
-		let type = tokens[2].trim().toLowerCase();
 
-		if ((!guild && type != 'help') || (guild && guild.admins.indexOf(message.author.id) == -1)) {
-			message.channel.send(`I'm sorry, ${message.author.username}, but you aren't allowed to do that!`);
-			break;
-		}
+		case 'ping':
+			message.channel.send(`PONG!`);
+		break;
+	
+		case 'unwatch':
+			type = (tokens[2] || '').trim().toLowerCase();
+	
+			if ((!guild && type != 'help') || (guild && guild.admins.indexOf(message.author.id) == -1)) {
+				message.channel.send(`I'm sorry, ${escapeMarkdown(message.author.username)}, but you aren't allowed to do that!`);
+				break;
+			}
+	
+			if (type == 'help' || !isValidWatcher(type)) {
+				fs.readFile(`${__dirname}/help/unwatch.txt`, 'utf8', (err, text) => {
+					if ((tokens[3] || '').toLowerCase() == 'me')
+						message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+					else
+						message.channel.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+				});
+	
+				break;
+			}
+	
+			if (tokens[4] == 'PSN') {
+				tokens[3] += tokens[4];
+				[].slice.apply(tokens, [4, 1].concat(tokens.slice(5)));
+			}
+	
+			league = getLeague(tokens[3]);
 
-		if (type == 'help') {
-			fs.readFile(`${__dirname}/help/watch.txt`, 'utf8', (err, text) => {
-				if ((tokens[3] || '').toLowerCase() == 'me')
-					  message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
-				  else
-					  message.channel.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
-			});
+			if (tokens[3] && !league) {
+				message.channel.send(`I'm sorry, ${escapeMarkdown(message.author.username)}, but "${escapeMarkdown(tokens[3])}" is not a valid league. See ${config.prefix} ${command} help for more information.`);
+				break;
+			}
 
-			break;
-		}
+			team = getTeam(tokens[4], league);
 
-		if (!isValidWatcher(type)) {
-			message.channel.send(`I'm sorry, ${message.author.username}, but "${tokens[2]}" is not a valid watcher type. See ${config.prefix} ${command} help for more information.`);
-			break;
-		}
+			if ((type == 'games' || (tokens[4] && !tokens[4].match(/^<\#(\d+)>$/))) && !team) {
+				message.channel.send(`I'm sorry, ${escapeMarkdown(message.author.username)}, but "${escapeMarkdown(tokens[4])}" is not a valid team. See ${config.prefix} ${command} help for more information.`);
+				break;
+			}
 
-		if (tokens[4] == 'PSN') {
-			tokens[3] += tokens[4];
-			[].slice.apply(tokens, [4, 1].concat(tokens.slice(5)));
-		}
+			channel = null;
+	
+			if (channel = tokens[tokens.length - 1].match(/^<\#(\d+)>$/))
+				channel = message.guild.channels.get(channel[1]);
+	
+			if (channel === undefined) {
+				message.channel.send(`The channel you requested could not be round in your server.`);
+				break;
+			}
+	
+			_message = {channel: '', log: ''};
+			oldLength = data.watchers.length;
+	
+			if (type == 'all') {
+				data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id));
+				_message.channel = `Ok! You are no longer watching any updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
+				_message.log = `${message.author.tag} has stopped watching all events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
+			} else if (/^all.?news$/.test(type)) {
+				data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id) || !isNewsWatcher(watcher));
+				_message.channel = `Ok! You are no longer watching any news updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
+				_message.log = `${message.author.tag} has stopped watching all news events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
+			} else {
+				data.watchers = data.watchers.filter(watcher => (watcher.guild != message.guild.id) || (league && watcher.league != league.id) || (team && watcher.team != team.id) || (channel && watcher.channel != channel.id) || (watcher.type != type));
+				_message.channel = `Ok! You are no longer watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`;
+				_message.log = `${message.author.tag} has stopped watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`;
+			}
+	
+			if (data.watchers.length != oldLength) {
+				if (_message.channel)
+					message.channel.send(escapeMarkdown(_message.channel.trim().replace(/ +/g, ' ')));
+	
+				if (_message.log)
+					log(_message.log.trim().replace(/ +/g, ' '));
+	
+				saveData();
+			} else
+				message.channel.send(`Ok! I checked over your watcher data, and there was nothing to remove.`);
+		break;
+	
+		case 'watch':
+			type = (tokens[2] || '').trim().toLowerCase();
+	
+			if ((!guild && type != 'help') || (guild && guild.admins.indexOf(message.author.id) == -1)) {
+				message.channel.send(`I'm sorry, ${escapeMarkdown(message.author.username)}, but you aren't allowed to do that!`);
+				break;
+			}
+	
+			if (type == 'help' || !isValidWatcher(type)) {
+				fs.readFile(`${__dirname}/help/watch.txt`, 'utf8', (err, text) => {
+					if ((tokens[3] || '').toLowerCase() == 'me')
+						message.author.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+					else
+						message.channel.send(eval('`' + text + '`'), {code: config.help.code, split: config.help.split});
+				});
+	
+				break;
+			}
+	
+			if (tokens[4] == 'PSN') {
+				tokens[3] += tokens[4];
+				[].slice.apply(tokens, [4, 1].concat(tokens.slice(5)));
+			}
+	
+			league = getLeague(tokens[3]);
+	
+			if (!league) {
+				message.channel.send(`I'm sorry, ${escapeMarkdown(message.author.username)}, but "${escapeMarkdown(tokens[3])}" is not a valid league. See ${config.prefix} ${command} help for more information.`);
+				break;
+			}
+	
+			team = getTeam(tokens[4], league);
 
-		let league = getLeague(tokens[3]);
-
-		if (!league) {
-			message.channel.send(`I'm sorry, ${message.author.username}, but "${tokens[3]}" is not a valid league. See ${config.prefix} ${command} help for more information.`);
-			break;
-		}
-
-		let team = getTeam(tokens[4], league);
-
-		if (type == 'games' && !team) {
-			message.channel.send(`I'm sorry, ${message.author.username}, but "${tokens[4]}" is not a valid team. See ${config.prefix} ${command} help for more information.`);
-			break;
-		}
-
-		let channel = null;
-
-		if (channel = tokens[tokens.length - 1].match(/^<\#(\d+)>$/))
-			channel = message.guild.channels.get(channel[1]);
-
-		if (channel === undefined) {
-			message.channel.send(`I'm sorry, ${message.author.username}, but the channel you requested could not be found in your server.`);
-			break;
-		} else if (!channel)
-			channel = getDefaultChannel(message.guild, guild.defaultChannel);
-
-		let _message = '';
-		let oldLength = data.watchers.length;
-		let types = [];
-
-		if (type == 'all')
-			types.push('bids', 'contracts', 'daily-stars', 'draft', 'games', 'news', 'trades', 'waivers');
-		else if (/^all.?news$/.test(type))
-			types.push('bids', 'contracts', 'draft', 'news', 'trades', 'waivers');
-		else
-			types.push(type);
-
-		types.forEach(type => {
-			let watcher = {guild: message.guild.id, channel: channel.id, league: league.id, team: team ? team.id : null, type: type};
-			let _watcher = data.watchers.filter(watcher => (watcher.guild == watcher.guild) && (watcher.channel == watcher.channel) && (watcher.league == watcher.league) && (watcher.team == watcher.team) && (watcher.type == watcher.type)).shift();
-
-			if (_watcher || (type == 'game' && !watcher.team))
-				return;
-
-			data.watchers.push(watcher);
-			log(`${message.author.tag} has started watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`);
-		});
-
-		if (oldLength != data.watchers.length) {
+			if ((type == 'games' || (tokens[4] && !tokens[4].match(/^<\#(\d+)>$/))) && !team) {
+				message.channel.send(`I'm sorry, ${escapeMarkdown(message.author.username)}, but "${escapeMarkdown(tokens[4])}" is not a valid team. See ${config.prefix} ${command} help for more information.`);
+				break;
+			}
+	
+			channel = null;
+	
+			if (channel = tokens[tokens.length - 1].match(/^<\#(\d+)>$/))
+				channel = message.guild.channels.get(channel[1]);
+	
+			if (channel === undefined) {
+				message.channel.send(`I'm sorry, ${escapeMarkdown(message.author.username)}, but the channel you requested could not be found in your server.`);
+				break;
+			} else if (!channel)
+				channel = getDefaultChannel(message.guild, guild.defaultChannel);
+	
+			_message = '';
+			oldLength = data.watchers.length;
+			let types = [];
+	
 			if (type == 'all')
-				message.channel.send(`Ok! You are now watching all updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`);
+				types.push('bids', 'contracts', 'daily-stars', 'draft', 'games', 'news', 'trades', 'waivers');
 			else if (/^all.?news$/.test(type))
-				message.channel.send(`Ok! You are now watching all news updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`);
+				types.push('bids', 'contracts', 'draft', 'news', 'trades', 'waivers');
 			else
-				message.channel.send(`Ok! You are now watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`);
-
-			saveData();
-		} else
-			message.channel.send(`Ok! I checked over your watcher data, and there was nothing new to add.`);
+				types.push(type);
+	
+			types.forEach(type => {
+				let watcher = {guild: message.guild.id, channel: channel.id, league: league.id, team: team ? team.id : null, type: type};
+				let _watcher = data.watchers.filter(watcher => (watcher.guild == watcher.guild) && (watcher.channel == watcher.channel) && (watcher.league == watcher.league) && (watcher.team == watcher.team) && (watcher.type == watcher.type)).shift();
+	
+				if (_watcher || (type == 'game' && !watcher.team))
+					return;
+	
+				data.watchers.push(watcher);
+				log(`${message.author.tag} has started watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} events${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel ' + message.guild.name + '#' + channel.name : ''}`);
+			});
+	
+			if (oldLength != data.watchers.length) {
+				if (type == 'all')
+					message.channel.send(escapeMarkdown(`Ok! You are now watching all updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`));
+				else if (/^all.?news$/.test(type))
+					message.channel.send(escapeMarkdown(`Ok! You are now watching all news updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`));
+				else
+					message.channel.send(escapeMarkdown(`Ok! You are now watching ${type.replace(/\W+/g, ' ').replace(/([^w])s$/, '$1')} updates${league || team ? ' from the' : ''}${league ? ' ' + league.name : ''}${team ? ' ' + team.name : ''}${channel ? ' in channel #' + channel.name : ''}.`));
+	
+				saveData();
+			} else
+				message.channel.send(`Ok! I checked over your watcher data, and there was nothing new to add.`);
 		break;
-	  }
 	}
 });
 
@@ -307,6 +419,10 @@ process.on('exit', () => {
 /**
  * Common functionality for easy reuasbility
  */
+function escapeMarkdown(input) {
+	return typeof input == 'string' ? input.replace(/[\*\_\~\`]/g, a => `\\${a}`) : input;
+}
+
 function getDefaultChannel(guild, channel) {
 	if (!(guild instanceof Discord.Guild))
 		guild = client.guilds.get(guild);
@@ -420,10 +536,10 @@ function sendDailyStarUpdates(league, stars) {
 
 	watchers.forEach(watcher => {
 		let forwards = stars.forwards.filter(star => !watcher.team || (watcher.team == star.team));
-		let defenders = stars.defenders.filter(star => !watcher.team || (watcher.team == s.team));
-		let goalies = stars.goalies.filter(star => !watcher.team || (watcher.team == s.team));
+		let defenders = stars.defenders.filter(star => !watcher.team || (watcher.team == star.team));
+		let goalies = stars.goalies.filter(star => !watcher.team || (watcher.team == star.team));
 
-		if (!(forwards.length + defense.length + goalies.length))
+		if (!(forwards.length + defenders.length + goalies.length))
 			return;
 
 		let guild = client.guilds.get(watcher.guild);
@@ -433,14 +549,14 @@ function sendDailyStarUpdates(league, stars) {
 			return;
 
 		let team = getTeam(watcher.team, league);
-		let message = `**Congratulations to the ${team ? (team.name + "'s ").replace(/s's $/, "s' ") : ''}${league.name} Daily Stars for ${stars.date}:**`;
+		let message = `**Congratulations to the ${team ? escapeMarkdown((team.name + "'s ").replace(/s's $/, "s' ")) : ''}${escapeMarkdown(league.name)} Daily Stars for ${escapeMarkdown(stars.date)}:**`;
 
-		forwards.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Forward _(${star.stats[0]} Points, ${star.stats[1]} Goals, ${star.stats[2]} Assists, ${star.stats[3] > 0 ? '+' : (star.stars[3] < 0 ? '-' : '')}${star.stats[3]})_`);
+		forwards.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Forward _(${star.stats[0]} Points, ${star.stats[1]} Goals, ${star.stats[2]} Assists, ${star.stats[3] > 0 ? '+' : (star.stats[3] < 0 ? '-' : '')}${star.stats[3]})_`);
 
 		if (forwards.length)
 			message += `\n`;
 
-		defenders.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Forward _(${star.stats[0]} Points, ${star.stats[1]} Goals, ${star.stats[2]} Assists, ${star.stats[3] > 0 ? '+' : (star.stars[3] < 0 ? '-' : '')}${star.stats[3]})_`);
+		defenders.forEach(star => message += `\n    * ${tagUser(star.name, guild)} - ${star.rank}${ordinal(star.rank)} Star Forward _(${star.stats[0]} Points, ${star.stats[1]} Goals, ${star.stats[2]} Assists, ${star.stats[3] > 0 ? '+' : (star.stats[3] < 0 ? '-' : '')}${star.stats[3]})_`);
 
 		if (defenders.length)
 			message += `\n`;
@@ -451,7 +567,7 @@ function sendDailyStarUpdates(league, stars) {
 
 	output.filter((value, index, array) => array.indexOf(value) == index).forEach(data => {
 		let [channel, message] = data;
-		log(`Sending message to ${channel.guild.name}#${channel.name}:\n\t${message.replace(/\n/g, '\n\t')}`);
+		log(`Sending message to ${channel.guild.name}#${channel.name}: ${message.replace(/\n/g, '\\n')}`);
 		channel.send(message)
 	});
 }
@@ -518,7 +634,7 @@ function sendNewsUpdates(league, news) {
 			else if (item.type == 'draft')
 				message = message.replace(/have drafted (.*?) (\d+\w+) overall/, (a, b, c) => `have drafted ${tagUser(b, channel.guild)} ${c} overall`);
 
-			channel.send(message)
+			channel.send(escapeMarkdown(message))
 		});
 	});
 
@@ -575,14 +691,14 @@ function sendScheduleUpdates(league, team, schedule) {
 			}
 
 			if (us.score > them.score)
-				output.push([channel, `The **${us.name}** have defeated the **${them.name}** by the score of **${us.score} to ${them.score}**!`]);
+				output.push([channel, `The **${escapeMarkdown(us.name)}** have defeated the **${escapeMarkdown(them.name)}** by the score of **${us.score} to ${them.score}**!`]);
 			else if (us.score < them.score)
-				output.push([channel, `The _${us.name}_ have been defeated by the _${them.name}_ by the score of _${them.score} to ${us.score}_.`]);
+				output.push([channel, `The _${escapeMarkdown(us.name)}_ have been defeated by the _${escapeMarkdown(them.name)}_ by the score of _${them.score} to ${us.score}_.`]);
 			else
-				output.push([channel, `The ${us} have tied the ${them.name} by the score of ${us.score} to ${them.score}.`]);
+				output.push([channel, `The ${escapeMarkdown(us.name)} have tied the ${escapeMarkdown(them.name)} by the score of ${us.score} to ${them.score}.`]);
 		});
 
-		output.filter((v,i,a) => {return a.indexOf(v)==i}).forEach(out => {
+		output.filter((value, index, array) => array.indexOf(value) == index).forEach(out => {
 			let [channel, message] = out;
 			log(`Sending message to ${channel.guild.name}#${channel.name}: ${message}`);
 			channel.send(message)
@@ -607,7 +723,7 @@ function tagUser(input, guild) {
 			user = member.user;
 	}
 
-	return user ? `<@${user.id}>` : input;
+	return user ? `<@${user.id}>` : escapeMarkdown(input);
 }
 
 function tokenize(string) {
