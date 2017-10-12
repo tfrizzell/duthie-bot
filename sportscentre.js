@@ -134,7 +134,7 @@ client.on('message', message => {
 				case 'teams':
 					if (tokens[4] == 'PSN') {
 						tokens[3] += tokens[4];
-						[].slice.apply(tokens, [4, 1].concat(tokens.slice(5)));
+						[].splice.apply(tokens, [4, 1].concat(tokens.slice(5)));
 					}
 		
 					league = getLeague(tokens[3]);
@@ -160,7 +160,7 @@ client.on('message', message => {
 
 					if (tokens[5] == 'PSN') {
 						tokens[4] += tokens[5];
-						[].slice.apply(tokens, [5, 1].concat(tokens.slice(6)));
+						[].splice.apply(tokens, [5, 1].concat(tokens.slice(6)));
 					}
 					
 					league = getLeague(tokens[4]);
@@ -241,7 +241,7 @@ client.on('message', message => {
 	
 			if (tokens[4] == 'PSN') {
 				tokens[3] += tokens[4];
-				[].slice.apply(tokens, [4, 1].concat(tokens.slice(5)));
+				[].splice.apply(tokens, [4, 1].concat(tokens.slice(5)));
 			}
 	
 			league = getLeague(tokens[3]);
@@ -318,7 +318,7 @@ client.on('message', message => {
 	
 			if (tokens[4] == 'PSN') {
 				tokens[3] += tokens[4];
-				[].slice.apply(tokens, [4, 1].concat(tokens.slice(5)));
+				[].splice.apply(tokens, [4, 1].concat(tokens.slice(5)));
 			}
 	
 			league = getLeague(tokens[3]);
