@@ -359,7 +359,7 @@ client.on('message', message => {
 	
 			types.forEach(type => {
 				let watcher = {guild: message.guild.id, channel: channel.id, league: league.id, team: team ? team.id : null, type: type};
-				let _watcher = data.watchers.filter(watcher => (watcher.guild == watcher.guild) && (watcher.channel == watcher.channel) && (watcher.league == watcher.league) && (watcher.team == watcher.team) && (watcher.type == watcher.type)).shift();
+				let _watcher = data.watchers.filter(_watcher => (watcher.guild == _watcher.guild) && (watcher.channel == _watcher.channel) && (watcher.league == _watcher.league) && (watcher.team == _watcher.team) && (watcher.type == _watcher.type)).shift();
 	
 				if (_watcher || (type == 'game' && !watcher.team))
 					return;
