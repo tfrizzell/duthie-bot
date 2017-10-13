@@ -98,9 +98,9 @@ Removes a watcher from your server's **Duthie Bot** data.
   If specifying a team by name, be sure to wrap it in quotes (ex: "Toronto Maple Leafs") or remove any spaces (ex: TorontoMapleLeafs).
 ```
 
-#### Unwatch
+#### Watch
 Adds a watcher to your server's **Duthie Bot** data.
-```vg
+```vb
 # SYNTAX
   -lg watch <type> <league>[ <team>[ <channel>]]
 
