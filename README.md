@@ -19,7 +19,7 @@ Once **Duthie Bot** has been added to your server, you will need to grant it per
 
 Configuration
 =============
-From a channel **Duthie Bot** has access to, send the message `-lg help` to get started. This section will be expanded to include detailed instructions over time.
+From a channel **Duthie Bot** has access to, send the message `-lg help` to get started, or read the [Commands](#commands) section below.
 
 Commands
 ========
