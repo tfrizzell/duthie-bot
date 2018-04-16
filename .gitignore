@@ -1,1 +1,3 @@
-/.project
+/node_modules/
+duthie-bot.db
+package-lock.json
