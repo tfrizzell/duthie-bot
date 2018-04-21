@@ -2,7 +2,7 @@
   "name": "duthie-bot",
   "version": "2.0.0",
   "description": "Duthie Bot informs your Discord server of the latest news and scores from any of the EA NHL leagues hosted at LeagueGaming.com and MyVirtualGaming.com",
-  "main": "duthie-bot.js",
+  "main": "duthie.js",
   "dependencies": {
     "cron": "^1.3.0",
     "discord.js": "^11.2.1",
@@ -13,7 +13,7 @@
     "xml2json": "^0.11.2"
   },
   "scripts": {
-    "start": "node duthie-bot.js"
+    "start": "node duthie.js"
   },
   "author": "Trevor Frizzell",
   "license": "MIT"

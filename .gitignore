@@ -1,5 +1,6 @@
 /help/
 /node_modules/
 /scripts/
-duthie-bot.db
+duthie.db
+duthie.db-journal
 package-lock.json
