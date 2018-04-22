@@ -1,6 +1,9 @@
-PRAGMA foreign_keys=off;
 BEGIN TRANSACTION;
 
+
+/**
+ * CREATE TABLES ...
+ */
 CREATE TABLE data_games (
  id integer NOT NULL PRIMARY KEY,
  leagueId integer NOT NULL REFERENCES leagues (id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -18,28 +21,35 @@ CREATE TABLE data_news (
  id integer NOT NULL PRIMARY KEY,
  leagueId text NOT NULL REFERENCES leagues (id) ON DELETE CASCADE ON UPDATE CASCADE,
  newsId text NOT NULL,
- teams text NOT NULL DEFAULT '',
  message text NOT NULL,
  timestamp text NOT NULL,
  queued integer NOT NULL DEFAULT 1,
  UNIQUE (leagueId, newsId)
 );
 
-CREATE TABLE guilds (
- guildId text NOT NULL PRIMARY KEY,
- defaultChannelId text,
- deleted integer
-) WITHOUT ROWID;
+CREATE TABLE data_news_team_map (
+ newsId integer NOT NULL REFERENCES data_news (id) ON DELETE CASCADE ON UPDATE CASCADE,
+ siteId integer NOT NULL REFERENCES sites (id) ON DELETE CASCADE ON UPDATE CASCADE,
+ mappedTeamId text NOT NULL,
+ PRIMARY KEY (newsId, siteId, mappedTeamId),
+ FOREIGN KEY (siteId, mappedTeamId) REFERENCES team_map (siteId, mappedTeamId) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
 CREATE TABLE guild_admins (
- guildId text NOT NULL REFERENCES guilds (guildId) ON DELETE CASCADE ON UPDATE CASCADE,
+ guildId text NOT NULL REFERENCES guilds (id) ON DELETE CASCADE ON UPDATE CASCADE,
  memberId text NOT NULL,
  PRIMARY KEY (guildId, memberId)
 ) WITHOUT ROWID;
 
-CREATE TABLE league_teams (
- leagueId integer NOT NULL REFERENCES sites (id) ON DELETE CASCADE ON UPDATE CASCADE,
- teamId text NOT NULL REFERENCES teams (teamId) ON DELETE CASCADE ON UPDATE CASCADE,
+CREATE TABLE guilds (
+ id text NOT NULL PRIMARY KEY,
+ defaultChannelId text,
+ archived text
+) WITHOUT ROWID;
+
+CREATE TABLE league_team_map (
+ leagueId integer NOT NULL REFERENCES leagues (id) ON DELETE CASCADE ON UPDATE CASCADE,
+ teamId integer NOT NULL REFERENCES teams (id) ON DELETE CASCADE ON UPDATE CASCADE,
  PRIMARY KEY (leagueId, teamId)
 ) WITHOUT ROWID;
 
@@ -50,49 +60,134 @@ CREATE TABLE leagues (
  name text NOT NULL UNIQUE,
  codename text NOT NULL UNIQUE,
  extraData text NOT NULL DEFAULT '{}',
- enabled integer NOT NULL DEFAULT 1,
+ disabled integer NOT NULL DEFAULT 0,
  UNIQUE (siteId, leagueId)
 );
 
 CREATE TABLE sites (
  id integer NOT NULL PRIMARY KEY,
  siteId text UNIQUE,
- name text NOT NULL UNIQUE,
- enabled integer NOT NULL DEFAULT 1
+ name text NOT NULL UNIQUE
 );
 
-CREATE TABLE teams (
+CREATE TABLE team_map (
  siteId integer NOT NULL REFERENCES sites (id) ON DELETE CASCADE ON UPDATE CASCADE,
- teamId text NOT NULL,
- name text NOT NULL,
- shortname text NOT NULL,
- PRIMARY KEY (siteId, teamId)
+ mappedTeamId text NOT NULL,
+ teamId integer NOT NULL REFERENCES teams (id) ON DELETE CASCADE ON UPDATE CASCADE,
+ PRIMARY KEY(siteId, mappedTeamId)
 ) WITHOUT ROWID;
+
+CREATE TABLE teams (
+ id integer NOT NULL PRIMARY KEY,
+ name text NOT NULL UNIQUE,
+ shortname text NOT NULL,
+ codename text UNIQUE
+);
 
 CREATE TABLE watcher_types (
  id integer NOT NULL PRIMARY KEY,
- name text UNIQUE,
- enabled integer NOT NULL DEFAULT 1
+ name text UNIQUE
 );
 
 CREATE TABLE watchers (
  id integer NOT NULL PRIMARY KEY,
- guildId text NOT NULL REFERENCES guilds (guildId) ON DELETE CASCADE ON UPDATE CASCADE,
+ guildId text NOT NULL REFERENCES guilds (id) ON DELETE CASCADE ON UPDATE CASCADE,
  typeId integer NOT NULL REFERENCES watcher_types (id) ON DELETE CASCADE ON UPDATE CASCADE,
  leagueId integer NOT NULL REFERENCES leagues (id) ON DELETE CASCADE ON UPDATE CASCADE,
  teamId integer REFERENCES teams (id) ON DELETE CASCADE ON UPDATE CASCADE,
  channelId integer NOT NULL DEFAULT '',
- deleted integer,
+ archived text,
  UNIQUE (guildId, typeId, leagueId, teamId, channelId)
 );
 
-CREATE TRIGGER queue_game AFTER UPDATE ON data_games
-WHEN 
-	IFNULL(new.queued, 0) != 1 AND new.visitorScore IS NOT NULL AND new.homeScore IS NOT NULL AND 
-	(new.visitorTeam != old.visitorTeam OR new.visitorScore != IFNULL(old.visitorScore, -1) OR new.homeTeam != old.homeTeam OR new.homeScore != IFNULL(old.homeScore, -1))
+
+/**
+ * CREATE TRIGGERS ...
+ */
+CREATE TRIGGER game_queue AFTER UPDATE ON data_games
+WHEN
+	IFNULL(NEW.queued, 0) != 1 AND NEW.visitorScore IS NOT NULL AND NEW.homeScore IS NOT NULL AND
+	(NEW.visitorTeam != OLD.visitorTeam OR NEW.visitorScore != IFNULL(OLD.visitorScore, -1) OR NEW.homeTeam != OLD.homeTeam OR NEW.homeScore != IFNULL(OLD.homeScore, -1))
 BEGIN
-	UPDATE data_games SET queued = 1 WHERE id = new.id;
+	UPDATE data_games SET queued = 1 WHERE id = NEW.id;
 END;
 
+CREATE TRIGGER news_team_added AFTER INSERT ON data_news_team_map
+WHEN
+	(SELECT message FROM data_news WHERE id = NEW.newsId) LIKE '%::team%::%'
+BEGIN
+	UPDATE data_news SET message = REPLACE(message, '::team' || NEW.mappedTeamId || '::', (SELECT team.name FROM team_map map JOIN teams team ON team.id = map.teamId WHERE map.siteId = NEW.siteId AND map.mappedTeamId = NEW.mappedTeamId)) WHERE id = NEW.newsId;
+END;
+
+CREATE TRIGGER team_create_codename AFTER INSERT ON teams
+BEGIN
+	UPDATE teams SET codename = UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(NEW.name, '/', ''), '-', ''), '''', ''), '.', ''), ' ', '')) WHERE id = NEW.id;
+END;
+
+CREATE TRIGGER team_update_codename AFTER UPDATE ON teams
+WHEN
+	NEW.codename != OLD.codename OR NEW.codename = ''
+BEGIN
+	UPDATE teams SET codename = UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(NEW.name, '/', ''), '-', ''), '''', ''), '.', ''), ' ', '')) WHERE id = NEW.id;
+END;
+
+
+/**
+ * CREATE VIEWS ...
+ */
+CREATE VIEW games AS SELECT
+ game.id,
+ game.leagueId,
+ league.name AS leagueName,
+ game.gameId,
+ game.timestamp,
+ visitor.id AS visitorTeam,
+ visitor.name AS visitorName,
+ visitor.shortname AS visitorShortname,
+ game.visitorScore,
+ home.id AS homeTeam,
+ home.name AS homeName,
+ home.shortname AS homeShortname,
+ game.homeScore,
+ game.queued
+FROM
+ data_games game
+ JOIN leagues league ON league.id = game.leagueId
+ LEFT JOIN team_map vis ON vis.siteId = league.siteId AND vis.mappedTeamId = game.visitorTeam
+ LEFT JOIN teams visitor ON visitor.id = vis.teamId
+ LEFT JOIN team_map hom ON hom.siteId = league.siteId AND hom.mappedTeamId = game.homeTeam
+ LEFT JOIN teams home ON home.id = hom.teamId
+WHERE
+ league.disabled = 0
+GROUP BY
+ game.id
+ORDER BY
+ game.timestamp ASC,
+ game.gameId ASC,
+ game.id ASC;
+
+CREATE VIEW news AS SELECT
+ news.id,
+ news.leagueId,
+ league.name AS leagueName,
+ news.newsId,
+ GROUP_CONCAT(team.id) AS teams,
+ news.message,
+ news.timestamp,
+ news.queued
+FROM
+ data_news news
+ JOIN leagues league ON league.id = news.leagueId
+ LEFT JOIN data_news_team_map map ON map.newsId = news.id
+ LEFT JOIN team_map teams ON teams.siteId = league.siteId AND teams.mappedTeamId = map.mappedTeamId
+ LEFT JOIN teams team ON team.id = teams.teamId
+WHERE
+ league.disabled = 0
+GROUP BY
+ news.id
+ORDER BY
+ news.timestamp ASC,
+ news.id ASC;
+
+
 COMMIT;
-PRAGMA foreign_keys=on;

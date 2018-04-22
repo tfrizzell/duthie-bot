@@ -2,6 +2,12 @@
 
 
 ///////////////////////////////////////
+//         LOAD DEPENDENCIES         //
+///////////////////////////////////////
+const Discord = require('discord.js');
+
+
+///////////////////////////////////////
 //     GLOBAL VARIABLE CREATION      //
 ///////////////////////////////////////
 global.config = global.config || require('./config.json');
@@ -28,12 +34,6 @@ global.prepareStatement = (...args) => {
 	stmts.push(stmt);
 	return stmt;
 };
-
-
-///////////////////////////////////////
-//         LOAD DEPENDENCIES         //
-///////////////////////////////////////
-const Discord = require('discord.js');
 
 
 ///////////////////////////////////////
@@ -98,7 +98,7 @@ require('./lib/node/cleanup')(() => Promise.all([
 		});
 
 		while (stmts.length > 0) {
-			stmts[0].finalize();
+			db.finalize(stmts[0]);
 		}
 
 		db.close(err => {
