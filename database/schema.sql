@@ -4,6 +4,19 @@ BEGIN TRANSACTION;
 /**
  * CREATE TABLES ...
  */
+ CREATE TABLE data_daily_stars (
+ leagueId integer NOT NULL REFERENCES leagues (id) ON DELETE CASCADE ON UPDATE CASCADE,
+ posGroup text NOT NULL,
+ rank integer NOT NULL,
+ team text NOT NULL,
+ name text NOT NULL,
+ position text NOT NULL,
+ metadata text NOT NULL DEFAULT '{}',
+ timestamp text NOT NULL,
+ queued integer NOT NULL DEFAULT 1,
+ PRIMARY KEY (leagueId, posGroup, rank)
+) WITHOUT ROWID;
+
 CREATE TABLE data_games (
  id integer NOT NULL PRIMARY KEY,
  leagueId integer NOT NULL REFERENCES leagues (id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -135,6 +148,35 @@ END;
 /**
  * CREATE VIEWS ...
  */
+ CREATE VIEW daily_stars AS SELECT
+ star.leagueId,
+ league.name AS leagueName,
+ star.posGroup AS 'group',
+ star.rank,
+ team.id AS teamId,
+ team.name AS teamName,
+ star.name AS playerName,
+ star.position,
+ star.metadata,
+ star.timestamp,
+ star.queued
+FROM
+ data_daily_stars star
+ JOIN leagues league ON league.id = star.leagueId
+ JOIN team_map map ON map.siteId = league.siteId AND map.mappedTeamId = star.team
+ JOIN teams team ON team.id = map.teamId
+WHERE
+ league.disabled = 0
+ORDER BY
+ CASE
+  WHEN star.posGroup = 'forwards' THEN 1
+  WHEN star.posGroup = 'defenders' THEN 2
+  WHEN star.posGroup = 'goalies' THEN 3
+  ELSE 4
+ END,
+ star.posGroup ASC,
+ star.rank ASC;
+
 CREATE VIEW games AS SELECT
  game.id,
  game.leagueId,
