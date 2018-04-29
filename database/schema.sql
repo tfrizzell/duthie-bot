@@ -35,6 +35,7 @@ CREATE TABLE data_news (
  leagueId text NOT NULL REFERENCES leagues (id) ON DELETE CASCADE ON UPDATE CASCADE,
  newsId text NOT NULL,
  message text NOT NULL,
+ type text DEFAULT NULL,
  timestamp text NOT NULL,
  queued integer NOT NULL DEFAULT 1,
  UNIQUE (leagueId, newsId)
@@ -215,6 +216,7 @@ CREATE VIEW news AS SELECT
  news.newsId,
  GROUP_CONCAT(team.id) AS teams,
  news.message,
+ news.type,
  news.timestamp,
  news.queued
 FROM
