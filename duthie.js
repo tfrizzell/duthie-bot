@@ -46,11 +46,8 @@ logger.info(`Starting ${config.name} v${pkg.version.replace(/^v+/g, '')} with no
 //   DISCORD CLIENT INITIALIZATION   //
 ///////////////////////////////////////
 global.client = new Discord.Client();
-const cleanupClient = require('./lib/discord');
-
-client.login(config.token).then(() => {
-	logger.info('Opened connection to Discord');
-});
+require('./lib/discord');
+client.login(config.token);
 
 
 ///////////////////////////////////////
