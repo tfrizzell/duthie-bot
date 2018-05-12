@@ -150,15 +150,15 @@ INSERT INTO teams (id, name, shortname) VALUES
  (121, 'Victoriaville Tigres', 'Tigres'), 
  (122, 'Windsor Spitfires', 'Spitfires');
 
-INSERT INTO watcher_types (id, name) VALUES 
- (1, 'bids'),
- (2, 'contracts'),
- (3, 'daily-stars'),
- (4, 'draft'),
- (5, 'games'),
- (6, 'news'),
- (7, 'trades'),
- (8, 'waivers');
+INSERT INTO watcher_types (id, name, description) VALUES 
+ (1, 'bids', 'tracks and announces winning bids'),
+ (2, 'contracts', 'tracks and announces new contracts'),
+ (3, 'daily-stars', 'tracks and announced daily stars'),
+ (4, 'draft', 'tracks and announces new draft picks'),
+ (5, 'games', 'tracks and announces game results'),
+ (6, 'news', 'tracks and announces non-specific news items'),
+ (7, 'trades', 'tracks and announces trades'),
+ (8, 'waivers', 'tracks and announces players played on, or claimed off, waivers');
 
 COMMIT;
 PRAGMA foreign_keys=on;

@@ -100,7 +100,8 @@ CREATE TABLE teams (
 
 CREATE TABLE watcher_types (
  id integer NOT NULL PRIMARY KEY,
- name text UNIQUE
+ name text UNIQUE,
+ description text NOT NULL
 );
 
 CREATE TABLE watchers (
@@ -109,7 +110,7 @@ CREATE TABLE watchers (
  typeId integer NOT NULL REFERENCES watcher_types (id) ON DELETE CASCADE ON UPDATE CASCADE,
  leagueId integer NOT NULL REFERENCES leagues (id) ON DELETE CASCADE ON UPDATE CASCADE,
  teamId integer REFERENCES teams (id) ON DELETE CASCADE ON UPDATE CASCADE,
- channelId integer NOT NULL DEFAULT '',
+ channelId text,
  archived text,
  UNIQUE (guildId, typeId, leagueId, teamId, channelId)
 );
