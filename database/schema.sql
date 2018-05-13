@@ -57,7 +57,6 @@ CREATE TABLE guild_admins (
 
 CREATE TABLE guilds (
  id text NOT NULL PRIMARY KEY,
- defaultChannelId text,
  archived text
 ) WITHOUT ROWID;
 
@@ -95,7 +94,8 @@ CREATE TABLE teams (
  id integer NOT NULL PRIMARY KEY,
  name text NOT NULL UNIQUE,
  shortname text NOT NULL,
- codename text UNIQUE
+ codename text UNIQUE,
+ codeshortname text
 );
 
 CREATE TABLE watcher_types (
@@ -136,14 +136,20 @@ END;
 
 CREATE TRIGGER team_create_codename AFTER INSERT ON teams
 BEGIN
-	UPDATE teams SET codename = UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(NEW.name, '/', ''), '-', ''), '''', ''), '.', ''), ' ', '')) WHERE id = NEW.id;
+	UPDATE teams SET
+		codename = UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(NEW.name, '/', ''), '-', ''), '''', ''), '.', ''), ' ', '')),
+		codeshortname = UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(NEW.shortname, '/', ''), '-', ''), '''', ''), '.', ''), ' ', ''))
+	WHERE id = NEW.id;
 END;
 
 CREATE TRIGGER team_update_codename AFTER UPDATE ON teams
 WHEN
 	NEW.codename != OLD.codename OR NEW.codename = ''
 BEGIN
-	UPDATE teams SET codename = UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(NEW.name, '/', ''), '-', ''), '''', ''), '.', ''), ' ', '')) WHERE id = NEW.id;
+	UPDATE teams SET 
+		codename = UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(NEW.name, '/', ''), '-', ''), '''', ''), '.', ''), ' ', '')),
+		codeshortname = UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(NEW.shortname, '/', ''), '-', ''), '''', ''), '.', ''), ' ', ''))
+	WHERE id = NEW.id;
 END;
 
 
