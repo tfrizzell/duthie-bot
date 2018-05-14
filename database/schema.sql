@@ -119,6 +119,44 @@ CREATE TABLE watchers (
 /**
  * CREATE TRIGGERS ...
  */
+CREATE TRIGGER check_unique_watcher_insert BEFORE INSERT ON watchers
+WHEN
+	NEW.teamId IS NULL OR NEW.channelId IS NULL
+BEGIN
+	SELECT CASE WHEN((
+		SELECT 1 FROM watchers 
+			WHERE 
+				guildId = NEW.guildId AND 
+				typeId = NEW.typeId AND 
+				leagueId = NEW.leagueId AND 
+				(teamId = NEW.teamId OR (teamId IS NULL AND NEW.teamId IS NULL)) AND
+				(channelId = NEW.channelId OR (channelId IS NULL AND NEW.channelId IS NULL)) AND
+				archived IS NULL
+		) NOTNULL)
+	THEN
+		RAISE(ABORT, "UNIQUE constraint failed: watchers.id")
+	END;
+END;
+
+CREATE TRIGGER check_unique_watcher_update BEFORE UPDATE ON watchers
+WHEN
+	NEW.teamId IS NULL OR NEW.channelId IS NULL
+BEGIN
+	SELECT CASE WHEN((
+		SELECT 1 FROM watchers 
+			WHERE 
+				guildId = NEW.guildId AND 
+				typeId = NEW.typeId AND 
+				leagueId = NEW.leagueId AND 
+				(teamId = NEW.teamId OR (teamId IS NULL AND NEW.teamId IS NULL)) AND
+				(channelId = NEW.channelId OR (channelId IS NULL AND NEW.channelId IS NULL)) AND
+				archived IS NULL
+		) NOTNULL)
+	THEN
+		RAISE(ABORT, "UNIQUE constraint failed: watchers.id")
+	END;
+END;
+
 CREATE TRIGGER game_queue AFTER UPDATE ON data_games
 WHEN
 	IFNULL(NEW.queued, 0) != 1 AND NEW.visitorScore IS NOT NULL AND NEW.homeScore IS NOT NULL AND
