@@ -1,39 +1,15 @@
 'use strict';
 
-
 ///////////////////////////////////////
 //         LOAD DEPENDENCIES         //
 ///////////////////////////////////////
 const Discord = require('discord.js');
 
+const db = require('./lib/db');
+const logger = require('./lib/logger');
 
-///////////////////////////////////////
-//     GLOBAL VARIABLE CREATION      //
-///////////////////////////////////////
-global.config = global.config || require('./config.json');
-global.db = global.db || require('./lib/db');
-global.logger = global.logger || require('./lib/logger');
-global.pkg = global.pkg || require('./package.json');
-
-
-///////////////////////////////////////
-//    PREPARED STATEMENT REGISTRY    //
-///////////////////////////////////////
-const stmts = [];
-
-global.prepareStatement = (...args) => {
-	const stmt = db.prepare(...args);
-	const finalize = stmt.finalize.bind(stmt);
-
-	stmt.finalize = (...args) => {
-		const result = finalize(...args);
-		stmts.splice(stmts.indexOf(stmt), 1);
-		return result;
-	};
-
-	stmts.push(stmt);
-	return stmt;
-};
+const config = require('./config.json');
+const pkg = require('./package.json');
 
 
 ///////////////////////////////////////
@@ -45,7 +21,7 @@ logger.info(`Starting ${config.name} v${pkg.version.replace(/^v+/g, '')} with no
 ///////////////////////////////////////
 //   DISCORD CLIENT INITIALIZATION   //
 ///////////////////////////////////////
-global.client = new Discord.Client();
+const client = require('./lib/discord/client').create();
 require('./lib/discord');
 client.login(config.token);
 
@@ -92,19 +68,15 @@ require('./lib/node/cleanup')(() => Promise.all([
 			if (err) {
 				logger.error(err);
 			}
-		});
 
-		while (stmts.length > 0) {
-			db.finalize(stmts[0]);
-		}
-
-		db.close(err => {
-			if (err) {
-				logger.error(err);
-			}
-
-			logger.info('Closed connection to database');
-			resolve();
+			db.close(err => {
+				if (err) {
+					logger.error(err);
+				}
+	
+				logger.info('Closed connection to database');
+				resolve();
+			});
 		});
 	})
 ]));
