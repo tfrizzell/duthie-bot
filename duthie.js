@@ -23,7 +23,10 @@ logger.info(`Starting ${config.name} v${pkg.version.replace(/^v+/g, '')} with no
 ///////////////////////////////////////
 const client = require('./lib/discord/client').create();
 require('./lib/discord');
-client.login(config.token);
+
+client
+	.login(config.token)
+	.catch(err => {client.emit('error', err)});
 
 
 ///////////////////////////////////////
@@ -43,7 +46,7 @@ require('./lib/node/exceptions');
 
 require('./lib/node/cleanup')(() => Promise.all([
 	new Promise(resolve => {
-		if (client.status !== 0) {
+		if (client === null) {
 			return resolve();
 		}
 
