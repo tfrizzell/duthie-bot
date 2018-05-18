@@ -1,21 +1,21 @@
 PRAGMA foreign_keys=off;
 BEGIN TRANSACTION;
 
-INSERT INTO leagues (id, siteId, leagueId, name, codename, extraData, disabled) VALUES 
- (1, 1, 37, 'LGHL', 'LGHL', '{"forumId":128,"seasonId":29}', 0),
- (2, 1, 38, 'LGAHL', 'LGAHL', '{"forumId":439,"seasonId":29}', 0),
- (3, 1, 39, 'LGCHL', 'LGCHL', '{"forumId":371,"seasonId":29}', 0),
- (4, 1, 67, 'LGHL PSN', 'LGHLPSN', '{"forumId":586,"seasonId":7}', 0),
- (5, 1, 68, 'LGAHL PSN', 'LGAHLPSN', '{"forumId":595,"seasonId":7}', 0),
- (6, 1, 69, 'LGCHL PSN', 'LGCHLPSN', '{"forumId":610,"seasonId":7}', 0),
- (7, 1, 90, 'ESHL', 'ESHL', '{"forumId":469,"seasonId":4}', 0),
- (8, 1, 91, 'ESHL PSN', 'ESHL PSN', '{"forumId":605,"seasonId":3}', 0),
- (9, 1, 97, 'LG World Cup', 'LGWORLDCUP', '{"forumId":187,"seasonId":2}', 0),
- (10, 2, 'vgnhl', 'VG NHL', 'VGNHL', '{}', 0),
- (11, 2, 'vgahl', 'VG AHL', 'VGAHL', '{}', 0),
- (12, 2, 'vgphl', 'VG PHL', 'VGPHL', '{}', 0),
- (13, 2, 'vghlwc', 'VG World Championship', 'VGWC', '{}', 0),
- (14, 2, 'vghlclub', 'VG Club', 'VGCLUB', '{}', 1);
+INSERT INTO leagues (id, siteId, leagueId, name, codename, extraData, customTeams, disabled) VALUES 
+ (1, 1, 37, 'LGHL', 'LGHL', '{"forumId":128,"seasonId":29}', 0, 0),
+ (2, 1, 38, 'LGAHL', 'LGAHL', '{"forumId":439,"seasonId":29}', 0, 0),
+ (3, 1, 39, 'LGCHL', 'LGCHL', '{"forumId":371,"seasonId":29}', 0, 0),
+ (4, 1, 67, 'LGHL PSN', 'LGHLPSN', '{"forumId":586,"seasonId":7}', 0, 0),
+ (5, 1, 68, 'LGAHL PSN', 'LGAHLPSN', '{"forumId":595,"seasonId":7}', 0, 0),
+ (6, 1, 69, 'LGCHL PSN', 'LGCHLPSN', '{"forumId":610,"seasonId":7}', 0, 0),
+ (7, 1, 90, 'ESHL', 'ESHL', '{"forumId":469,"seasonId":4}', 1, 0),
+ (8, 1, 91, 'ESHL PSN', 'ESHL PSN', '{"forumId":605,"seasonId":3}', 1, 0),
+ (9, 1, 97, 'LG World Cup', 'LGWORLDCUP', '{"forumId":187,"seasonId":2}', 1, 0),
+ (10, 2, 'vgnhl', 'VG NHL', 'VGNHL', '{}', 0, 0),
+ (11, 2, 'vgahl', 'VG AHL', 'VGAHL', '{}', 0, 0),
+ (12, 2, 'vgphl', 'VG PHL', 'VGPHL', '{}', 0, 0),
+ (13, 2, 'vghlwc', 'VG World Championship', 'VGWC', '{}', 1, 0),
+ (14, 2, 'vghlclub', 'VG Club', 'VGCLUB', '{}', 1, 0);
 
 INSERT INTO sites (id, siteId, name) VALUES
  (1, 'leaguegaming', 'LeagueGaming.com'),

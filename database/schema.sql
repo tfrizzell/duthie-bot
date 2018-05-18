@@ -73,6 +73,7 @@ CREATE TABLE leagues (
  name text NOT NULL UNIQUE,
  codename text NOT NULL UNIQUE,
  extraData text NOT NULL DEFAULT '{}',
+ customTeams integer NOT NULL DEFAULT 0,
  disabled integer NOT NULL DEFAULT 0,
  UNIQUE (siteId, leagueId)
 );
@@ -237,6 +238,7 @@ CREATE VIEW games AS SELECT
  home.name AS homeName,
  home.shortname AS homeShortname,
  game.homeScore,
+ league.customTeams,
  game.queued
 FROM
  data_games game
