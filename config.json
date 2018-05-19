@@ -1,5 +1,6 @@
 {
   "name": "Duthie Bot",
   "prefix": "-lg",
-  "token": ""
+  "token": "",
+  "dbfile": "duthie.db"
 }
