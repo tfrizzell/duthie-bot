@@ -67,19 +67,13 @@ require('./lib/node/cleanup')(() => Promise.all([
 			return resolve();
 		}
 
-		db.commit(err => {
+		db.close(err => {
 			if (err) {
 				logger.error(err);
 			}
 
-			db.close(err => {
-				if (err) {
-					logger.error(err);
-				}
-	
-				logger.info('Closed connection to database');
-				resolve();
-			});
+			logger.info('Closed connection to database');
+			resolve();
 		});
 	})
 ]));

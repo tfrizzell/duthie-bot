@@ -168,9 +168,9 @@ END;
 
 CREATE TRIGGER news_team_added AFTER INSERT ON data_news_team_map
 WHEN
-	(SELECT message FROM data_news WHERE id = NEW.newsId) LIKE '%::team%::%'
+	(SELECT message FROM data_news WHERE id = NEW.newsId) LIKE '%::team=%::%'
 BEGIN
-	UPDATE data_news SET message = REPLACE(message, '::team' || NEW.mappedTeamId || '::', (SELECT team.name FROM team_map map JOIN teams team ON team.id = map.teamId WHERE map.siteId = NEW.siteId AND map.mappedTeamId = NEW.mappedTeamId)) WHERE id = NEW.newsId;
+	UPDATE data_news SET message = REPLACE(message, '::team=' || NEW.mappedTeamId || '::', (SELECT team.name FROM team_map map JOIN teams team ON team.id = map.teamId WHERE map.siteId = NEW.siteId AND map.mappedTeamId = NEW.mappedTeamId)) WHERE id = NEW.newsId;
 END;
 
 CREATE TRIGGER team_create_codename AFTER INSERT ON teams
@@ -265,6 +265,7 @@ CREATE VIEW news AS SELECT
  news.message,
  news.type,
  news.timestamp,
+ league.customTeams,
  news.queued
 FROM
  data_news news
