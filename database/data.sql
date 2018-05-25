@@ -154,7 +154,7 @@ INSERT INTO watcher_types (id, name, description) VALUES
  (1, 'bids', 'tracks and announces winning bids'),
  (2, 'contracts', 'tracks and announces new contracts'),
  (3, 'daily-stars', 'tracks and announced daily stars'),
- (4, 'draft', 'tracks and announces new draft picks'),
+ (4, 'drafts', 'tracks and announces new draft picks'),
  (5, 'games', 'tracks and announces game results'),
  (6, 'news', 'tracks and announces non-specific news items'),
  (7, 'trades', 'tracks and announces trades'),
