@@ -122,7 +122,7 @@ CREATE TABLE watchers (
  */
 CREATE TRIGGER check_unique_watcher_insert BEFORE INSERT ON watchers
 WHEN
-	NEW.teamId IS NULL OR NEW.channelId IS NULL
+	(NEW.teamId IS NULL OR NEW.channelId IS NULL) AND NEW.archived IS NULL
 BEGIN
 	SELECT CASE WHEN((
 		SELECT 1 FROM watchers 
@@ -141,7 +141,7 @@ END;
 
 CREATE TRIGGER check_unique_watcher_update BEFORE UPDATE ON watchers
 WHEN
-	NEW.teamId IS NULL OR NEW.channelId IS NULL
+	(NEW.teamId IS NULL OR NEW.channelId IS NULL) AND NEW.archived IS NULL
 BEGIN
 	SELECT CASE WHEN((
 		SELECT 1 FROM watchers 
