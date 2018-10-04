@@ -1,6 +1,6 @@
 Duthie Bot
 ===============
-Originally written as a [Discord](https://discordapp.com/) webhook powered by a series of [PHP scripts](http://php.net/), **Duthie Bot** has been reinvented as a [Discord](https://discordapp.com/) bot written in [Node.js](https://nodejs.org/). Providing features such as game updates, news tracking, and daily star reporting, **Duthie Bot** is the perfect addition to your [LeagueGaming.com](https://www.leaguegaming.com) or [MyVirtualGaming.com](https://vghl.myvirtualgaming.com/) EA NHL team server.
+Originally written as a [Discord](https://discordapp.com/) webhook powered by a series of [PHP scripts](http://php.net/), **Duthie Bot** has been reinvented as a [Discord](https://discordapp.com/) bot written in [Node.js](https://nodejs.org/). Providing features such as game updates, news tracking, and daily star reporting, **Duthie Bot** is the perfect addition to your [LeagueGaming.com](https://www.leaguegaming.com), [MyVirtualGaming.com](https://vghl.myvirtualgaming.com/), or [TheSPNHL](https://thespnhl.com) EA NHL team server.
 
 The first iteration of **Duthie Bot** was a simple project for a simple low-volume use case. As interest grew, the need for a better solution became more and more apparent. In version 2, **Duthie Bot** has gone through some major performance improvements including a transition from filesystem storage to [sqlite3](https://www.sqlite.org/index.html) and a complete refactor of how the data mining scripts work.
 
