@@ -16,7 +16,9 @@ INSERT INTO leagues (id, siteId, leagueId, name, codename, extraData, customTeam
  (12, 2, 'vgphl', 'VG PHL', 'VGPHL', '{}', 0, 0),
  (13, 2, 'vghlwc', 'VG World Championship', 'VGWC', '{}', 1, 0),
  (14, 2, 'vghlclub', 'VG Club', 'VGCLUB', '{}', 1, 0),
- (15, 3, 'spnhl', 'SPNHL', 'SPNHL', '{}', 0, 0);
+ (15, 3, 'spnhl', 'SPNHL', 'SPNHL', '{}', 0, 0),
+ (16, 1, 78, 'LGFNP', 'LGFNP', '{}', 1, 0),
+ (17, 1, 79, 'LGFNP PSN', 'LGFNPPSN', '{}', 1, 0);
 
 INSERT INTO sites (id, siteId, name) VALUES
  (1, 'leaguegaming', 'LeagueGaming.com'),
