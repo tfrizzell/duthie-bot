@@ -25,7 +25,7 @@ Once **Duthie Bot** has been added to your server, you will need to grant it per
 
 Configuration
 =============
-From a channel **Duthie Bot** has access to, send the message `-lg help` to get started, or read the [Commands](#commands) section below.
+From a channel **Duthie Bot** has access to, send the message `-duthie help` to get started, or read the [Commands](#commands) section below.
 
 Commands
 ========
@@ -33,7 +33,7 @@ Commands
 Lists the set of data available to your server.
 ```vb
 # SYNTAX
-  -lg list <mode> [<type>[ <league>[ <team>[ <channel>]]]]
+  -duthie list <mode>[ type= <type>][ league=<league>][ team=<team>][ channel=<channel>]
 
 # MODE (required)
   There are currently three supported list modes:
@@ -71,14 +71,14 @@ Lists the set of data available to your server.
 Sends a ping to **Duthie Bot** to make sure it's parsing and responding to messages
 ```vb
 # SYNTAX
-  -lg ping
+  -duthie ping
 ```
 
 #### Unwatch
 Removes a watcher from your server's **Duthie Bot** data.
 ```vb
 # SYNTAX
-  -lg unwatch <type>[ <league>[ <team>]]
+  -duthie unwatch type=<type>[ league=<league>][ team=<team>][ channel=<channel>]
 
 # TYPE (required)
   There are currently nine valid types:
@@ -102,13 +102,18 @@ Removes a watcher from your server's **Duthie Bot** data.
   The team argument is optional when deregistering a watcher. If omitted, all watchers that match the other arguments will be removed. To specify a team, simple enter the team's id or name found on LeagueGaming.com. For a list of valid teams, see -lg list teams.
 
   If specifying a team by name, be sure to wrap it in quotes (ex: "Toronto Maple Leafs") or remove any spaces (ex: TorontoMapleLeafs).
+
+# CHANNEL (optional)
+  The channel argument is optional when deregistering a watcher. If omitted, the current channel will be used. To specify all channel, use `channel=*`.
+
+  If specifying a team by name, be sure to wrap it in quotes (ex: "Toronto Maple Leafs") or remove any spaces (ex: TorontoMapleLeafs).
 ```
 
 #### Watch
 Adds a watcher to your server's **Duthie Bot** data.
 ```vb
 # SYNTAX
-  -lg watch <type> <league>[ <team>[ <channel>]]
+  -duthie watch type=<type> league=<league>[ team=<team>][ channel=<channel>]
 
 # TYPE (required)
   There are currently nine valid types:
