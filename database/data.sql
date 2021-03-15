@@ -18,7 +18,11 @@ INSERT INTO leagues (id, siteId, leagueId, name, codename, extraData, customTeam
  (14, 2, 'vghlclub', 'VG Club', 'VGCLUB', '{}', 1, 0),
  (15, 3, 'spnhl', 'SPNHL', 'SPNHL', '{}', 0, 0),
  (16, 1, 78, 'LGFNP', 'LGFNP', '{}', 1, 0),
- (17, 1, 79, 'LGFNP PSN', 'LGFNPPSN', '{}', 1, 0);
+ (17, 1, 79, 'LGFNP PSN', 'LGFNPPSN', '{}', 1, 0),
+ (18, 1, 50, 'LGBA', 'LGBA', '{}', 0, 0),
+ (19, 1, 70, 'LGBA PSN', 'LGBAPSN', '{}', 0, 0),
+ (20, 1, 53, 'LGFA', 'LGFA', '{}', 0, 0),
+ (21, 1, 73, 'LGFA PSN', 'LGFAPSN', '{}', 0, 0);
 
 INSERT INTO sites (id, siteId, name) VALUES
  (1, 'leaguegaming', 'LeagueGaming.com'),
@@ -152,7 +156,39 @@ INSERT INTO teams (id, name, shortname) VALUES
  (119, 'Vancouver Giants', 'Giants'), 
  (120, 'Victoria Royals', 'Royals'), 
  (121, 'Victoriaville Tigres', 'Tigres'), 
- (122, 'Windsor Spitfires', 'Spitfires');
+ (122, 'Windsor Spitfires', 'Spitfires'),
+
+ /* NBA */
+ (123, 'Atlanta Hawks', 'Hawks'),
+ (124, 'Boston Celtics', 'Celtics'),
+ (125, 'Brooklyn Nets', 'Nets'),
+ (126, 'Charlotte Hornets', 'Hornets'),
+ (127, 'Chicago Bulls', 'Bulls'),
+ (128, 'Cleveland Cavaliers', 'Cavaliers'),
+ (129, 'Dallas Mavericks', 'Mavericks'),
+ (130, 'Denver Nuggets', 'Nuggets'),
+ (131, 'Detroit Pistons', 'Pistons'),
+ (132, 'Golden State Warriors', 'Warriors'),
+ (133, 'Houston Rockets', 'Rockets'),
+ (134, 'Indiana Pacers', 'Pacers'),
+ (135, 'Los Angeles Clippers', 'Clippers'),
+ (136, 'Los Angeles Lakers', 'Lakers'),
+ (137, 'Memphis Grizzlies', 'Grizzlies'),
+ (138, 'Miami Heat', 'Heat'),
+ (139, 'Milwaukee Bucks', 'Bucks'),
+ (140, 'Minnesota Timberwolves', 'Timberwolves'),
+ (141, 'New Orleans Pelicans', 'Pelicans'),
+ (142, 'New York Knicks', 'Knicks'),
+ (143, 'Oklahoma City Thunder', 'Thunder'),
+ (144, 'Orlando Magic', 'Magic'),
+ (145, 'Philadelphia 76ers', '76ers'),
+ (146, 'Phoenix Suns', 'Suns'),
+ (147, 'Portland Trail Blazers', 'Trail Blazers'),
+ (148, 'Sacramento Kings', 'Kings'),
+ (149, 'San Antonio Spurs', 'Spurs'),
+ (150, 'Toronto Raptors', 'Raptors'),
+ (151, 'Utah Jazz', 'Jazz'),
+ (152, 'Washington Wizards', 'Wizards');
 
 INSERT INTO watcher_types (id, name, description) VALUES 
  (1, 'bids', 'tracks and announces winning bids'),

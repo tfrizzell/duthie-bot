@@ -228,7 +228,9 @@ ORDER BY
 CREATE VIEW games AS SELECT
  game.id,
  game.leagueId,
+ league.siteId,
  league.name AS leagueName,
+ league.leagueId AS leagueUid,
  game.gameId,
  game.timestamp,
  visitor.id AS visitorTeam,
