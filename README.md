@@ -55,11 +55,11 @@ Lists the set of data available to your server.
       * waivers       - announces any players placed on or claimed off waivers that match your league and/or team filters
 
 # LEAGUE (optional, mode=teams,watchers)
-  When listing teams or watchers, you can provide any league to filter the output on. See -lg list leagues for a list of valid leagues.
+  When listing teams or watchers, you can provide any league to filter the output on. See -duthie list leagues for a list of valid leagues.
   If specifying a league by name, be sure to wrap it in quotes (ex: "LGHL PSN") or remove any spaces (ex: LGHLPSN).
 
 # TEAM (optional, mode=watchers)
-  When listing watchers, you can provide any team to filter the output on. See -lg list teams for a list of valid teams.
+  When listing watchers, you can provide any team to filter the output on. See -duthie list teams for a list of valid teams.
 
   If specifying a team by name, be sure to wrap it in quotes (ex: "Columbus Blue Jackets") or remove any spaces (ex: ColumbusBlueJackets).
 
@@ -94,12 +94,12 @@ Removes a watcher from your server's **Duthie Bot** data.
       * waivers     - announces any players placed on or claimed off waivers that match your league and/or team filters
 
 # LEAGUE (optional)
-  The league argument is optional when deregistering a watcher. If omitted, all watchers that match the other arguments will be removed. To specify a league, simple enter the league's id or name found on LeagueGaming.com. For a list of valid leagues, see -lg list leagues.
+  The league argument is optional when deregistering a watcher. If omitted, all watchers that match the other arguments will be removed. To specify a league, simple enter the league's id or name found on LeagueGaming.com. For a list of valid leagues, see -duthie list leagues.
 
   If specifying a league by name, be sure to wrap it in quotes (ex: "LGHL PSN") or remove any spaces (ex: LGHLPSN).
 
 # TEAM (optional)
-  The team argument is optional when deregistering a watcher. If omitted, all watchers that match the other arguments will be removed. To specify a team, simple enter the team's id or name found on LeagueGaming.com. For a list of valid teams, see -lg list teams.
+  The team argument is optional when deregistering a watcher. If omitted, all watchers that match the other arguments will be removed. To specify a team, simple enter the team's id or name found on LeagueGaming.com. For a list of valid teams, see -duthie list teams.
 
   If specifying a team by name, be sure to wrap it in quotes (ex: "Toronto Maple Leafs") or remove any spaces (ex: TorontoMapleLeafs).
 
@@ -129,12 +129,12 @@ Adds a watcher to your server's **Duthie Bot** data.
       * waivers     - announces any players placed on or claimed off waivers that match your league and/or team filters
 
 # LEAGUE (required)
-  To register a watcher with Duthie Bot, you must specify a supported league from LeagueGaming.com. Duthie Bot does not support leagueless watchers at this time. To specify a league, simply enter the league's id or name found on LeagueGaming.com. For a list of valid leagues, see -lg list leagues.
+  To register a watcher with Duthie Bot, you must specify a supported league from LeagueGaming.com. Duthie Bot does not support leagueless watchers at this time. To specify a league, simply enter the league's id or name found on LeagueGaming.com. For a list of valid leagues, see -duthie list leagues.
 
   If specifying a league by name, be sure to wrap it in quotes (ex: "LGHL PSN") or remove any spaces (ex: LGHLPSN).
 
 # TEAM (optional)
-  The team argument is optional for all types except games. Duthie Bot does not support teamless game watchers. To specify a team, simply enter the team's id or name found on LeagueGaming.com. For a list of valid teams, see -lg list teams.
+  The team argument is optional for all types except games. Duthie Bot does not support teamless game watchers. To specify a team, simply enter the team's id or name found on LeagueGaming.com. For a list of valid teams, see -duthie list teams.
 
   If specifying a team by name, be sure to wrap it in quotes (ex: "Columbus Blue Jackets") or remove any spaces (ex: ColumbusBlueJackets).
 
