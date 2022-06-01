@@ -11,6 +11,7 @@ public class SpLeagueProvider : ILeagueProvider
             new League
             {
                 SiteId = SpSiteProvider.SITE_ID,
+                Id = new Guid("6991c990-a4fa-488b-884a-79b00e4e3577"),
                 Name = "SPNHL",
                 Info = new SpLeagueInfo { LeagueId = "spnhl" },
                 Tags = new Tags { "psn", "ea nhl", "6v6" },

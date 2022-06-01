@@ -1,6 +1,6 @@
 namespace Duthie.Modules.LeagueGaming;
 
-public class LgLeagueInfo
+internal class LgLeagueInfo
 {
     public int LeagueId { get; set; }
     public int SeasonId { get; set; }
