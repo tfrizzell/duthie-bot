@@ -12,6 +12,9 @@ public class TeamModel : DataModel<Team>
 
         model.HasKey(t => t.Id);
 
+        model.HasIndex(t => t.Name)
+            .IsUnique();
+
         model.Property(t => t.Id)
             .ValueGeneratedOnAdd();
 

@@ -10,8 +10,10 @@ public class Watcher
     public ulong? ChannelId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ArchivedAt { get; set; } = null;
-    
+
+#nullable disable
     public virtual Guild Guild { get; set; }
     public virtual League League { get; set; }
     public virtual Team Team { get; set; }
+#nullable enable
 }

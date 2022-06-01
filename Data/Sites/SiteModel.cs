@@ -1,3 +1,4 @@
+using Duthie.Modules.LeagueGaming;
 using Duthie.Types;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -17,11 +18,5 @@ public class SiteModel : DataModel<Site>
 
         model.Property(s => s.Id)
             .ValueGeneratedOnAdd();
-
-        model.HasData(
-            DefaultSites.LeagueGaming,
-            DefaultSites.MyVirtualGaming,
-            DefaultSites.SPNHL
-        );
     }
 }

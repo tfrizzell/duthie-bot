@@ -16,11 +16,11 @@ internal class DuthieDbContextFactory : IDesignTimeDbContextFactory<DuthieDbCont
         switch (config.Type)
         {
             case DatabaseType.MySql:
-                optionsBuilder.UseMySql(config.ConnectionString, MariaDbServerVersion.AutoDetect(config.ConnectionString), b => b.MigrationsAssembly("Bot"));
+                optionsBuilder.UseMySql(config.ConnectionString, MariaDbServerVersion.AutoDetect(config.ConnectionString), b => b.MigrationsAssembly("Duthie.Bot"));
                 break;
 
             case DatabaseType.Sqlite:
-                optionsBuilder.UseSqlite(config.ConnectionString, b => b.MigrationsAssembly("Bot"));
+                optionsBuilder.UseSqlite(config.ConnectionString, b => b.MigrationsAssembly("Duthie.Bot"));
                 break;
         }
 

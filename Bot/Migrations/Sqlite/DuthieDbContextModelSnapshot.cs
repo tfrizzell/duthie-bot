@@ -31,6 +31,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -60,199 +61,29 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.Property<bool>("Enabled")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Info")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("SiteId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Tags")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.HasIndex("SiteId", "Name")
                         .IsUnique();
 
                     b.ToTable("Leagues", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("25e5037d-cf8c-4a36-852c-e3cec36a5dc5"),
-                            Enabled = true,
-                            Name = "LGHL",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"xbox\",\"ea nhl\",\"6v6\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("981d1b21-fa47-4979-9684-13336ecb3f6c"),
-                            Enabled = true,
-                            Name = "LGAHL",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"xbox\",\"ea nhl\",\"6v6\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("f5bbe441-7cc0-4de8-8960-b479113997b7"),
-                            Enabled = true,
-                            Name = "LGCHL",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"xbox\",\"ea nhl\",\"6v6\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("86c4e0fe-056b-450c-9a55-9ab32946ea31"),
-                            Enabled = true,
-                            Name = "LGHL PSN",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("c5884f38-cae4-461c-af99-beebcdc63e88"),
-                            Enabled = true,
-                            Name = "LGAHL PSN",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("e6f88d50-c9e3-43f2-be3d-11c29fc4403b"),
-                            Enabled = true,
-                            Name = "LGCHL PSN",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("aef1cea7-c626-42b4-9a45-0b9ea3deeb51"),
-                            Enabled = true,
-                            Name = "ESHL",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"xbox\",\"ea nhl\",\"6v6\",\"esports\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("0f9b50f8-3526-4bd3-9323-60b67f6a6abb"),
-                            Enabled = true,
-                            Name = "ESHL PSN",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\",\"esports\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("92718d97-8d2d-4ea3-a4b0-c4cefb75979d"),
-                            Enabled = true,
-                            Name = "LG World Cup",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\",\"tournament\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("5957b164-7bb5-4324-967a-16c3044260b2"),
-                            Enabled = true,
-                            Name = "VGNHL National League",
-                            SiteId = new Guid("40a06d17-e48f-49f1-9184-7393f035322c"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("0fc1b6e9-9181-4545-9d32-5edbd67b276a"),
-                            Enabled = true,
-                            Name = "VGAHL Affiliate League",
-                            SiteId = new Guid("40a06d17-e48f-49f1-9184-7393f035322c"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("ed4403ee-5ed3-46b2-8dce-d245c1e5b132"),
-                            Enabled = true,
-                            Name = "VGPHL Prospect League",
-                            SiteId = new Guid("40a06d17-e48f-49f1-9184-7393f035322c"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("0ec6177f-7e39-437b-9cb9-1551db76bd4e"),
-                            Enabled = true,
-                            Name = "VGHL World Championship",
-                            SiteId = new Guid("40a06d17-e48f-49f1-9184-7393f035322c"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\",\"tournament\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("8cba4eb0-8722-4415-aa82-b0027ae33702"),
-                            Enabled = true,
-                            Name = "VGHL Club League",
-                            SiteId = new Guid("40a06d17-e48f-49f1-9184-7393f035322c"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("d103fab3-808e-4451-a3c9-450534d5a4cb"),
-                            Enabled = true,
-                            Name = "SPNHL",
-                            SiteId = new Guid("c193a2eb-f6fd-4c1d-bf2b-b77ef05f236c"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("76f28c43-fe50-4d66-910d-be37622ecb0e"),
-                            Enabled = true,
-                            Name = "Friday Night Puck",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"xbox\",\"ea nhl\",\"6v6\",\"weekly\",\"pickup\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("f8ef5453-6b84-4ae9-9c3e-0553f0fd8971"),
-                            Enabled = true,
-                            Name = "Friday Night Puck PSN",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"psn\",\"ea nhl\",\"6v6\",\"weekly\",\"pickup\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("c0fcd9f5-d48a-465f-867b-905bafec917d"),
-                            Enabled = true,
-                            Name = "LGBA",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"xbox\",\"nba 2k\",\"5v5\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("3b5133d0-8801-4b86-9920-b7025cf88335"),
-                            Enabled = true,
-                            Name = "LGBA PSN",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"psn\",\"nba 2k\",\"5v5\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("f9351c11-a36d-4069-804b-e0f317935576"),
-                            Enabled = true,
-                            Name = "LGFA",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"xbox\",\"fifa\",\"11v11\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("1112ece0-a84c-4dc1-9a75-278d4a0e4dd8"),
-                            Enabled = true,
-                            Name = "LGFA PSN",
-                            SiteId = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Tags = "[\"psn\",\"fifa\",\"11v11\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("9545ede8-6948-44e0-8ef8-61668c6ab9e1"),
-                            Enabled = true,
-                            Name = "VGHL 3s League",
-                            SiteId = new Guid("40a06d17-e48f-49f1-9184-7393f035322c"),
-                            Tags = "[\"psn\",\"ea nhl\",\"3v3\"]"
-                        });
                 });
 
             modelBuilder.Entity("Duthie.Types.LeagueTeam", b =>
@@ -264,6 +95,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.Property<string>("IId")
+                        .IsRequired()
                         .HasColumnType("TEXT")
                         .HasColumnName("InternalId");
 
@@ -284,9 +116,11 @@ namespace Duthie.Bot.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Tags")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -295,29 +129,6 @@ namespace Duthie.Bot.Migrations.Sqlite
                         .IsUnique();
 
                     b.ToTable("Sites", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"),
-                            Enabled = true,
-                            Name = "leaguegaming.com",
-                            Tags = "[\"psn\",\"xbox\",\"ea nhl\",\"nba 2k\",\"fifa\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("40a06d17-e48f-49f1-9184-7393f035322c"),
-                            Enabled = true,
-                            Name = "myvirtualgaming.com",
-                            Tags = "[\"psn\",\"ea nhl\"]"
-                        },
-                        new
-                        {
-                            Id = new Guid("c193a2eb-f6fd-4c1d-bf2b-b77ef05f236c"),
-                            Enabled = true,
-                            Name = "thespnhl.com",
-                            Tags = "[\"psn\",\"ea nhl\"]"
-                        });
                 });
 
             modelBuilder.Entity("Duthie.Types.Team", b =>
@@ -327,12 +138,15 @@ namespace Duthie.Bot.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ShortName")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Tags")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

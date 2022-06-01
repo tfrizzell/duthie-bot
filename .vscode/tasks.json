@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Bot/Bot.csproj",
+                "${workspaceFolder}/Duthie.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/Bot/Bot.csproj",
+                "${workspaceFolder}/Bot/Duthie.Bot.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/Bot/Bot.csproj"
+                "${workspaceFolder}/Bot/Duthie.Bot.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

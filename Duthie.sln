@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Bot", "Bot\Bot.csproj", "{AA5FC069-1395-4116-8389-B2E6878AB709}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Bot", "Bot\Duthie.Bot.csproj", "{AA5FC069-1395-4116-8389-B2E6878AB709}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Data", "Data\Data.csproj", "{638B03BA-4CD0-467E-AB03-85B4722FC681}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Data", "Data\Duthie.Data.csproj", "{638B03BA-4CD0-467E-AB03-85B4722FC681}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Service", "Services\Services.csproj", "{A0B19841-AAC6-4EA5-9683-A112A0EDE3FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Service", "Services\Duthie.Services.csproj", "{A0B19841-AAC6-4EA5-9683-A112A0EDE3FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Types", "Types\Types.csproj", "{4A40ED7E-211A-4B5D-8917-7023FFFB758F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Types", "Types\Duthie.Types.csproj", "{4A40ED7E-211A-4B5D-8917-7023FFFB758F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Modules", "Modules\Duthie.Modules.csproj", "{F9242839-CE2A-433C-B64E-5629C127D3FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,5 +42,9 @@ Global
 		{B631AC41-9653-46D2-A530-CA72F28F5374}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B631AC41-9653-46D2-A530-CA72F28F5374}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B631AC41-9653-46D2-A530-CA72F28F5374}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9242839-CE2A-433C-B64E-5629C127D3FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9242839-CE2A-433C-B64E-5629C127D3FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9242839-CE2A-433C-B64E-5629C127D3FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9242839-CE2A-433C-B64E-5629C127D3FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

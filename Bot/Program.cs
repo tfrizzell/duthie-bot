@@ -33,6 +33,7 @@ async Task MainAsync()
     using (var context = serviceProvider.GetRequiredService<DuthieDbContext>())
     {
         context.Database.Migrate();
+        await context.PopulateAsync();
     }
 
     var client = serviceProvider.GetRequiredService<DiscordShardedClient>();

@@ -40,11 +40,11 @@ public static class CompositionRoot
             switch (databaseConfiguration.Type)
             {
                 case DatabaseType.MySql:
-                    options.UseMySql(databaseConfiguration.ConnectionString, MariaDbServerVersion.AutoDetect(databaseConfiguration.ConnectionString), b => b.MigrationsAssembly("Bot"));
+                    options.UseMySql(databaseConfiguration.ConnectionString, MariaDbServerVersion.AutoDetect(databaseConfiguration.ConnectionString), b => b.MigrationsAssembly("Duthie.Bot"));
                     break;
 
                 case DatabaseType.Sqlite:
-                    options.UseSqlite(databaseConfiguration.ConnectionString, b => b.MigrationsAssembly("Bot"));
+                    options.UseSqlite(databaseConfiguration.ConnectionString, b => b.MigrationsAssembly("Duthie.Bot"));
                     break;
             }
         });

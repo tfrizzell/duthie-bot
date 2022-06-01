@@ -7,12 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Types\Types.csproj" />
+    <ProjectReference Include="..\Data\Duthie.Data.csproj" />
+    <ProjectReference Include="..\Types\Duthie.Types.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.5" />
   </ItemGroup>
 
 </Project>

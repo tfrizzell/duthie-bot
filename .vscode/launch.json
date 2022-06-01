@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Bot/bin/Debug/net6.0/Bot.dll",
+            "program": "${workspaceFolder}/Bot/bin/Debug/net6.0/Duthie.Bot.dll",
             "args": [],
             "cwd": "${workspaceFolder}/Bot",
             "console": "internalConsole",

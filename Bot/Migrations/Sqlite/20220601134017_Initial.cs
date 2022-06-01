@@ -14,7 +14,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
                     JoinedAt = table.Column<string>(type: "TEXT", nullable: false),
                     LeftAt = table.Column<string>(type: "TEXT", nullable: true)
                 },
@@ -28,8 +28,8 @@ namespace Duthie.Bot.Migrations.Sqlite
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
-                    Tags = table.Column<string>(type: "TEXT", nullable: true),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Tags = table.Column<string>(type: "TEXT", nullable: false),
                     Enabled = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -42,9 +42,9 @@ namespace Duthie.Bot.Migrations.Sqlite
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
-                    ShortName = table.Column<string>(type: "TEXT", nullable: true),
-                    Tags = table.Column<string>(type: "TEXT", nullable: true)
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    ShortName = table.Column<string>(type: "TEXT", nullable: false),
+                    Tags = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -75,8 +75,9 @@ namespace Duthie.Bot.Migrations.Sqlite
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     SiteId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
-                    Tags = table.Column<string>(type: "TEXT", nullable: true),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Info = table.Column<string>(type: "TEXT", nullable: true),
+                    Tags = table.Column<string>(type: "TEXT", nullable: false),
                     Enabled = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -96,7 +97,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                 {
                     LeagueId = table.Column<Guid>(type: "TEXT", nullable: false),
                     TeamId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    InternalId = table.Column<string>(type: "TEXT", nullable: true)
+                    InternalId = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -150,21 +151,6 @@ namespace Duthie.Bot.Migrations.Sqlite
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
-
-            migrationBuilder.InsertData(
-                table: "Sites",
-                columns: new[] { "Id", "Enabled", "Name", "Tags" },
-                values: new object[] { new Guid("40a06d17-e48f-49f1-9184-7393f035322c"), true, "myvirtualgaming.com", "[\"psn\",\"ea nhl\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Sites",
-                columns: new[] { "Id", "Enabled", "Name", "Tags" },
-                values: new object[] { new Guid("c193a2eb-f6fd-4c1d-bf2b-b77ef05f236c"), true, "thespnhl.com", "[\"psn\",\"ea nhl\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Sites",
-                columns: new[] { "Id", "Enabled", "Name", "Tags" },
-                values: new object[] { new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), true, "leaguegaming.com", "[\"psn\",\"xbox\",\"ea nhl\",\"nba 2k\",\"fifa\"]" });
 
             migrationBuilder.InsertData(
                 table: "Teams",
@@ -936,115 +922,11 @@ namespace Duthie.Bot.Migrations.Sqlite
                 columns: new[] { "Id", "Name", "ShortName", "Tags" },
                 values: new object[] { new Guid("ff8968a2-0895-4b0c-a28d-fb3dff7d2b2d"), "Texas Stars", "Stars", "[\"ahl\",\"hockey\"]" });
 
-            migrationBuilder.InsertData(
+            migrationBuilder.CreateIndex(
+                name: "IX_Leagues_Name",
                 table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("0ec6177f-7e39-437b-9cb9-1551db76bd4e"), true, "VGHL World Championship", new Guid("40a06d17-e48f-49f1-9184-7393f035322c"), "[\"psn\",\"ea nhl\",\"6v6\",\"tournament\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("0f9b50f8-3526-4bd3-9323-60b67f6a6abb"), true, "ESHL PSN", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"psn\",\"ea nhl\",\"6v6\",\"esports\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("0fc1b6e9-9181-4545-9d32-5edbd67b276a"), true, "VGAHL Affiliate League", new Guid("40a06d17-e48f-49f1-9184-7393f035322c"), "[\"psn\",\"ea nhl\",\"6v6\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("1112ece0-a84c-4dc1-9a75-278d4a0e4dd8"), true, "LGFA PSN", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"psn\",\"fifa\",\"11v11\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("25e5037d-cf8c-4a36-852c-e3cec36a5dc5"), true, "LGHL", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"xbox\",\"ea nhl\",\"6v6\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("3b5133d0-8801-4b86-9920-b7025cf88335"), true, "LGBA PSN", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"psn\",\"nba 2k\",\"5v5\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("5957b164-7bb5-4324-967a-16c3044260b2"), true, "VGNHL National League", new Guid("40a06d17-e48f-49f1-9184-7393f035322c"), "[\"psn\",\"ea nhl\",\"6v6\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("76f28c43-fe50-4d66-910d-be37622ecb0e"), true, "Friday Night Puck", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"xbox\",\"ea nhl\",\"6v6\",\"weekly\",\"pickup\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("86c4e0fe-056b-450c-9a55-9ab32946ea31"), true, "LGHL PSN", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"psn\",\"ea nhl\",\"6v6\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("8cba4eb0-8722-4415-aa82-b0027ae33702"), true, "VGHL Club League", new Guid("40a06d17-e48f-49f1-9184-7393f035322c"), "[\"psn\",\"ea nhl\",\"6v6\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("92718d97-8d2d-4ea3-a4b0-c4cefb75979d"), true, "LG World Cup", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"psn\",\"ea nhl\",\"6v6\",\"tournament\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("9545ede8-6948-44e0-8ef8-61668c6ab9e1"), true, "VGHL 3s League", new Guid("40a06d17-e48f-49f1-9184-7393f035322c"), "[\"psn\",\"ea nhl\",\"3v3\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("981d1b21-fa47-4979-9684-13336ecb3f6c"), true, "LGAHL", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"xbox\",\"ea nhl\",\"6v6\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("aef1cea7-c626-42b4-9a45-0b9ea3deeb51"), true, "ESHL", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"xbox\",\"ea nhl\",\"6v6\",\"esports\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("c0fcd9f5-d48a-465f-867b-905bafec917d"), true, "LGBA", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"xbox\",\"nba 2k\",\"5v5\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("c5884f38-cae4-461c-af99-beebcdc63e88"), true, "LGAHL PSN", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"psn\",\"ea nhl\",\"6v6\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("d103fab3-808e-4451-a3c9-450534d5a4cb"), true, "SPNHL", new Guid("c193a2eb-f6fd-4c1d-bf2b-b77ef05f236c"), "[\"psn\",\"ea nhl\",\"6v6\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("e6f88d50-c9e3-43f2-be3d-11c29fc4403b"), true, "LGCHL PSN", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"psn\",\"ea nhl\",\"6v6\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("ed4403ee-5ed3-46b2-8dce-d245c1e5b132"), true, "VGPHL Prospect League", new Guid("40a06d17-e48f-49f1-9184-7393f035322c"), "[\"psn\",\"ea nhl\",\"6v6\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("f5bbe441-7cc0-4de8-8960-b479113997b7"), true, "LGCHL", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"xbox\",\"ea nhl\",\"6v6\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("f8ef5453-6b84-4ae9-9c3e-0553f0fd8971"), true, "Friday Night Puck PSN", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"psn\",\"ea nhl\",\"6v6\",\"weekly\",\"pickup\"]" });
-
-            migrationBuilder.InsertData(
-                table: "Leagues",
-                columns: new[] { "Id", "Enabled", "Name", "SiteId", "Tags" },
-                values: new object[] { new Guid("f9351c11-a36d-4069-804b-e0f317935576"), true, "LGFA", new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41"), "[\"xbox\",\"fifa\",\"11v11\"]" });
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Leagues_SiteId_Name",

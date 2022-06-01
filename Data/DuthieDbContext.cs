@@ -52,15 +52,15 @@ public class DuthieDbContext : DbContext
                     .HasConversion(new UlongToStringConverter(), new UlongValueComparer());
             }
 
-            // IReadOnlyCollection<string>
-            properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(IReadOnlyCollection<string>));
+            // Tags
+            properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(Tags));
 
             foreach (var property in properties)
             {
                 builder
                     .Entity(entityType.Name)
                     .Property(property.Name)
-                    .HasConversion(new IReadOnlyCollectionToStringConverter(), new IReadOnlyCollectionStringValueComparer());
+                    .HasConversion(new TagsToStringConverter(), new TagsValueComparer());
             }
         }
     }
