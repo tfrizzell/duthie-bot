@@ -1,5 +1,4 @@
 using Duthie.Data;
-using Duthie.Services.Extensions;
 using Duthie.Types;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,21 +8,16 @@ internal static class DuthieDbPopulator
 {
     public static async Task PopulateAsync(this DuthieDbContext context)
     {
-        AppDomain.CurrentDomain.Load("Duthie.Modules");
         await PopulateSitesAsync(context);
         await PopulateLeaguesAsync(context);
     }
 
     private static async Task PopulateSitesAsync(DuthieDbContext context)
     {
-        var a = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.FullName.StartsWith("Duthie."));
-        var b = a.SelectMany(s => s.GetTypes());
-        var c = b.Where(p => typeof(ISiteProvider).IsAssignableFrom(p) && !p.IsAbstract);
-
         var sites = AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(s => s.GetTypes())
-            .Where(p => typeof(ISiteProvider).IsAssignableFrom(p) && !p.IsAbstract)
-            .SelectMany(p => ((ISiteProvider)Activator.CreateInstance(p)!).Sites);
+            .SelectMany(a => a.GetTypes())
+            .Where(t => !t.IsAbstract && typeof(ISiteProvider).IsAssignableFrom(t))
+            .SelectMany(t => ((ISiteProvider)Activator.CreateInstance(t)!).Sites);
 
         foreach (var site in sites)
         {
@@ -37,9 +31,9 @@ internal static class DuthieDbPopulator
     private static async Task PopulateLeaguesAsync(DuthieDbContext context)
     {
         var leagues = AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(l => l.GetTypes())
-            .Where(p => typeof(ILeagueProvider).IsAssignableFrom(p) && !p.IsAbstract)
-            .SelectMany(p => ((ILeagueProvider)Activator.CreateInstance(p)!).Leagues);
+            .SelectMany(a => a.GetTypes())
+            .Where(t => !t.IsAbstract && typeof(ILeagueProvider).IsAssignableFrom(t))
+            .SelectMany(t => ((ILeagueProvider)Activator.CreateInstance(t)!).Leagues);
 
         foreach (var league in leagues)
         {

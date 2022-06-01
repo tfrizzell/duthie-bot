@@ -5,12 +5,16 @@ using Discord.WebSocket;
 using Duthie.Bot.Commands;
 using Duthie.Bot.Configuration;
 using Duthie.Bot.Events;
+using Duthie.Bot.Services;
 using Duthie.Data;
+using Duthie.Modules.LeagueGaming;
+using Duthie.Services.Background;
 using Duthie.Services.Guilds;
 using Duthie.Services.Leagues;
 using Duthie.Services.Sites;
 using Duthie.Services.Teams;
 using Duthie.Services.Watchers;
+using Duthie.Types.Api;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -107,8 +111,20 @@ public static class CompositionRoot
         services.AddCommand<ListCommand>();
         return services;
     }
+
     public static IServiceCollection AddApi(this IServiceCollection services)
     {
+        var apis = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(s => s.GetTypes())
+            .Where(t => !t.IsAbstract && typeof(IApi).IsAssignableFrom(t));
+
+        var apiService = new ApiService();
+        services.AddSingleton(apiService);
+
+        foreach (var api in apis)
+            apiService.Register((IApi)Activator.CreateInstance(api)!);
+
+        services.AddSingleton<LeagueBackgroundService>();
         return services;
     }
 

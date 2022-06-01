@@ -1,6 +1,6 @@
 namespace Duthie.Types;
 
-public class League
+public class League : ILeague
 {
     public Guid Id { get; set; }
     public Guid SiteId { get; set; }
@@ -14,4 +14,10 @@ public class League
     public virtual IReadOnlyCollection<LeagueTeam> LeagueTeams { get; set; }
     public virtual IEnumerable<Team> Teams { get; set; }
 #nullable enable
+}
+
+public interface ILeague
+{
+    string Name { get; set; }
+    object? Info { get; set; }
 }

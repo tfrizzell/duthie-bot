@@ -1,5 +1,6 @@
 ﻿// https://discordapp.com/oauth2/authorize?&client_id=435582099714605057&scope=bot&permissions=2048
 
+using System.Reflection;
 using Discord;
 using Discord.WebSocket;
 using Duthie.Bot;
@@ -8,6 +9,8 @@ using Duthie.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
+await LoadModules();
+
 var services = new ServiceCollection()
     .ConfigureServices()
     .AddDiscord()
@@ -15,6 +18,20 @@ var services = new ServiceCollection()
     .AddAppInfo();
 
 await MainAsync();
+
+Task LoadModules()
+{
+    var modules = new List<string> { Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory) ?? ".", "Duthie.Modules.dll") };
+    var moduleDir = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory) ?? ".", "Modules");
+
+    if (Directory.Exists(moduleDir))
+        modules.AddRange(Directory.EnumerateFiles(moduleDir, "*.dll"));
+
+    foreach (var module in modules)
+        Assembly.LoadFile(module);
+
+    return Task.CompletedTask;
+}
 
 async Task MainAsync()
 {
