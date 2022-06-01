@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "visualstudioexptteam.vscodeintellicode",
+        "eamodio.gitlens",
+        "ms-dotnettools.csharp",
+        "reptarsrage.vscode-manage-user-secrets",
+    ],
+    "unwantedRecommendations": []
+}

@@ -1,0 +1,130 @@
+using Duthie.Data;
+using Duthie.Services.Extensions;
+using Duthie.Types;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+
+namespace Duthie.Services.Teams;
+
+public class TeamService
+{
+    private readonly ILogger<TeamService> _logger;
+    private readonly IDbContextFactory<DuthieDbContext> _contextFactory;
+    private readonly IMemoryCache _memoryCache;
+
+    public TeamService(
+        ILogger<TeamService> logger,
+        IDbContextFactory<DuthieDbContext> contextFactory,
+        IMemoryCache memoryCache)
+    {
+        _logger = logger;
+        _contextFactory = contextFactory;
+        _memoryCache = memoryCache;
+    }
+
+    private IQueryable<Team> CreateQuery(DuthieDbContext context) =>
+        context.Set<Team>()
+            .Include(t => t.LeagueTeams)
+                .ThenInclude(m => m.League)
+                    .ThenInclude(l => l.Site)
+            .OrderBy(t => t.Name);
+
+    public async Task<int> DeleteAsync(params Guid[] ids)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            foreach (var id in ids)
+            {
+                var team = await context.Set<Team>().FirstOrDefaultAsync(t => t.Id == id);
+
+                if (team != null)
+                    await context.RemoveAsync(team);
+            }
+
+            return await context.SaveChangesAsync();
+        }
+    }
+
+    private async Task DeleteAsync(DuthieDbContext context, Guid id)
+    {
+        var team = await context.Set<Team>().FirstOrDefaultAsync(t => t.Id == id);
+
+        if (team != null)
+            await context.RemoveAsync(team);
+    }
+
+    public async Task<bool> ExistsAsync(Guid id)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            return await context.Set<Team>().AnyAsync(t => t.Id == id);
+        }
+    }
+
+    public async Task<IEnumerable<Team>> FindAsync(string text = "", IEnumerable<Guid>? sites = null, IEnumerable<Guid>? leagues = null, string[]? tags = null)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            var query = CreateQuery(context);
+
+            if (!string.IsNullOrWhiteSpace(text))
+                query = query.Where(t => t.Id.ToString().ToLower().Equals(text.ToLower())
+                    || t.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower())
+                        || t.ShortName.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower()));
+
+            if (sites?.Count() > 0)
+                query = query.Where(t => t.LeagueTeams.Any(m => sites.Contains(m.League.SiteId)));
+
+            if (leagues?.Count() > 0)
+                query = query.Where(t => t.LeagueTeams.Any(m => leagues.Contains(m.League.Id)));
+
+            var results = await query
+                .OrderBy(t => t.Id.ToString().ToLower().Equals(text.ToLower()))
+                .ThenBy(t => t.Name)
+                .ToListAsync();
+
+            return tags?.Count() > 0
+                ? results.Where(t => tags.All(tag => t.Tags.Contains(tag)))
+                : results;
+        }
+    }
+
+    public async Task<Team?> GetAsync(Guid teamId)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            return await CreateQuery(context).FirstOrDefaultAsync(t => t.Id == teamId);
+        }
+    }
+
+    public Task<IEnumerable<Team>> GetAllAsync() =>
+        _memoryCache.GetOrCreateAsync<IEnumerable<Team>>(new { type = GetType(), method = "GetAllAsync" }, async entry =>
+        {
+            entry.SetOptions(new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(15)
+            });
+
+            using (var context = await _contextFactory.CreateDbContextAsync())
+            {
+                return await CreateQuery(context).ToListAsync();
+            }
+        });
+
+    public async Task<int> SaveAsync(params Team[] teams)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            foreach (var team in teams)
+            {
+                if (!await context.Set<Team>().AnyAsync(t => t.Id == team.Id))
+                    await context.Set<Team>().AddAsync(team);
+                else
+                    await context.Set<Team>().UpdateAsync(team);
+            }
+
+            return await context.SaveChangesAsync();
+        }
+    }
+}
