@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MyVirtualGaming\Duthie.Modules.MyVirtualGaming.csproj" />
+    <ProjectReference Include="..\..\Data\Duthie.Data.csproj" />
   </ItemGroup>
 
 </Project>

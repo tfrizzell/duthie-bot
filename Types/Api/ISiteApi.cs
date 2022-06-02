@@ -1,5 +1,4 @@
 namespace Duthie.Types.Api;
 
-public interface ISiteApi : IApi, ILeagueInfoApi, ITeamsApi
-{
-}
+public interface ISiteApi : IApi, IDailyStarsApi, IGamesApi, ILeagueInfoApi, INewsApi, ITeamsApi
+{ }

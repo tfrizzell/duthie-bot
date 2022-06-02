@@ -1,5 +1,7 @@
+using System.Runtime.CompilerServices;
 using Duthie.Types;
 
+[assembly: InternalsVisibleTo("Duthie.Modules.MyVirtualGaming.Tests")]
 namespace Duthie.Modules.MyVirtualGaming;
 
 public class MyVirtualGamingSiteProvider : ISiteProvider
