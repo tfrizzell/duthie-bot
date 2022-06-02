@@ -217,7 +217,7 @@ public class WatchersCommand : BaseCommandWithAdminCheck
             return;
         }
 
-        if (teams == null)// || !teams.Any(t => leagues.Any(l => l.Teams.Any(m => m.TeamId == t.Id))))
+        if (teams == null || !teams.Any(t => leagues.Any(l => l.Teams.Any(lt => lt.Id == t.Id))))
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team(s) you requested.", ephemeral: true);
             return;
@@ -235,8 +235,8 @@ public class WatchersCommand : BaseCommandWithAdminCheck
         {
             foreach (var team in teams)
             {
-                // if (!league.Teams.Any(m => m.TeamId == team.Id))
-                //     continue;
+                if (!league.Teams.Any(t => t.Id == team.Id))
+                    continue;
 
                 foreach (var watcherType in watcherTypes)
                 {
@@ -346,7 +346,7 @@ public class WatchersCommand : BaseCommandWithAdminCheck
                 return;
             }
 
-            if (teamOption != null && (teams == null))// || !teams.Any(t => leagues?.Any(l => l.Teams.Any(m => m.TeamId == t.Id)) != false)))
+            if (teamOption != null && (teams == null || !teams.Any(t => leagues?.Any(l => l.Teams.Any(lt => lt.Id == t.Id)) != false)))
             {
                 await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team(s) you requested.", ephemeral: true);
                 return;

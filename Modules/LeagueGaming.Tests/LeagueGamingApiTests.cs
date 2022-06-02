@@ -3,26 +3,26 @@ using Duthie.Types;
 
 namespace Duthie.Modules.LeagueGaming.Tests;
 
-public class LgApiTests
+public class LeagueGamingApiTests
 {
     private static readonly Guid LEAGUE_ID = new Guid("86c4e0fe-056b-450c-9a55-9ab32946ea31");
     private const int EXPECTED_LEAGUE_ID = 67;
     private const int EXPECTED_SEASON_ID = 20;
     private const int EXPECTED_FORUM_ID = 586;
 
-    private readonly LgApi _api;
+    private readonly LeagueGamingApi _api;
     private readonly League _league;
 
-    public LgApiTests()
+    public LeagueGamingApiTests()
     {
-        _api = new LgApi();
-        _league = new LgLeagueProvider().Leagues.First(l => l.Id == LEAGUE_ID);
+        _api = new LeagueGamingApi();
+        _league = new LeagueGamingLeagueProvider().Leagues.First(l => l.Id == LEAGUE_ID);
     }
 
     [Fact]
     public void Supports_LeagueGaming()
     {
-        Assert.True(_api.Supports.Contains(LgSiteProvider.SITE_ID), $"{_api.GetType().Name} does not support site {LgSiteProvider.SITE_ID}");
+        Assert.True(_api.Supports.Contains(LeagueGamingSiteProvider.SITE_ID), $"{_api.GetType().Name} does not support site {LeagueGamingSiteProvider.SITE_ID}");
     }
 
     [Fact]
@@ -31,9 +31,9 @@ public class LgApiTests
         var league = await _api.GetLeagueInfoAsync(_league);
         Assert.True(league != null, $"{_api.GetType().Name} does not support league {_league.Id}");
         Assert.True(_league.Name.Equals(league!.Name), $"expected Name to be {_league.Name} but got {league.Name}");
-        Assert.True(league?.Info is LgLeagueInfo, $"expected Info to be of type {typeof(LgLeagueInfo).Name} but got {league?.Info?.GetType()?.Name ?? "null"}");
+        Assert.True(league?.Info is LeagueGamingLeagueInfo, $"expected Info to be of type {typeof(LeagueGamingLeagueInfo).Name} but got {league?.Info?.GetType()?.Name ?? "null"}");
 
-        var info = (league?.Info as LgLeagueInfo)!;
+        var info = (league?.Info as LeagueGamingLeagueInfo)!;
         Assert.True(EXPECTED_LEAGUE_ID == info.LeagueId, $"expected Info.LeagueId to be {EXPECTED_LEAGUE_ID} but got {info.LeagueId}");
         Assert.True(EXPECTED_SEASON_ID <= info.SeasonId, $"expected Info.SeasonId to be greater than or equal to {EXPECTED_SEASON_ID} but got {info.SeasonId}");
         Assert.True(EXPECTED_FORUM_ID == info.ForumId, $"expected Info.ForumId to be greater than or equal to {EXPECTED_FORUM_ID} but got {info.ForumId}");

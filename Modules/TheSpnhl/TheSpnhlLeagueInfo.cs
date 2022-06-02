@@ -1,6 +1,6 @@
 namespace Duthie.Modules.TheSpnhl;
 
-internal class SpLeagueInfo
+internal class TheSpnhlLeagueInfo
 {
     public string LeagueId { get; set; } = "";
 }

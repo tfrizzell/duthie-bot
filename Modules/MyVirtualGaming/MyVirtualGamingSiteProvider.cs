@@ -1,10 +1,10 @@
 using Duthie.Types;
 
-namespace Duthie.Modules.TheSpnhl;
+namespace Duthie.Modules.MyVirtualGaming;
 
-public class SpSiteProvider : ISiteProvider
+public class MyVirtualGamingSiteProvider : ISiteProvider
 {
-    internal static readonly Guid SITE_ID = new Guid("c193a2eb-f6fd-4c1d-bf2b-b77ef05f236c");
+    internal static readonly Guid SITE_ID = new Guid("40a06d17-e48f-49f1-9184-7393f035322c");
 
     public IReadOnlyCollection<Site> Sites
     {
@@ -13,7 +13,7 @@ public class SpSiteProvider : ISiteProvider
             new Site
             {
                 Id = SITE_ID,
-                Name = "thespnhl.com",
+                Name = "myvirtualgaming.com",
                 Tags = new Tags { "psn", "ea nhl" },
                 Enabled = true
             },

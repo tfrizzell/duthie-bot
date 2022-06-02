@@ -8,6 +8,6 @@ public class Guild
     public DateTimeOffset? LeftAt { get; set; } = null;
 
 #nullable disable
-    public virtual ICollection<GuildAdmin> Admins { get; set; }
+    public virtual IEnumerable<GuildAdmin> Admins { get; set; }
 #nullable enable
 }

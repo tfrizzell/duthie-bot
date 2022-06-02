@@ -7,6 +7,9 @@ using Duthie.Bot.Configuration;
 using Duthie.Bot.Events;
 using Duthie.Bot.Services;
 using Duthie.Data;
+using Duthie.Modules.LeagueGaming;
+using Duthie.Modules.MyVirtualGaming;
+using Duthie.Modules.TheSpnhl;
 using Duthie.Services.Background;
 using Duthie.Services.Guilds;
 using Duthie.Services.Leagues;
@@ -54,14 +57,16 @@ public static class CompositionRoot
         services.AddLogging(options =>
         {
             options
+                .ClearProviders()
                 .AddConfiguration(config.GetSection("Logging"))
                 .AddSimpleConsole(builder =>
                 {
                     builder.IncludeScopes = true;
                     builder.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
                 });
-        })
-        .AddMemoryCache();
+        });
+
+        services.AddMemoryCache();
 
         services.AddSingleton<IConfiguration>(config);
         services.AddSingleton(databaseConfiguration);
@@ -112,17 +117,26 @@ public static class CompositionRoot
 
     public static IServiceCollection AddApi(this IServiceCollection services)
     {
-        var apis = AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(s => s.GetTypes())
-            .Where(t => !t.IsAbstract && typeof(IApi).IsAssignableFrom(t));
-
         var apiService = new ApiService();
         services.AddSingleton(apiService);
+
+        apiService.Register(new LeagueGamingApi());
+        apiService.Register(new MyVirtualGamingApi());
+        apiService.Register(new TheSpnhlApi());
+
+        var apis = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(s => s.GetTypes())
+            .Where(t => !t.IsAbstract
+                && typeof(IApi).IsAssignableFrom(t)
+                && typeof(LeagueGamingApi) != t
+                && typeof(MyVirtualGamingApi) != t
+                && typeof(TheSpnhlApi) != t);
+
 
         foreach (var api in apis)
             apiService.Register((IApi)Activator.CreateInstance(api)!);
 
-        services.AddSingleton<LeagueBackgroundService>();
+        services.AddSingleton<LeagueUpdateService>();
         return services;
     }
 

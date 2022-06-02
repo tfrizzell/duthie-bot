@@ -4,7 +4,7 @@ using Duthie.Types;
 [assembly: InternalsVisibleTo("Duthie.Modules.LeagueGaming.Tests")]
 namespace Duthie.Modules.LeagueGaming;
 
-public class LgSiteProvider : ISiteProvider
+public class LeagueGamingSiteProvider : ISiteProvider
 {
     internal static readonly Guid SITE_ID = new Guid("e3f25028-0a34-4430-a2a5-a1a7fab73b41");
 

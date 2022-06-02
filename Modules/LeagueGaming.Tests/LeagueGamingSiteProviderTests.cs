@@ -1,11 +1,11 @@
 namespace Duthie.Modules.LeagueGaming.Tests;
 
-public class LgSiteProviderTests
+public class LeagueGamingSiteProviderTests
 {
     [Fact]
     public void Provides_Only_DefaultSites()
     {
-        var expectedCount = new LgSiteProvider().Sites.Count();
+        var expectedCount = new LeagueGamingSiteProvider().Sites.Count();
         var actualCount = DefaultSites().Count();
         Assert.True(expectedCount == actualCount, $"expected {expectedCount} sites but found {actualCount}");
     }
@@ -15,8 +15,8 @@ public class LgSiteProviderTests
     public void DefaultSites_Exist(string id, string name)
     {
         var siteId = new Guid(id);
-        var siteProvider = new LgSiteProvider();
-        var site = siteProvider.Sites.FirstOrDefault(s => s.Id == LgSiteProvider.SITE_ID);
+        var siteProvider = new LeagueGamingSiteProvider();
+        var site = siteProvider.Sites.FirstOrDefault(s => s.Id == LeagueGamingSiteProvider.SITE_ID);
 
         Assert.True(site != null, $"no matching site found");
         Assert.True(name.Equals(site?.Name), $"expected Name to be {name} but got {site?.Name}");

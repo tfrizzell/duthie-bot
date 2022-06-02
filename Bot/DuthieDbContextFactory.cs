@@ -1,3 +1,4 @@
+using System.Reflection;
 using Duthie.Bot.Configuration;
 using Duthie.Data;
 using Microsoft.EntityFrameworkCore;
@@ -8,11 +9,16 @@ namespace Duthie.Bot;
 
 internal class DuthieDbContextFactory : IDesignTimeDbContextFactory<DuthieDbContext>
 {
+    public DuthieDbContextFactory()
+    {
+        LoadModules();
+    }
+
     public DuthieDbContext CreateDbContext(string[] args)
     {
         var config = GetDatabaseConfiguration();
         var optionsBuilder = new DbContextOptionsBuilder<DuthieDbContext>();
-        
+
         switch (config.Type)
         {
             case DatabaseType.MySql:
@@ -25,6 +31,18 @@ internal class DuthieDbContextFactory : IDesignTimeDbContextFactory<DuthieDbCont
         }
 
         return new DuthieDbContext(optionsBuilder.Options);
+    }
+
+    private static void LoadModules()
+    {
+        var modules = new List<string> { };
+        var moduleDir = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory) ?? ".", "modules");
+
+        if (Directory.Exists(moduleDir))
+            modules.AddRange(Directory.EnumerateFiles(moduleDir, "*.dll"));
+
+        foreach (var module in modules)
+            Assembly.LoadFile(module);
     }
 
     private static IConfiguration GetConfiguration()

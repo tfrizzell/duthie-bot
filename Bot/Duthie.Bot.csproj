@@ -33,6 +33,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
@@ -44,16 +45,5 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
-
-  <Target Name="CopyModules" AfterTargets="ResolveReferences">
-    <Message Text="Copying modules..." />
-    <ItemGroup>
-      <ReferenceCopyLocalPaths
-        Condition=" $([System.String]::new('%(ReferenceCopyLocalPaths.FileName)').StartsWith('Duthie.Modules.')) "
-        Update="%(ReferenceCopyLocalPaths)"
-        DestinationSubDirectory="modules\"
-      />
-    </ItemGroup>
-  </Target>
 
 </Project>

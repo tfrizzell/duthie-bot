@@ -635,6 +635,11 @@ namespace Duthie.Bot.Migrations.Sqlite
             migrationBuilder.InsertData(
                 table: "Teams",
                 columns: new[] { "Id", "Name", "ShortName", "Tags" },
+                values: new object[] { new Guid("a12932c2-459f-4886-821f-63ac5803726b"), "Abbotsford Canucks", "Canucks", "[\"ahl\",\"hockey\"]" });
+
+            migrationBuilder.InsertData(
+                table: "Teams",
+                columns: new[] { "Id", "Name", "ShortName", "Tags" },
                 values: new object[] { new Guid("a1464f78-6508-4d94-8781-11c9b8fcf722"), "Chicago Blackhawks", "Blackhawks", "[\"nhl\",\"hockey\"]" });
 
             migrationBuilder.InsertData(
@@ -942,6 +947,12 @@ namespace Duthie.Bot.Migrations.Sqlite
             migrationBuilder.CreateIndex(
                 name: "IX_Sites_Name",
                 table: "Sites",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_Name",
+                table: "Teams",
                 column: "Name",
                 unique: true);
 

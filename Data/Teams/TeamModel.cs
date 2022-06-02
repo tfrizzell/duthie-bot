@@ -18,6 +18,9 @@ public class TeamModel : DataModel<Team>
         model.Property(t => t.Id)
             .ValueGeneratedOnAdd();
 
+        model.HasMany(t => t.LeagueTeams)
+            .WithOne(t => t.Team);
+
         model.Ignore(t => t.Leagues);
 
         model.HasData(

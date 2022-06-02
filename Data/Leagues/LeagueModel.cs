@@ -26,6 +26,9 @@ public class LeagueModel : DataModel<League>
         model.Property(l => l.Info)
             .HasConversion(new LeagueInfoToStringConverter(), new LeagueInfoValueComparer());
 
+        model.HasMany(l => l.LeagueTeams)
+            .WithOne(t => t.League);
+
         model.Ignore(l => l.Teams);
     }
 }

@@ -1,6 +1,6 @@
 namespace Duthie.Modules.MyVirtualGaming;
 
-internal class VgLeagueInfo
+internal class MyVirtualGamingLeagueInfo
 {
     public string LeagueId { get; set; } = "";
 }

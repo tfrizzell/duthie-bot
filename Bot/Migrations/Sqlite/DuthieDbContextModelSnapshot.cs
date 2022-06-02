@@ -151,6 +151,9 @@ namespace Duthie.Bot.Migrations.Sqlite
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("Teams", (string)null);
 
                     b.HasData(
@@ -377,6 +380,13 @@ namespace Duthie.Bot.Migrations.Sqlite
                             Name = "Winnipeg Jets",
                             ShortName = "Jets",
                             Tags = "[\"nhl\",\"hockey\"]"
+                        },
+                        new
+                        {
+                            Id = new Guid("a12932c2-459f-4886-821f-63ac5803726b"),
+                            Name = "Abbotsford Canucks",
+                            ShortName = "Canucks",
+                            Tags = "[\"ahl\",\"hockey\"]"
                         },
                         new
                         {

@@ -3,9 +3,6 @@ using Discord.WebSocket;
 using Duthie.Bot.Configuration;
 using Duthie.Bot.Utils;
 using Duthie.Services.Guilds;
-using Duthie.Services.Leagues;
-using Duthie.Services.Sites;
-using Duthie.Services.Teams;
 using Duthie.Types;
 
 namespace Duthie.Bot.Commands;

@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Duthie.Bot.Migrations.Sqlite
 {
     [DbContext(typeof(DuthieDbContext))]
-    [Migration("20220601134017_Initial")]
+    [Migration("20220602135743_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -152,6 +152,9 @@ namespace Duthie.Bot.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Teams", (string)null);
 
@@ -379,6 +382,13 @@ namespace Duthie.Bot.Migrations.Sqlite
                             Name = "Winnipeg Jets",
                             ShortName = "Jets",
                             Tags = "[\"nhl\",\"hockey\"]"
+                        },
+                        new
+                        {
+                            Id = new Guid("a12932c2-459f-4886-821f-63ac5803726b"),
+                            Name = "Abbotsford Canucks",
+                            ShortName = "Canucks",
+                            Tags = "[\"ahl\",\"hockey\"]"
                         },
                         new
                         {

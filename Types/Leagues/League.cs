@@ -11,7 +11,7 @@ public class League : ILeague
 
 #nullable disable
     public virtual Site Site { get; set; }
-    public virtual IReadOnlyCollection<LeagueTeam> LeagueTeams { get; set; }
+    public virtual IEnumerable<LeagueTeam> LeagueTeams { get; set; }
     public virtual IEnumerable<Team> Teams { get; set; }
 #nullable enable
 }

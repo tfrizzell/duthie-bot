@@ -5,18 +5,18 @@ using Duthie.Types.Api;
 
 namespace Duthie.Modules.LeagueGaming;
 
-public class LgApi : ISiteApi
+public class LeagueGamingApi : ISiteApi
 {
     private readonly HttpClient _httpClient;
 
-    public LgApi()
+    public LeagueGamingApi()
     {
         _httpClient = new HttpClient();
     }
 
     public IReadOnlySet<Guid> Supports
     {
-        get => new HashSet<Guid> { LgSiteProvider.SITE_ID };
+        get => new HashSet<Guid> { LeagueGamingSiteProvider.SITE_ID };
     }
 
     private string GetUrl(IDictionary<string, object> parameters, string file = "index.php", string path = "leaguegaming/league")
@@ -27,10 +27,10 @@ public class LgApi : ISiteApi
 
     public async Task<ILeague?> GetLeagueInfoAsync(League league)
     {
-        if (league.Info is not LgLeagueInfo)
+        if (league.Info is not LeagueGamingLeagueInfo)
             return null;
 
-        var leagueInfo = (league.Info as LgLeagueInfo)!;
+        var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
 
         var html = Regex.Replace(await _httpClient.GetStringAsync(GetUrl(new Dictionary<string, object>
         {
@@ -50,7 +50,7 @@ public class LgApi : ISiteApi
         return new League
         {
             Name = info.Groups[2].Value.Trim(),
-            Info = new LgLeagueInfo
+            Info = new LeagueGamingLeagueInfo
             {
                 LeagueId = leagueInfo.LeagueId,
                 SeasonId = season.Success ? int.Parse(season.Groups[1].Value) : leagueInfo.SeasonId,
@@ -61,10 +61,10 @@ public class LgApi : ISiteApi
 
     public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
     {
-        if (league.Info is not LgLeagueInfo)
+        if (league.Info is not LeagueGamingLeagueInfo)
             return null;
 
-        var leagueInfo = (league.Info as LgLeagueInfo)!;
+        var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
 
         var html = await _httpClient.GetStringAsync(GetUrl(new Dictionary<string, object>
         {
@@ -77,11 +77,6 @@ public class LgApi : ISiteApi
         var nameMatches = Regex.Matches(html, @$"<div[^>]*class=""team_box_icon""[^>]*>.*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>.*?</div>", RegexOptions.IgnoreCase);
 
         if (nameMatches.Count() == 0)
-            return null;
-
-        var shortNameMatches = Regex.Matches(html, @$"<td[^>]*><img[^>]*/team\d+.png[^>]*> \d+\) .*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>.*?</td>", RegexOptions.IgnoreCase);
-
-        if (shortNameMatches.Count() == 0)
             return null;
 
         var teams = new Dictionary<string, LeagueTeam>();
@@ -98,20 +93,25 @@ public class LgApi : ISiteApi
             teams[id].IId = id;
         }
 
-        foreach (Match match in shortNameMatches)
+        var shortNameMatches = Regex.Matches(html, @$"<td[^>]*><img[^>]*/team\d+.png[^>]*> \d+\) .*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>.*?</td>", RegexOptions.IgnoreCase);
+
+        if (shortNameMatches.Count() > 0)
         {
-            var id = match.Groups[1].Value;
+            foreach (Match match in shortNameMatches)
+            {
+                var id = match.Groups[1].Value;
 
-            if (!teams.ContainsKey(id))
-                teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
+                if (!teams.ContainsKey(id))
+                    teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
 
-            teams[id].Team.ShortName = match.Groups[2].Value.Trim();
-            teams[id].IId = id;
+                teams[id].Team.ShortName = match.Groups[2].Value.Trim();
+                teams[id].IId = id;
 
-            if (string.IsNullOrWhiteSpace(teams[id].Team.Name))
-                teams[id].Team.Name = teams[id].Team.ShortName;
+                if (string.IsNullOrWhiteSpace(teams[id].Team.Name))
+                    teams[id].Team.Name = teams[id].Team.ShortName;
+            }
         }
 
-        return teams.Values;
+        return teams.Values.ToList();
     }
 }

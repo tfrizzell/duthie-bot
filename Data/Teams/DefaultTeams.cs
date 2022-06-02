@@ -270,6 +270,14 @@ public static class DefaultTeams
      *        AHL        *
      *                   *
      *********************/
+    public static readonly Team AHLCanucks = new Team
+    {
+        Id = new Guid("a12932c2-459f-4886-821f-63ac5803726b"),
+        Name = "Abbotsford Canucks",
+        ShortName = "Canucks",
+        Tags = new Tags { "ahl", "hockey" }
+    };
+
     public static readonly Team AHLCondors = new Team
     {
         Id = new Guid("c55ce002-3a30-454c-bbba-039ba8baef29"),
@@ -1257,7 +1265,7 @@ public static class DefaultTeams
     };
 
     public static readonly IReadOnlyCollection<Team> NHL = new Team[] { NHLDucks, NHLCoyotes, NHLBruins, NHLSabres, NHLFlames, NHLHurricanes, NHLBlackhawks, NHLAvalanche, NHLBlueJackets, NHLStars, NHLRedWings, NHLOilers, NHLPanthers, NHLKings, NHLWild, NHLCanadiens, NHLPredators, NHLDevils, NHLIslanders, NHLRangers, NHLSenators, NHLFlyers, NHLPenguins, NHLSharks, NHLKraken, NHLBlues, NHLLightning, NHLMapleLeafs, NHLCanucks, NHLGoldenKnights, NHLCapitals, NHLJets };
-    public static readonly IReadOnlyCollection<Team> AHL = new Team[] { AHLCondors, AHLSenators, AHLIslanders, AHLCheckers, AHLWolves, AHLMonsters, AHLFirebirds, AHLEagles, AHLGriffins, AHLWolfPack, AHLSilverKnights, AHLBears, AHLWild, AHLRocket, AHLPhantoms, AHLMoose, AHLAdmirals, AHLReign, AHLBruins, AHLAmericans, AHLIceHogs, AHLRampage, AHLGulls, AHLBarracuda, AHLThunderbirds, AHLHeat, AHLCrunch, AHLStars, AHLMarlies, AHLRoadrunners, AHLComets, AHLPenguins };
+    public static readonly IReadOnlyCollection<Team> AHL = new Team[] { AHLCanucks, AHLCondors, AHLSenators, AHLIslanders, AHLCheckers, AHLWolves, AHLMonsters, AHLFirebirds, AHLEagles, AHLGriffins, AHLWolfPack, AHLSilverKnights, AHLBears, AHLWild, AHLRocket, AHLPhantoms, AHLMoose, AHLAdmirals, AHLReign, AHLBruins, AHLAmericans, AHLIceHogs, AHLRampage, AHLGulls, AHLBarracuda, AHLThunderbirds, AHLHeat, AHLCrunch, AHLStars, AHLMarlies, AHLRoadrunners, AHLComets, AHLPenguins };
     public static readonly IReadOnlyCollection<Team> CHL = new Team[] { CHLTitan, CHLBrakkar, CHLColts, CHLArmada, CHLWheatKings, CHLHitmen, CHLScreamingEagles, CHLIslanders, CHLSagueneens, CHLVoltigeurs, CHLOilKings, CHLOtters, CHLSilvertips, CHLFirebirds, CHLOlympiques, CHLStorm, CHLMooseheads, CHLBulldogs, CHLBlazers, CHLRockets, CHLFrontenacs, CHLRangers, CHLIce, CHLHurricanes, CHLKnights, CHLTigers, CHLSteelheads, CHLWildcats, CHLWarriors, CHLIceDogs, CHLBattalion, CHLGenerals, CHL67s, CHLAttack, CHLPetes, CHLWinterhawks, CHLRaiders, CHLCougars, CHLRemparts, CHLRebels, CHLPats, CHLOceanic, CHLHuskies, CHLSpirit, CHLSeaDogs, CHLSting, CHLBlades, CHLGreyhounds, CHLThunderbirds, CHLCataractes, CHLPhoenix, CHLChiefs, CHLWolves, CHLBroncos, CHLAmericans, CHLForeurs, CHLGiants, CHLRoyals, CHLTigres, CHLSpitfires };
     public static readonly IReadOnlyCollection<Team> NBA = new Team[] { NBAHawks, NBACeltics, NBANets, NBAHornets, NBABulls, NBACavaliers, NBAMavericks, NBANuggets, NBAPistons, NBAWarriors, NBARockets, NBAPacers, NBAClippers, NBALakers, NBAGrizzlies, NBAHeat, NBABucks, NBATimberwolves, NBAPelicans, NBAKnicks, NBAThunder, NBAMagic, NBA76ers, NBASuns, NBATrailBlazers, NBAKings, NBASpurs, NBARaptors, NBAJazz, NBAWizards };
 }
