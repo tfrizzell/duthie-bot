@@ -1,13 +1,19 @@
-lg-sportscentre
+Duthie Bot
 ===============
-Originally written as a [Discord](https://discordapp.com/) webhook powered by a series of [PHP scripts](http://php.net/), **Duthie Bot** (code name: lg-sportscentre) has been reinvented as a [Discord](https://discordapp.com/) bot written in [NodeJS](https://nodejs.org/). Providing features such as game updates, news tracking, and daily star reporting, **Duthie Bot** is the perfect addition to your [LeagueGaming.com](http://www.leaguegaming.com) EA NHL team server.
+Originally written as a [Discord](https://discordapp.com/) webhook powered by a series of [PHP scripts](http://php.net/), **Duthie Bot** has been reinvented as a [Discord](https://discordapp.com/) bot written in [Node.js](https://nodejs.org/). Providing features such as game updates, news tracking, and daily star reporting, **Duthie Bot** is the perfect addition to your [LeagueGaming.com](https://www.leaguegaming.com), [MyVirtualGaming.com](https://vghl.myvirtualgaming.com/), or [TheSPNHL.com](https://thespnhl.com) EA NHL team server.
+
+The first iteration of **Duthie Bot** was a simple project for a simple low-volume use case. As interest grew, the need for a better solution became more and more apparent. In version 2, **Duthie Bot** has gone through some major performance improvements including a transition from filesystem storage to [sqlite3](https://www.sqlite.org/index.html) and a complete refactor of how the data mining scripts work.
 
 Dependencies
 ============
  * [node.js](https://nodejs.org/) >= 6.11.3
  * [discord.js](//github.com/hydrabolt/discord.js) >= 11.2.1
+ * [sqlite3](//github.com/mapbox/node-sqlite3) >= 4.0.0
+ * [cron](//github.com/kelektiv/node-cron) >= 1.3.0
+ * [moment](https://momentjs.com/) >= 2.22.0
+ * [moment-timezone](https://momentjs.com/timezone/) >= 0.5.14
  * [request](//github.com/request/request) >= 2.83.0
- * [node-cron](//github.com/kelektiv/node-cron) >= 1.3.0
+ * [xml2json](//github.com/buglabs/node-xml2json) >= 0.11.2
 
 How to Use
 ==========
@@ -19,7 +25,7 @@ Once **Duthie Bot** has been added to your server, you will need to grant it per
 
 Configuration
 =============
-From a channel **Duthie Bot** has access to, send the message `-lg help` to get started, or read the [Commands](#commands) section below.
+From a channel **Duthie Bot** has access to, send the message `-duthie help` to get started, or read the [Commands](#commands) section below.
 
 Commands
 ========
@@ -27,7 +33,7 @@ Commands
 Lists the set of data available to your server.
 ```vb
 # SYNTAX
-  -lg list <mode> [<type>[ <league>[ <team>[ <channel>]]]]
+  -duthie list <mode>[ type= <type>][ league=<league>][ team=<team>][ channel=<channel>]
 
 # MODE (required)
   There are currently three supported list modes:
@@ -49,11 +55,11 @@ Lists the set of data available to your server.
       * waivers       - announces any players placed on or claimed off waivers that match your league and/or team filters
 
 # LEAGUE (optional, mode=teams,watchers)
-  When listing teams or watchers, you can provide any league to filter the output on. See -lg list leagues for a list of valid leagues.
+  When listing teams or watchers, you can provide any league to filter the output on. See -duthie list leagues for a list of valid leagues.
   If specifying a league by name, be sure to wrap it in quotes (ex: "LGHL PSN") or remove any spaces (ex: LGHLPSN).
 
 # TEAM (optional, mode=watchers)
-  When listing watchers, you can provide any team to filter the output on. See -lg list teams for a list of valid teams.
+  When listing watchers, you can provide any team to filter the output on. See -duthie list teams for a list of valid teams.
 
   If specifying a team by name, be sure to wrap it in quotes (ex: "Columbus Blue Jackets") or remove any spaces (ex: ColumbusBlueJackets).
 
@@ -65,14 +71,14 @@ Lists the set of data available to your server.
 Sends a ping to **Duthie Bot** to make sure it's parsing and responding to messages
 ```vb
 # SYNTAX
-  -lg ping
+  -duthie ping
 ```
 
 #### Unwatch
 Removes a watcher from your server's **Duthie Bot** data.
 ```vb
 # SYNTAX
-  -lg unwatch <type>[ <league>[ <team>]]
+  -duthie unwatch type=<type>[ league=<league>][ team=<team>][ channel=<channel>]
 
 # TYPE (required)
   There are currently nine valid types:
@@ -88,12 +94,17 @@ Removes a watcher from your server's **Duthie Bot** data.
       * waivers     - announces any players placed on or claimed off waivers that match your league and/or team filters
 
 # LEAGUE (optional)
-  The league argument is optional when deregistering a watcher. If omitted, all watchers that match the other arguments will be removed. To specify a league, simple enter the league's id or name found on LeagueGaming.com. For a list of valid leagues, see -lg list leagues.
+  The league argument is optional when deregistering a watcher. If omitted, all watchers that match the other arguments will be removed. To specify a league, simple enter the league's id or name found on LeagueGaming.com. For a list of valid leagues, see -duthie list leagues.
 
   If specifying a league by name, be sure to wrap it in quotes (ex: "LGHL PSN") or remove any spaces (ex: LGHLPSN).
 
 # TEAM (optional)
-  The team argument is optional when deregistering a watcher. If omitted, all watchers that match the other arguments will be removed. To specify a team, simple enter the team's id or name found on LeagueGaming.com. For a list of valid teams, see -lg list teams.
+  The team argument is optional when deregistering a watcher. If omitted, all watchers that match the other arguments will be removed. To specify a team, simple enter the team's id or name found on LeagueGaming.com. For a list of valid teams, see -duthie list teams.
+
+  If specifying a team by name, be sure to wrap it in quotes (ex: "Toronto Maple Leafs") or remove any spaces (ex: TorontoMapleLeafs).
+
+# CHANNEL (optional)
+  The channel argument is optional when deregistering a watcher. If omitted, the current channel will be used. To specify all channel, use `channel=*`.
 
   If specifying a team by name, be sure to wrap it in quotes (ex: "Toronto Maple Leafs") or remove any spaces (ex: TorontoMapleLeafs).
 ```
@@ -102,7 +113,7 @@ Removes a watcher from your server's **Duthie Bot** data.
 Adds a watcher to your server's **Duthie Bot** data.
 ```vb
 # SYNTAX
-  -lg watch <type> <league>[ <team>[ <channel>]]
+  -duthie watch type=<type> league=<league>[ team=<team>][ channel=<channel>]
 
 # TYPE (required)
   There are currently nine valid types:
@@ -118,12 +129,12 @@ Adds a watcher to your server's **Duthie Bot** data.
       * waivers     - announces any players placed on or claimed off waivers that match your league and/or team filters
 
 # LEAGUE (required)
-  To register a watcher with Duthie Bot, you must specify a supported league from LeagueGaming.com. Duthie Bot does not support leagueless watchers at this time. To specify a league, simply enter the league's id or name found on LeagueGaming.com. For a list of valid leagues, see -lg list leagues.
+  To register a watcher with Duthie Bot, you must specify a supported league from LeagueGaming.com. Duthie Bot does not support leagueless watchers at this time. To specify a league, simply enter the league's id or name found on LeagueGaming.com. For a list of valid leagues, see -duthie list leagues.
 
   If specifying a league by name, be sure to wrap it in quotes (ex: "LGHL PSN") or remove any spaces (ex: LGHLPSN).
 
 # TEAM (optional)
-  The team argument is optional for all types except games. Duthie Bot does not support teamless game watchers. To specify a team, simply enter the team's id or name found on LeagueGaming.com. For a list of valid teams, see -lg list teams.
+  The team argument is optional for all types except games. Duthie Bot does not support teamless game watchers. To specify a team, simply enter the team's id or name found on LeagueGaming.com. For a list of valid teams, see -duthie list teams.
 
   If specifying a team by name, be sure to wrap it in quotes (ex: "Columbus Blue Jackets") or remove any spaces (ex: ColumbusBlueJackets).
 

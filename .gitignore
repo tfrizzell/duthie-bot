@@ -1,1 +1,7 @@
-/.project
+/help/
+/node_modules/
+/scripts/
+*.db
+*.db-*
+package-lock.json
+yarn.lock
