@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Types\Duthie.Types.csproj" />
-    <ProjectReference Include="..\Modules\Duthie.Modules.csproj" />
   </ItemGroup>
 
   <ItemGroup>

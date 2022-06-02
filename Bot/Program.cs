@@ -21,8 +21,9 @@ await MainAsync();
 
 Task LoadModules()
 {
-    var modules = new List<string> { Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory) ?? ".", "Duthie.Modules.dll") };
-    var moduleDir = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory) ?? ".", "Modules");
+    // var modules = new List<string> { Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory) ?? ".", "Duthie.Modules.dll") };
+    var modules = new List<string> {};
+    var moduleDir = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory) ?? ".", "modules");
 
     if (Directory.Exists(moduleDir))
         modules.AddRange(Directory.EnumerateFiles(moduleDir, "*.dll"));

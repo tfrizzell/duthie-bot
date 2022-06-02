@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Types\Duthie.Types.csproj" />
+    <ProjectReference Include="..\..\Types\Duthie.Types.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

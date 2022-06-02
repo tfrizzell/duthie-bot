@@ -7,7 +7,6 @@ using Duthie.Bot.Configuration;
 using Duthie.Bot.Events;
 using Duthie.Bot.Services;
 using Duthie.Data;
-using Duthie.Modules.LeagueGaming;
 using Duthie.Services.Background;
 using Duthie.Services.Guilds;
 using Duthie.Services.Leagues;
@@ -19,7 +18,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using CommandService = Discord.Commands.CommandService;
 
 namespace Duthie.Bot;
 

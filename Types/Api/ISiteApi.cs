@@ -1,8 +1,5 @@
 namespace Duthie.Types.Api;
 
-// public interface ISiteApi : IDailyStarsApi, IGamesApi, ILeagueInfoApi, INewsApi, ITeamsApi
-public interface ISiteApi : IApi, ILeagueInfoApi
+public interface ISiteApi : IApi, ILeagueInfoApi, ITeamsApi
 {
-    // new IEnumerable<Guid> Supports();
-    // public new bool Supports(League leauge) => Supports().Contains(leauge.SiteId);
 }

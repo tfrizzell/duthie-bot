@@ -14,7 +14,9 @@
     <ProjectReference Include="..\Types\Duthie.Types.csproj" />
     <ProjectReference Include="..\Services\Duthie.Services.csproj" />
     <ProjectReference Include="..\Data\Duthie.Data.csproj" />
-    <ProjectReference Include="..\Modules\Duthie.Modules.csproj" />
+    <ProjectReference Include="..\Modules\LeagueGaming\Duthie.Modules.LeagueGaming.csproj" />
+    <ProjectReference Include="..\Modules\MyVirtualGaming\Duthie.Modules.MyVirtualGaming.csproj" />
+    <ProjectReference Include="..\Modules\TheSpnhl\Duthie.Modules.TheSpnhl.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,10 +39,21 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="appsettings.json" />
-    <EmbeddedResource Include="appsettings.json">
+    <None Remove="appsettings*.json" />
+    <EmbeddedResource Include="appsettings*.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
+
+  <Target Name="CopyModules" AfterTargets="ResolveReferences">
+    <Message Text="Copying modules..." />
+    <ItemGroup>
+      <ReferenceCopyLocalPaths
+        Condition=" $([System.String]::new('%(ReferenceCopyLocalPaths.FileName)').StartsWith('Duthie.Modules.')) "
+        Update="%(ReferenceCopyLocalPaths)"
+        DestinationSubDirectory="modules\"
+      />
+    </ItemGroup>
+  </Target>
 
 </Project>

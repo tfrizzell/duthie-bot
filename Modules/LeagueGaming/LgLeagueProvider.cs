@@ -102,7 +102,7 @@ public class LgLeagueProvider : ILeagueProvider
             {
                 SiteId = LgSiteProvider.SITE_ID,
                 Id = new Guid("76f28c43-fe50-4d66-910d-be37622ecb0e"),
-                Name = "FNP",
+                Name = "LGFNP",
                 Info = new LgLeagueInfo { LeagueId = 78 },
                 Tags = new Tags { "xbox", "ea nhl", "6v6", "weekly", "pickup" },
                 Enabled = true

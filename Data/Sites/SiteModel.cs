@@ -1,4 +1,3 @@
-using Duthie.Modules.LeagueGaming;
 using Duthie.Types;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

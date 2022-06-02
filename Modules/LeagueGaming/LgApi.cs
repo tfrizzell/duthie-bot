@@ -25,27 +25,27 @@ public class LgApi : ISiteApi
         return $"https://www.leaguegaming.com/forums/{file}?{path}&{queryString}".Replace("?&", "?");
     }
 
-    public async Task<ILeague> GetLeagueInfoAsync(League league)
+    public async Task<ILeague?> GetLeagueInfoAsync(League league)
     {
         if (league.Info is not LgLeagueInfo)
-            return league;
+            return null;
 
         var leagueInfo = (league.Info as LgLeagueInfo)!;
 
-        var html = await _httpClient.GetStringAsync(GetUrl(new Dictionary<string, object>
+        var html = Regex.Replace(await _httpClient.GetStringAsync(GetUrl(new Dictionary<string, object>
         {
             ["action"] = "league",
-            ["page"] = "standings",
+            ["page"] = "standing",
             ["leagueid"] = leagueInfo.LeagueId,
             ["seasonid"] = 1
-        }));
+        })), @"[\r\n]+", "");
 
-        var info = Regex.Match(html, @$"<li[^>]* custom-tab-{leagueInfo.LeagueId} [^>]*>\s*<a[^>]*/league\.(\d+)[^>]*>.*?<span[^>]*>(.*?)</span>\s*</a>", RegexOptions.IgnoreCase & RegexOptions.Singleline);
+        var info = Regex.Match(html, @$"<li[^>]* custom-tab-{leagueInfo.LeagueId} [^>]*>.*?<a[^>]*/league\.(\d+)[^>]*>.*?<span[^>]*>(.*?)</span>.*?</a>", RegexOptions.IgnoreCase);
 
         if (!info.Success)
-            return league;
+            return null;
 
-        var season = Regex.Match(html, @$"<a[^>]*leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid=(\d+)[^>]*>Roster", RegexOptions.IgnoreCase & RegexOptions.Singleline);
+        var season = Regex.Match(html, @$"<a[^>]*leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid=(\d+)[^>]*>Roster</a>", RegexOptions.IgnoreCase);
 
         return new League
         {
@@ -57,5 +57,61 @@ public class LgApi : ISiteApi
                 ForumId = int.Parse(info.Groups[1].Value)
             }
         };
+    }
+
+    public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
+    {
+        if (league.Info is not LgLeagueInfo)
+            return null;
+
+        var leagueInfo = (league.Info as LgLeagueInfo)!;
+
+        var html = await _httpClient.GetStringAsync(GetUrl(new Dictionary<string, object>
+        {
+            ["action"] = "league",
+            ["page"] = "standing",
+            ["leagueid"] = leagueInfo.LeagueId,
+            ["seasonid"] = leagueInfo.SeasonId
+        }));
+
+        var nameMatches = Regex.Matches(html, @$"<div[^>]*class=""team_box_icon""[^>]*>.*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>.*?</div>", RegexOptions.IgnoreCase);
+
+        if (nameMatches.Count() == 0)
+            return null;
+
+        var shortNameMatches = Regex.Matches(html, @$"<td[^>]*><img[^>]*/team\d+.png[^>]*> \d+\) .*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>.*?</td>", RegexOptions.IgnoreCase);
+
+        if (shortNameMatches.Count() == 0)
+            return null;
+
+        var teams = new Dictionary<string, LeagueTeam>();
+
+        foreach (Match match in nameMatches)
+        {
+            var id = match.Groups[1].Value;
+
+            if (!teams.ContainsKey(id))
+                teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
+
+            teams[id].Team.Name =
+            teams[id].Team.ShortName = match.Groups[2].Value.Trim();
+            teams[id].IId = id;
+        }
+
+        foreach (Match match in shortNameMatches)
+        {
+            var id = match.Groups[1].Value;
+
+            if (!teams.ContainsKey(id))
+                teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
+
+            teams[id].Team.ShortName = match.Groups[2].Value.Trim();
+            teams[id].IId = id;
+
+            if (string.IsNullOrWhiteSpace(teams[id].Team.Name))
+                teams[id].Team.Name = teams[id].Team.ShortName;
+        }
+
+        return teams.Values;
     }
 }

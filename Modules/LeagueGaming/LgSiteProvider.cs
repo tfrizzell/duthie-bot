@@ -1,5 +1,7 @@
+using System.Runtime.CompilerServices;
 using Duthie.Types;
 
+[assembly: InternalsVisibleTo("Duthie.Modules.LeagueGaming.Tests")]
 namespace Duthie.Modules.LeagueGaming;
 
 public class LgSiteProvider : ISiteProvider

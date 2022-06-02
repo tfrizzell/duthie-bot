@@ -41,9 +41,13 @@ public class LeagueBackgroundService
                 if (api != null)
                 {
                     var data = await api.GetLeagueInfoAsync(league);
-                    league.Name = data.Name;
-                    league.Info = data.Info;
-                    await context.Set<League>().UpdateAsync(league);
+
+                    if (data != null)
+                    {
+                        league.Name = data.Name;
+                        league.Info = data.Info;
+                        await context.Set<League>().UpdateAsync(league);
+                    }
                 }
             }));
 
