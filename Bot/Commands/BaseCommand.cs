@@ -3,7 +3,7 @@ using Discord.WebSocket;
 using Duthie.Bot.Configuration;
 using Duthie.Bot.Utils;
 using Duthie.Services.Guilds;
-using Duthie.Types;
+using Duthie.Types.Watchers;
 
 namespace Duthie.Bot.Commands;
 

@@ -1,4 +1,7 @@
-namespace Duthie.Types;
+using Duthie.Types.Common;
+using Duthie.Types.Leagues;
+
+namespace Duthie.Types.Teams;
 
 public class Team
 {

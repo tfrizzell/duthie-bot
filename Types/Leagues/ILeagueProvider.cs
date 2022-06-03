@@ -1,4 +1,4 @@
-namespace Duthie.Types;
+namespace Duthie.Types.Leagues;
 
 public interface ILeagueProvider
 {

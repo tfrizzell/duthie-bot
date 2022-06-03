@@ -1,6 +1,6 @@
 using Duthie.Data;
 using Duthie.Services.Extensions;
-using Duthie.Types;
+using Duthie.Types.Teams;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -57,7 +57,7 @@ public class TeamService
         }
     }
 
-    public async Task<IEnumerable<Team>> FindAsync(string text = "", IEnumerable<Guid>? sites = null, IEnumerable<Guid>? leagues = null, string[]? tags = null)
+    public async Task<IEnumerable<Team>> FindAsync(string text = "", IEnumerable<Guid>? sites = null, IEnumerable<Guid>? leagues = null, ICollection<string>? tags = null)
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
@@ -76,7 +76,7 @@ public class TeamService
 
             var teams = await query
                 .OrderBy(t => t.Id.ToString().ToLower().Equals(text.ToLower()))
-                .ThenBy(t => t.Name)
+                    .ThenBy(t => t.Name)
                 .ToListAsync();
 
             return tags?.Count() > 0

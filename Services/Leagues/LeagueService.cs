@@ -1,5 +1,6 @@
 using Duthie.Data;
-using Duthie.Types;
+using Duthie.Services.Extensions;
+using Duthie.Types.Leagues;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -26,9 +27,37 @@ public class LeagueService
         context.Set<League>()
             .Include(l => l.Site)
             .Include(l => l.LeagueTeams)
+                .ThenInclude(t => t.Team)
             .OrderBy(l => l.Name);
 
-    public async Task<IEnumerable<League>> FindAsync(string text = "", IEnumerable<Guid>? sites = null, string[]? tags = null)
+    public async Task<int> DeleteAsync(IEnumerable<Guid> ids) =>
+        await DeleteAsync(ids.ToArray());
+
+    public async Task<int> DeleteAsync(params Guid[] ids)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            foreach (var id in ids)
+            {
+                var league = await context.Set<League>().FirstOrDefaultAsync(l => l.Id == id && l.Enabled);
+
+                if (league != null)
+                    league.Enabled = false;
+            }
+
+            return await context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<bool> ExistsAsync(Guid id)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            return await context.Set<League>().AnyAsync(l => l.Id == id && l.Enabled);
+        }
+    }
+
+    public async Task<IEnumerable<League>> FindAsync(string text = "", IEnumerable<Guid>? sites = null, ICollection<string>? tags = null)
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
@@ -44,9 +73,9 @@ public class LeagueService
 
             var leagues = await query
                 .OrderBy(l => l.Id.ToString().ToLower().Equals(text.ToLower()))
-                .ThenBy(l => l.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower()))
-                .ThenBy(l => (l.Name.StartsWith("VG") && l.Name.ToLower().StartsWith(text.ToLower())))
-                .ThenBy(l => l.Name)
+                    .ThenBy(l => l.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower()))
+                    .ThenBy(l => (l.Name.StartsWith("VG") && l.Name.ToLower().StartsWith(text.ToLower())))
+                    .ThenBy(l => l.Name)
                 .ToListAsync();
 
             return tags?.Count() > 0
@@ -78,4 +107,25 @@ public class LeagueService
                     .ToListAsync();
             }
         });
+
+    public async Task<int> SaveAsync(IEnumerable<League> leagues) =>
+        await SaveAsync(leagues.ToArray());
+
+    // TODO: Updating LeagueTeam entries is encountering issues in this method.
+    //       Futher investigation is needed.
+    public async Task<int> SaveAsync(params League[] leagues)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            foreach (var league in leagues)
+            {
+                if (!await context.Set<League>().AnyAsync(l => l.Id == league.Id))
+                    await context.Set<League>().AddAsync(league);
+                else
+                    await context.Set<League>().UpdateAsync(league);
+            }
+
+            return await context.SaveChangesAsync();
+        }
+    }
 }

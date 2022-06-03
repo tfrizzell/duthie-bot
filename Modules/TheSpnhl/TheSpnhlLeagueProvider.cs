@@ -1,4 +1,5 @@
-using Duthie.Types;
+using Duthie.Types.Common;
+using Duthie.Types.Leagues;
 
 namespace Duthie.Modules.TheSpnhl;
 

@@ -42,7 +42,9 @@ public class GuildAdminService
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            return await context.Set<GuildAdmin>().AnyAsync(a => a.GuildId == guildId && a.MemberId == memberId);
+            return await context.Set<GuildAdmin>()
+                .Include(a => a.Guild)
+                .AnyAsync(a => a.GuildId == guildId && a.MemberId == memberId && a.Guild.LeftAt == null);
         }
     }
 
@@ -51,7 +53,7 @@ public class GuildAdminService
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
             return await CreateQuery(context)
-                .Where(a => a.GuildId == guildId)
+                .Where(a => a.GuildId == guildId && a.Guild.LeftAt == null)
                 .Select(a => a.MemberId)
                 .ToListAsync();
         }

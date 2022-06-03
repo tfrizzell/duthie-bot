@@ -1,6 +1,6 @@
 using Duthie.Data;
 using Duthie.Services.Extensions;
-using Duthie.Types;
+using Duthie.Types.Watchers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -29,8 +29,8 @@ public class WatcherService
                 .ThenInclude(l => l.Site)
             .Include(w => w.Team)
             .OrderBy(w => w.League.Name)
-            .ThenBy(w => w.Team.Name)
-            .ThenBy(w => w.Type);
+                .ThenBy(w => w.Team.Name)
+                .ThenBy(w => w.Type);
 
     public async Task<int> DeleteAsync(IEnumerable<Guid> ids) =>
         await DeleteAsync(ids.ToArray());
@@ -55,21 +55,18 @@ public class WatcherService
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            return await context.Set<Watcher>().AnyAsync(w => w.Id == id && w.ArchivedAt == null);
+            return await context.Set<Watcher>()
+                .Include(w => w.League)
+                    .ThenInclude(l => l.Site)
+                .AnyAsync(w => w.Id == id && w.ArchivedAt == null && w.League.Enabled && w.League.Site.Enabled);
         }
     }
 
-    public async Task<IEnumerable<Watcher>> FindAsync(ulong guildId, string text = "", IEnumerable<Guid>? sites = null, IEnumerable<Guid>? leagues = null, IEnumerable<Guid>? teams = null, IEnumerable<WatcherType>? types = null, IEnumerable<ulong?>? channels = null)
+    public async Task<IEnumerable<Watcher>> FindAsync(ulong guildId, IEnumerable<Guid>? sites = null, IEnumerable<Guid>? leagues = null, IEnumerable<Guid>? teams = null, IEnumerable<WatcherType>? types = null, IEnumerable<ulong?>? channels = null)
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            var query = CreateQuery(context).Where(w => w.ArchivedAt == null && w.GuildId == guildId);
-
-            if (!string.IsNullOrWhiteSpace(text))
-                query = query.Where(w => w.Id.ToString().ToLower().Equals(text.ToLower())
-                    || w.League.Site.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower())
-                    || w.League.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower())
-                    || w.Team.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower()));
+            var query = CreateQuery(context).Where(w => w.GuildId == guildId && w.ArchivedAt == null && w.League.Enabled && w.League.Site.Enabled);
 
             if (sites?.Count() > 0)
                 query = query.Where(w => sites.Contains(w.League.SiteId));
@@ -83,12 +80,29 @@ public class WatcherService
             if (channels?.Count() > 0)
                 query = query.Where(w => channels.Contains(w.ChannelId));
 
-            return await query
-                .OrderBy(w => w.Id.ToString().ToLower().Equals(text.ToLower()))
-                .ThenBy(w => w.League.Name)
-                .ThenBy(w => w.Team.Name)
-                .ThenBy(w => w.Type)
-                .ToListAsync();
+            return await query.ToListAsync();
+        }
+    }
+
+    public async Task<IEnumerable<Watcher>> FindAsync(IEnumerable<Guid>? sites = null, IEnumerable<Guid>? leagues = null, IEnumerable<Guid>? teams = null, IEnumerable<WatcherType>? types = null, IEnumerable<ulong?>? channels = null)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            var query = CreateQuery(context).Where(w => w.ArchivedAt == null && w.League.Enabled && w.League.Site.Enabled);
+
+            if (sites?.Count() > 0)
+                query = query.Where(w => sites.Contains(w.League.SiteId));
+
+            if (leagues?.Count() > 0)
+                query = query.Where(w => leagues.Contains(w.LeagueId));
+
+            if (teams?.Count() > 0)
+                query = query.Where(w => teams.Contains(w.TeamId));
+
+            if (channels?.Count() > 0)
+                query = query.Where(w => channels.Contains(w.ChannelId));
+
+            return await query.ToListAsync();
         }
     }
 
@@ -105,7 +119,7 @@ public class WatcherService
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
             return await CreateQuery(context)
-                .Where(w => w.ArchivedAt == null && w.GuildId == guildId)
+                .Where(w => w.GuildId == guildId && w.ArchivedAt == null && w.League.Enabled && w.League.Site.Enabled)
                 .ToListAsync();
         }
     }

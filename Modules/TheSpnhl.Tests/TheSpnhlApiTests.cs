@@ -1,4 +1,5 @@
-using Duthie.Types;
+using Duthie.Types.Leagues;
+using Duthie.Types.Teams;
 
 namespace Duthie.Modules.TheSpnhl.Tests;
 
@@ -6,8 +7,8 @@ public class TheSpnhlApiTests
 {
     private readonly IReadOnlyCollection<string> EXCLUDED_TEAMS = new string[] { "Ducks", "Coyotes", "Bruins", "Sabres", "Hurricanes", "Stars", "Red Wings", "Oilers", "Panthers", "Kings", "Predators", "Devils", "Islanders", "Senators", "Sharks", "Blues", "Maple Leafs", "Canucks", "Golden Knights", "Capitals" };
 
-    private static readonly Guid LEAGUE_ID = new Guid("6991c990-a4fa-488b-884a-79b00e4e3577");
-    private const int EXPECTED_SEASON_ID = 43;
+    private static readonly Guid TEST_LEAGUE_ID = new Guid("6991c990-a4fa-488b-884a-79b00e4e3577");
+    private const int TEST_SEASON_ID = 43;
 
     private readonly TheSpnhlApi _api;
     private readonly League _league;
@@ -15,7 +16,7 @@ public class TheSpnhlApiTests
     public TheSpnhlApiTests()
     {
         _api = new TheSpnhlApi();
-        _league = new TheSpnhlLeagueProvider().Leagues.First(l => l.Id == LEAGUE_ID);
+        _league = new TheSpnhlLeagueProvider().Leagues.First(l => l.Id == TEST_LEAGUE_ID);
     }
 
     [Fact]
@@ -25,7 +26,7 @@ public class TheSpnhlApiTests
     }
 
     [Fact]
-    public async Task GetLeagueInfoAsync_ReturnsLeagueInfo()
+    public async Task GetLeagueInfoAsync_ReturnsExpectedLeagueInfo()
     {
         var league = await _api.GetLeagueInfoAsync(_league);
         Assert.True(league != null, $"{_api.GetType().Name} does not support league {_league.Id}");
@@ -33,11 +34,11 @@ public class TheSpnhlApiTests
         Assert.True(league?.Info is TheSpnhlLeagueInfo, $"expected Info to be of type {typeof(TheSpnhlLeagueInfo).Name} but got {league?.Info?.GetType()?.Name ?? "null"}");
 
         var info = (league?.Info as TheSpnhlLeagueInfo)!;
-        Assert.True(EXPECTED_SEASON_ID <= info.SeasonId, $"expected Info.SeasonId to be greater than or equal to {EXPECTED_SEASON_ID} but got {info.SeasonId}");
+        Assert.True(TEST_SEASON_ID <= info.SeasonId, $"expected Info.SeasonId to be greater than or equal to {TEST_SEASON_ID} but got {info.SeasonId}");
     }
 
     [Fact]
-    public async Task GetTeamsAsync_ReturnsNHLTeams()
+    public async Task GetTeamsAsync_ReturnsExpectedTeams()
     {
         var teams = await _api.GetTeamsAsync(_league);
         Assert.True(teams != null, $"{_api.GetType().Name} does not support league {_league.Id}");
@@ -57,7 +58,7 @@ public class TheSpnhlApiTests
             var leagueTeam = teams?.FirstOrDefault(t => t.Team.Name.Equals(team.Name) && t.Team.ShortName.Equals(team.ShortName));
             Assert.True(team.Name.Equals(leagueTeam?.Team.Name), $"expected Name {team.Name} but got {leagueTeam?.Team.Name}");
             Assert.True(team.ShortName.Equals(leagueTeam?.Team.ShortName), $"expected ShortName {team.ShortName} but got {leagueTeam?.Team.ShortName}");
-            Assert.True(!string.IsNullOrWhiteSpace(leagueTeam?.IId), $"expected IId to non-empty but got empty");
+            Assert.True(!string.IsNullOrWhiteSpace(leagueTeam?.IId), $"expected IId to non-empty");
         }
     }
 }

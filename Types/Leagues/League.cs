@@ -1,4 +1,8 @@
-namespace Duthie.Types;
+using Duthie.Types.Common;
+using Duthie.Types.Sites;
+using Duthie.Types.Teams;
+
+namespace Duthie.Types.Leagues;
 
 public class League : ILeague
 {
@@ -12,7 +16,7 @@ public class League : ILeague
 #nullable disable
     public virtual Site Site { get; set; }
     public virtual IEnumerable<LeagueTeam> LeagueTeams { get; set; }
-    public virtual IEnumerable<Team> Teams { get; set; }
+    public virtual IEnumerable<Team> Teams => LeagueTeams?.Select(t => t.Team);
 #nullable enable
 }
 

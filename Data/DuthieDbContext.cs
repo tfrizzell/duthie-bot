@@ -3,7 +3,7 @@
 using System.Collections.Immutable;
 using Duthie.Data.Comparers;
 using Duthie.Data.Converters;
-using Duthie.Types;
+using Duthie.Types.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -20,7 +20,8 @@ public class DuthieDbContext : DbContext
         new TeamModel(),
         new LeagueTeamModel(),
         new WatcherModel(),
-        new GuildMessageModel()
+        new GuildMessageModel(),
+        new GameModel()
     );
 
     public DuthieDbContext(DbContextOptions<DuthieDbContext> options) : base(options) { }
@@ -72,20 +73,7 @@ public class DuthieDbContext : DbContext
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
             // DateTimeOffset
-            var properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(Guid)
-                                                                        || p.PropertyType == typeof(Guid?));
-
-            foreach (var property in properties)
-            {
-                builder
-                    .Entity(entityType.Name)
-                    .Property(property.Name)
-                    .Metadata
-                    .SetValueComparer(new GuidValueComparer());
-            }
-
-            // DateTimeOffset
-            properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(DateTimeOffset)
+            var properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(DateTimeOffset)
                                                                         || p.PropertyType == typeof(DateTimeOffset?));
 
             foreach (var property in properties)
@@ -96,5 +84,17 @@ public class DuthieDbContext : DbContext
                     .HasConversion(new DateTimeOffsetToStringConverter());
             }
         }
+    }
+
+    public Task RemoveRangeAsync(params object[] entities)
+    {
+        RemoveRange(entities);
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveRangeAsync(IEnumerable<object> entities)
+    {
+        RemoveRange(entities);
+        return Task.CompletedTask;
     }
 }

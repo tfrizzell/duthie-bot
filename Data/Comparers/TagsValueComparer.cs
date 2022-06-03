@@ -1,4 +1,4 @@
-using Duthie.Types;
+using Duthie.Types.Common;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Duthie.Data.Comparers;

@@ -114,6 +114,44 @@ namespace Duthie.Bot.Migrations.Sqlite
                 });
 
             migrationBuilder.CreateTable(
+                name: "Games",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    LeagueId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    GameId = table.Column<string>(type: "TEXT", nullable: false),
+                    Date = table.Column<string>(type: "TEXT", nullable: false),
+                    VisitorId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    VisitorScore = table.Column<int>(type: "INTEGER", nullable: true),
+                    HomeId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    HomeScore = table.Column<int>(type: "INTEGER", nullable: true),
+                    Overtime = table.Column<bool>(type: "INTEGER", nullable: true),
+                    Shootout = table.Column<bool>(type: "INTEGER", nullable: true),
+                    VisitorTeamId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    HomeTeamId = table.Column<Guid>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Games", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Games_Leagues_LeagueId",
+                        column: x => x.LeagueId,
+                        principalTable: "Leagues",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Games_Teams_HomeTeamId",
+                        column: x => x.HomeTeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Games_Teams_VisitorTeamId",
+                        column: x => x.VisitorTeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "LeagueTeams",
                 columns: table => new
                 {
@@ -950,6 +988,21 @@ namespace Duthie.Bot.Migrations.Sqlite
                 values: new object[] { new Guid("ff8968a2-0895-4b0c-a28d-fb3dff7d2b2d"), "Texas Stars", "Stars", "[\"ahl\",\"hockey\"]" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Games_HomeTeamId",
+                table: "Games",
+                column: "HomeTeamId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Games_LeagueId",
+                table: "Games",
+                column: "LeagueId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Games_VisitorTeamId",
+                table: "Games",
+                column: "VisitorTeamId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_GuildMessages_GuildId",
                 table: "GuildMessages",
                 column: "GuildId");
@@ -1002,6 +1055,9 @@ namespace Duthie.Bot.Migrations.Sqlite
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Games");
+
             migrationBuilder.DropTable(
                 name: "GuildAdmins");
 

@@ -1,4 +1,5 @@
-using Duthie.Types;
+using Duthie.Types.Common;
+using Duthie.Types.Leagues;
 
 namespace Duthie.Modules.LeagueGaming;
 
@@ -15,7 +16,7 @@ public class LeagueGamingLeagueProvider : ILeagueProvider
                 Name = "LGHL",
                 Info = new LeagueGamingLeagueInfo { LeagueId = 37 },
                 Tags = new Tags { "xbox", "ea nhl", "6v6" },
-                Enabled = true
+                Enabled = true,
             },
 
             new League
@@ -25,7 +26,7 @@ public class LeagueGamingLeagueProvider : ILeagueProvider
                 Name = "LGAHL",
                 Info = new LeagueGamingLeagueInfo { LeagueId = 38 },
                 Tags = new Tags { "xbox", "ea nhl", "6v6" },
-                Enabled = true
+                Enabled = true,
             },
 
             new League
@@ -35,7 +36,7 @@ public class LeagueGamingLeagueProvider : ILeagueProvider
                 Name = "LGCHL",
                 Info = new LeagueGamingLeagueInfo { LeagueId = 39 },
                 Tags = new Tags { "xbox", "ea nhl", "6v6" },
-                Enabled = true
+                Enabled = true,
             },
 
             new League
@@ -45,7 +46,7 @@ public class LeagueGamingLeagueProvider : ILeagueProvider
                 Name = "LGHL PSN",
                 Info = new LeagueGamingLeagueInfo { LeagueId = 67 },
                 Tags = new Tags { "psn", "ea nhl", "6v6" },
-                Enabled = true
+                Enabled = true,
             },
 
             new League
@@ -55,7 +56,7 @@ public class LeagueGamingLeagueProvider : ILeagueProvider
                 Name = "LGAHL PSN",
                 Info = new LeagueGamingLeagueInfo { LeagueId = 68 },
                 Tags = new Tags { "psn", "ea nhl", "6v6" },
-                Enabled = true
+                Enabled = true,
             },
 
             new League
@@ -65,7 +66,7 @@ public class LeagueGamingLeagueProvider : ILeagueProvider
                 Name = "LGCHL PSN",
                 Info = new LeagueGamingLeagueInfo { LeagueId = 69 },
                 Tags = new Tags { "psn", "ea nhl", "6v6" },
-                Enabled = true
+                Enabled = true,
             },
 
             new League
@@ -75,7 +76,7 @@ public class LeagueGamingLeagueProvider : ILeagueProvider
                 Name = "ESHL",
                 Info = new LeagueGamingLeagueInfo { LeagueId = 90 },
                 Tags = new Tags { "xbox", "ea nhl", "6v6", "esports" },
-                Enabled = true
+                Enabled = true,
             },
 
             new League
@@ -85,7 +86,7 @@ public class LeagueGamingLeagueProvider : ILeagueProvider
                 Name = "ESHL PSN",
                 Info = new LeagueGamingLeagueInfo { LeagueId = 91 },
                 Tags = new Tags { "psn", "ea nhl", "6v6", "esports" },
-                Enabled = true
+                Enabled = true,
             },
 
             new League
@@ -95,7 +96,7 @@ public class LeagueGamingLeagueProvider : ILeagueProvider
                 Name = "LG World Cup",
                 Info = new LeagueGamingLeagueInfo { LeagueId = 97 },
                 Tags = new Tags { "psn", "ea nhl", "6v6", "tournament" },
-                Enabled = true
+                Enabled = true,
             },
 
             new League
@@ -105,7 +106,7 @@ public class LeagueGamingLeagueProvider : ILeagueProvider
                 Name = "LGFNP",
                 Info = new LeagueGamingLeagueInfo { LeagueId = 78 },
                 Tags = new Tags { "xbox", "ea nhl", "6v6", "weekly", "pickup" },
-                Enabled = true
+                Enabled = true,
             },
 
             new League
@@ -115,7 +116,7 @@ public class LeagueGamingLeagueProvider : ILeagueProvider
                 Name = "LGFNP PSN",
                 Info = new LeagueGamingLeagueInfo { LeagueId = 79 },
                 Tags = new Tags { "psn", "ea nhl", "6v6", "weekly", "pickup" },
-                Enabled = true
+                Enabled = true,
             },
 
             new League

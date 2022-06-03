@@ -1,4 +1,4 @@
-namespace Duthie.Types;
+namespace Duthie.Types.Sites;
 
 public interface ISiteProvider
 {

@@ -1,6 +1,6 @@
 using Duthie.Data;
 using Duthie.Services.Extensions;
-using Duthie.Types;
+using Duthie.Types.Guilds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -46,23 +46,6 @@ public class GuildService
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
             return await context.Set<Guild>().AnyAsync(g => g.Id == id && g.LeftAt == null);
-        }
-    }
-
-    public async Task<IEnumerable<Guild>> FindAsync(string text = "")
-    {
-        using (var context = await _contextFactory.CreateDbContextAsync())
-        {
-            var query = CreateQuery(context).Where(g => g.LeftAt == null);
-
-            if (!string.IsNullOrWhiteSpace(text))
-                query = query.Where(g => g.Id.ToString().ToLower().Equals(text.ToLower())
-                    || g.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower()));
-
-            return await query
-                .OrderBy(g => g.Id.ToString().ToLower().Equals(text.ToLower()))
-                .ThenBy(g => g.Name)
-                .ToListAsync();
         }
     }
 

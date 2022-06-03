@@ -1,18 +1,16 @@
 using System.Text.RegularExpressions;
 using System.Web;
-using Duthie.Types;
 using Duthie.Types.Api;
+using Duthie.Types.Leagues;
+using Duthie.Types.Teams;
 
 namespace Duthie.Modules.TheSpnhl;
 
 public class TheSpnhlApi : ILeagueInfoApi, ITeamsApi
 {
-    private readonly HttpClient _httpClient;
+    private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
-    public TheSpnhlApi()
-    {
-        _httpClient = new HttpClient();
-    }
+    private readonly HttpClient _httpClient = new HttpClient();
 
     public IReadOnlySet<Guid> Supports
     {

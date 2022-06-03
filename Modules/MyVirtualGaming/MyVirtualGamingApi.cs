@@ -1,19 +1,17 @@
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
-using Duthie.Types;
 using Duthie.Types.Api;
+using Duthie.Types.Leagues;
+using Duthie.Types.Teams;
 
 namespace Duthie.Modules.MyVirtualGaming;
 
 public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
 {
-    private readonly HttpClient _httpClient;
+    private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
-    public MyVirtualGamingApi()
-    {
-        _httpClient = new HttpClient();
-    }
+    private readonly HttpClient _httpClient = new HttpClient();
 
     public IReadOnlySet<Guid> Supports
     {

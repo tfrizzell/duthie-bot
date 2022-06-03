@@ -1,5 +1,6 @@
 using Duthie.Data;
-using Duthie.Types;
+using Duthie.Types.Leagues;
+using Duthie.Types.Sites;
 using Microsoft.EntityFrameworkCore;
 
 namespace Duthie.Bot;

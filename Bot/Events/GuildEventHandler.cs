@@ -4,7 +4,7 @@ using Discord.WebSocket;
 using Duthie.Bot.Configuration;
 using Duthie.Bot.Extensions;
 using Duthie.Services.Guilds;
-using Duthie.Types;
+using Duthie.Types.Guilds;
 using Microsoft.Extensions.Logging;
 
 namespace Duthie.Bot.Events;
@@ -60,7 +60,7 @@ public class GuildEventHandler : IAsyncHandler
         _client.ShardReady -= HandleReadyAsync;
 
         var sw = Stopwatch.StartNew();
-        _logger.LogDebug("Updating guilds");
+        _logger.LogInformation("Updating guilds");
 
         try
         {
@@ -95,11 +95,8 @@ public class GuildEventHandler : IAsyncHandler
 
     private async Task HandleUserLeftAsync(SocketGuild guild, SocketUser user)
     {
-        if (await _guildAdminService.ExistsAsync(guild.Id, user.Id))
-        {
+        if ((await _guildAdminService.DeleteAsync(guild.Id, user.Id)) > 0)
             _logger.LogInformation($"{_appInfo.Name} administrator {user} has left guild \"{guild.Name}\" [{guild.Id}]");
-            await _guildAdminService.DeleteAsync(guild.Id, user.Id);
-        }
     }
 
     private async Task JoinAsync(Guild guild)

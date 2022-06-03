@@ -1,3 +1,5 @@
+using Duthie.Types.Guilds;
+
 namespace Duthie.Types;
 
 public class GuildAdmin

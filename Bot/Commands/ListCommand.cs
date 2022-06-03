@@ -7,7 +7,9 @@ using Duthie.Bot.Utils;
 using Duthie.Services.Leagues;
 using Duthie.Services.Sites;
 using Duthie.Services.Teams;
-using Duthie.Types;
+using Duthie.Types.Leagues;
+using Duthie.Types.Sites;
+using Duthie.Types.Watchers;
 using Microsoft.Extensions.Logging;
 
 namespace Duthie.Bot.Commands;
@@ -186,7 +188,7 @@ public class ListCommand : BaseCommand
                 data: leagues.Select(l => new string[] {
                     l.Name,
                     l.Site.Name,
-                    string.Join(",", l.Tags)
+                    string.Join(", ", l.Tags)
                 })), ephemeral: true);
         }
         else
@@ -213,7 +215,7 @@ public class ListCommand : BaseCommand
                 },
                 data: sites.Select(s => new string[] {
                     s.Name,
-                    string.Join(",", s.Tags)
+                    string.Join(", ", s.Tags)
                 })), ephemeral: true);
         }
         else
@@ -260,7 +262,7 @@ public class ListCommand : BaseCommand
                     t.Name,
                     t.ShortName,
                     Regex.Replace(string.Join(", ", t.Leagues.Select(l => l.Name).OrderBy(n => n)), @"^(.{27}).{4,}", @"$1..."),
-                    string.Join(",", t.Tags)
+                    string.Join(", ", t.Tags)
                 })), ephemeral: true);
         }
         else

@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace Duthie.Types;
+namespace Duthie.Types.Common;
 
 public class Tags : HashSet<string>
 {

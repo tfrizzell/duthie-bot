@@ -1,6 +1,6 @@
 using Duthie.Data.Comparers;
 using Duthie.Data.Converters;
-using Duthie.Types;
+using Duthie.Types.Leagues;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

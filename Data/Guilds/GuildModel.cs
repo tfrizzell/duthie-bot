@@ -1,4 +1,4 @@
-using Duthie.Types;
+using Duthie.Types.Guilds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

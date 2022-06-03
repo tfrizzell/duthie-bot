@@ -11,6 +11,7 @@ using Duthie.Modules.LeagueGaming;
 using Duthie.Modules.MyVirtualGaming;
 using Duthie.Modules.TheSpnhl;
 using Duthie.Services.Background;
+using Duthie.Services.Games;
 using Duthie.Services.Guilds;
 using Duthie.Services.Leagues;
 using Duthie.Services.Sites;
@@ -40,47 +41,42 @@ public static class CompositionRoot
         var databaseConfiguration = new DatabaseConfiguration();
         config.GetSection("Database").Bind(databaseConfiguration);
 
-        services.AddDbContextFactory<DuthieDbContext>(options =>
-        {
-            switch (databaseConfiguration.Type)
+        return services.AddDbContextFactory<DuthieDbContext>(options =>
             {
-                case DatabaseType.MySql:
-                    options.UseMySql(databaseConfiguration.ConnectionString, MariaDbServerVersion.AutoDetect(databaseConfiguration.ConnectionString), b => b.MigrationsAssembly("Duthie.Bot"));
-                    break;
-
-                case DatabaseType.Sqlite:
-                    options.UseSqlite(databaseConfiguration.ConnectionString, b => b.MigrationsAssembly("Duthie.Bot"));
-                    break;
-            }
-        });
-
-        services.AddLogging(options =>
-        {
-            options
-                .ClearProviders()
-                .AddConfiguration(config.GetSection("Logging"))
-                .AddSimpleConsole(builder =>
+                switch (databaseConfiguration.Type)
                 {
-                    builder.IncludeScopes = true;
-                    builder.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
-                });
-        });
+                    case DatabaseType.MySql:
+                        options.UseMySql(databaseConfiguration.ConnectionString, MariaDbServerVersion.AutoDetect(databaseConfiguration.ConnectionString), b => b.MigrationsAssembly("Duthie.Bot"));
+                        break;
 
-        services.AddMemoryCache();
-
-        services.AddSingleton<IConfiguration>(config);
-        services.AddSingleton(databaseConfiguration);
-
-        services.AddSingleton<GuildService>();
-        services.AddSingleton<GuildAdminService>();
-        services.AddSingleton<SiteService>();
-        services.AddSingleton<LeagueService>();
-        services.AddSingleton<TeamService>();
-        services.AddSingleton<WatcherService>();
-        services.AddSingleton<GuildMessageService>();
-
-        services.AddHandler<ProgramEventHandler>();
-        return services;
+                    case DatabaseType.Sqlite:
+                        options.UseSqlite(databaseConfiguration.ConnectionString, b => b.MigrationsAssembly("Duthie.Bot"));
+                        break;
+                }
+            })
+            .AddLogging(options =>
+            {
+                options
+                    .ClearProviders()
+                    .AddConfiguration(config.GetSection("Logging"))
+                    .AddSimpleConsole(builder =>
+                    {
+                        builder.IncludeScopes = true;
+                        builder.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
+                    });
+            })
+            .AddMemoryCache()
+            .AddSingleton<IConfiguration>(config)
+            .AddSingleton(databaseConfiguration)
+            .AddSingleton<GuildService>()
+            .AddSingleton<GuildAdminService>()
+            .AddSingleton<SiteService>()
+            .AddSingleton<LeagueService>()
+            .AddSingleton<TeamService>()
+            .AddSingleton<WatcherService>()
+            .AddSingleton<GameService>()
+            .AddSingleton<GuildMessageService>()
+            .AddHandler<ProgramEventHandler>();
     }
 
     public static IServiceCollection AddDiscord(this IServiceCollection services)
@@ -100,30 +96,24 @@ public static class CompositionRoot
             CaseSensitiveCommands = false,
         });
 
-        services.AddSingleton(discordConfig);
-        services.AddSingleton(client);
-        services.AddSingleton(commands);
-        services.AddSingleton<CommandRegistrationService>();
-
-        services.AddHandler<GuildEventHandler>();
-        services.AddHandler<CommandEventHandler>();
-        services.AddHandler<DiscordEventHandler>();
-
-        services.AddCommand<PingCommand>();
-        services.AddCommand<AdminCommand>();
-        services.AddCommand<WatchersCommand>();
-        services.AddCommand<ListCommand>();
-        return services;
+        return services
+            .AddSingleton(discordConfig)
+            .AddSingleton(client)
+            .AddSingleton(commands)
+            .AddSingleton<CommandRegistrationService>()
+            .AddHandler<GuildEventHandler>()
+            .AddHandler<CommandEventHandler>()
+            .AddHandler<DiscordEventHandler>()
+            .AddCommand<PingCommand>()
+            .AddCommand<AdminCommand>()
+            .AddCommand<WatchersCommand>()
+            .AddCommand<ListCommand>();
     }
 
     public static IServiceCollection AddApi(this IServiceCollection services)
     {
         var apiService = new ApiService();
         services.AddSingleton(apiService);
-
-        apiService.Register(new LeagueGamingApi());
-        apiService.Register(new MyVirtualGamingApi());
-        apiService.Register(new TheSpnhlApi());
 
         var apis = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(s => s.GetTypes())
@@ -133,12 +123,16 @@ public static class CompositionRoot
                 && typeof(MyVirtualGamingApi) != t
                 && typeof(TheSpnhlApi) != t);
 
+        apiService.Register(
+            new List<IApi>() {
+                new LeagueGamingApi(),
+                new MyVirtualGamingApi(),
+                new TheSpnhlApi()
+            }.Concat(apis.Select(api => (IApi)Activator.CreateInstance(api)!)).ToArray());
 
-        foreach (var api in apis)
-            apiService.Register((IApi)Activator.CreateInstance(api)!);
-
-        services.AddSingleton<LeagueUpdateService>();
-        return services;
+        return services
+            .AddSingleton<LeagueUpdateService>()
+            .AddSingleton<GameUpdateService>();
     }
 
     public static IServiceCollection AddAppInfo(this IServiceCollection services)
@@ -150,21 +144,14 @@ public static class CompositionRoot
             ?? assembly.GetName().Version?.ToString()
             ?? "";
 
-        services.AddSingleton(new AppInfo(Version: version));
-        return services;
+        return services.AddSingleton(new AppInfo(Version: version));
     }
 
-    private static void AddHandler<T>(this IServiceCollection services)
-        where T : class, IAsyncHandler
-    {
-        services.AddSingleton<T>();
-        services.AddSingleton<IAsyncHandler>(s => s.GetRequiredService<T>());
-    }
+    private static IServiceCollection AddHandler<T>(this IServiceCollection services) where T : class, IAsyncHandler =>
+        services.AddSingleton<T>()
+            .AddSingleton<IAsyncHandler>(s => s.GetRequiredService<T>());
 
-    private static void AddCommand<T>(this IServiceCollection services)
-        where T : class, ICommand
-    {
-        services.AddSingleton<T>();
-        services.AddSingleton<ICommand>(s => s.GetRequiredService<T>());
-    }
+    private static IServiceCollection AddCommand<T>(this IServiceCollection services) where T : class, ICommand =>
+        services.AddSingleton<T>()
+            .AddSingleton<ICommand>(s => s.GetRequiredService<T>());
 }

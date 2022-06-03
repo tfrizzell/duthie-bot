@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Duthie.Types;
+using Duthie.Types.Common;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Duthie.Data.Converters;

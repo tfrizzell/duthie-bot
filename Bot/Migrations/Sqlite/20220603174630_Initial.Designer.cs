@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Duthie.Bot.Migrations.Sqlite
 {
     [DbContext(typeof(DuthieDbContext))]
-    [Migration("20220603022754_Initial")]
+    [Migration("20220603174630_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -19,26 +19,56 @@ namespace Duthie.Bot.Migrations.Sqlite
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.5");
 
-            modelBuilder.Entity("Duthie.Types.Guild", b =>
+            modelBuilder.Entity("Duthie.Types.Games.Game", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("JoinedAt")
+                    b.Property<string>("Date")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LeftAt")
+                    b.Property<string>("GameId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
+                    b.Property<Guid>("HomeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("HomeScore")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("HomeTeamId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("LeagueId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool?>("Overtime")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool?>("Shootout")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("VisitorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("VisitorScore")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("VisitorTeamId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Guilds", (string)null);
+                    b.HasIndex("HomeTeamId");
+
+                    b.HasIndex("LeagueId");
+
+                    b.HasIndex("VisitorTeamId");
+
+                    b.ToTable("Games", (string)null);
                 });
 
             modelBuilder.Entity("Duthie.Types.GuildAdmin", b =>
@@ -86,7 +116,29 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.ToTable("GuildMessages", (string)null);
                 });
 
-            modelBuilder.Entity("Duthie.Types.League", b =>
+            modelBuilder.Entity("Duthie.Types.Guilds.Guild", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("JoinedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LeftAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Guilds", (string)null);
+                });
+
+            modelBuilder.Entity("Duthie.Types.Leagues.League", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -120,7 +172,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.ToTable("Leagues", (string)null);
                 });
 
-            modelBuilder.Entity("Duthie.Types.LeagueTeam", b =>
+            modelBuilder.Entity("Duthie.Types.Leagues.LeagueTeam", b =>
                 {
                     b.Property<Guid>("LeagueId")
                         .HasColumnType("TEXT");
@@ -140,7 +192,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.ToTable("LeagueTeams", (string)null);
                 });
 
-            modelBuilder.Entity("Duthie.Types.Site", b =>
+            modelBuilder.Entity("Duthie.Types.Sites.Site", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -165,7 +217,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.ToTable("Sites", (string)null);
                 });
 
-            modelBuilder.Entity("Duthie.Types.Team", b =>
+            modelBuilder.Entity("Duthie.Types.Teams.Team", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1278,7 +1330,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                         });
                 });
 
-            modelBuilder.Entity("Duthie.Types.Watcher", b =>
+            modelBuilder.Entity("Duthie.Types.Watchers.Watcher", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1319,9 +1371,32 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.ToTable("Watchers", (string)null);
                 });
 
+            modelBuilder.Entity("Duthie.Types.Games.Game", b =>
+                {
+                    b.HasOne("Duthie.Types.Teams.Team", "HomeTeam")
+                        .WithMany()
+                        .HasForeignKey("HomeTeamId");
+
+                    b.HasOne("Duthie.Types.Leagues.League", "League")
+                        .WithMany()
+                        .HasForeignKey("LeagueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Duthie.Types.Teams.Team", "VisitorTeam")
+                        .WithMany()
+                        .HasForeignKey("VisitorTeamId");
+
+                    b.Navigation("HomeTeam");
+
+                    b.Navigation("League");
+
+                    b.Navigation("VisitorTeam");
+                });
+
             modelBuilder.Entity("Duthie.Types.GuildAdmin", b =>
                 {
-                    b.HasOne("Duthie.Types.Guild", "Guild")
+                    b.HasOne("Duthie.Types.Guilds.Guild", "Guild")
                         .WithMany()
                         .HasForeignKey("GuildId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1332,7 +1407,7 @@ namespace Duthie.Bot.Migrations.Sqlite
 
             modelBuilder.Entity("Duthie.Types.GuildMessage", b =>
                 {
-                    b.HasOne("Duthie.Types.Guild", "Guild")
+                    b.HasOne("Duthie.Types.Guilds.Guild", "Guild")
                         .WithMany()
                         .HasForeignKey("GuildId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1341,9 +1416,9 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.Navigation("Guild");
                 });
 
-            modelBuilder.Entity("Duthie.Types.League", b =>
+            modelBuilder.Entity("Duthie.Types.Leagues.League", b =>
                 {
-                    b.HasOne("Duthie.Types.Site", "Site")
+                    b.HasOne("Duthie.Types.Sites.Site", "Site")
                         .WithMany("Leagues")
                         .HasForeignKey("SiteId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1352,15 +1427,15 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.Navigation("Site");
                 });
 
-            modelBuilder.Entity("Duthie.Types.LeagueTeam", b =>
+            modelBuilder.Entity("Duthie.Types.Leagues.LeagueTeam", b =>
                 {
-                    b.HasOne("Duthie.Types.League", "League")
+                    b.HasOne("Duthie.Types.Leagues.League", "League")
                         .WithMany("LeagueTeams")
                         .HasForeignKey("LeagueId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Duthie.Types.Team", "Team")
+                    b.HasOne("Duthie.Types.Teams.Team", "Team")
                         .WithMany("LeagueTeams")
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1371,21 +1446,21 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.Navigation("Team");
                 });
 
-            modelBuilder.Entity("Duthie.Types.Watcher", b =>
+            modelBuilder.Entity("Duthie.Types.Watchers.Watcher", b =>
                 {
-                    b.HasOne("Duthie.Types.Guild", "Guild")
+                    b.HasOne("Duthie.Types.Guilds.Guild", "Guild")
                         .WithMany()
                         .HasForeignKey("GuildId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Duthie.Types.League", "League")
+                    b.HasOne("Duthie.Types.Leagues.League", "League")
                         .WithMany()
                         .HasForeignKey("LeagueId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Duthie.Types.Team", "Team")
+                    b.HasOne("Duthie.Types.Teams.Team", "Team")
                         .WithMany()
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1398,17 +1473,17 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.Navigation("Team");
                 });
 
-            modelBuilder.Entity("Duthie.Types.League", b =>
+            modelBuilder.Entity("Duthie.Types.Leagues.League", b =>
                 {
                     b.Navigation("LeagueTeams");
                 });
 
-            modelBuilder.Entity("Duthie.Types.Site", b =>
+            modelBuilder.Entity("Duthie.Types.Sites.Site", b =>
                 {
                     b.Navigation("Leagues");
                 });
 
-            modelBuilder.Entity("Duthie.Types.Team", b =>
+            modelBuilder.Entity("Duthie.Types.Teams.Team", b =>
                 {
                     b.Navigation("LeagueTeams");
                 });

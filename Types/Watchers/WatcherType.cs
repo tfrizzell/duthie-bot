@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace Duthie.Types;
+namespace Duthie.Types.Watchers;
 
 public enum WatcherType
 {

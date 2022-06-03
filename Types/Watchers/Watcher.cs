@@ -1,4 +1,8 @@
-namespace Duthie.Types;
+using Duthie.Types.Guilds;
+using Duthie.Types.Leagues;
+using Duthie.Types.Teams;
+
+namespace Duthie.Types.Watchers;
 
 public class Watcher
 {

@@ -1,4 +1,5 @@
-using Duthie.Types;
+using Duthie.Types.Common;
+using Duthie.Types.Leagues;
 
 namespace Duthie.Modules.MyVirtualGaming;
 
@@ -54,7 +55,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
                 Id = new Guid("8cba4eb0-8722-4415-aa82-b0027ae33702"),
                 Name = "VGHL Club League",
                 Info = new MyVirtualGamingLeagueInfo { LeagueId = "vghlclub" },
-                Tags = new Tags { "psn", "ea nhl", "6v6" },
+                Tags = new Tags { "psn", "ea nhl", "6v6", "club teams" },
                 Enabled = true
             },
 

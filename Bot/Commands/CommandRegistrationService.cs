@@ -40,7 +40,7 @@ public class CommandRegistrationService
     public async Task RegisterCommandsAsync(BaseSocketClient client)
     {
         var sw = Stopwatch.StartNew();
-        _logger.LogDebug("Registering slash commands");
+        _logger.LogInformation("Registering slash commands");
         await client.ShowRegisteringStatusAsync();
 
         try

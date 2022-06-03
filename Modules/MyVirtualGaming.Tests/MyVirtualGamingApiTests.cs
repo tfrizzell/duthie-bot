@@ -1,4 +1,5 @@
-using Duthie.Types;
+using Duthie.Types.Leagues;
+using Duthie.Types.Teams;
 
 namespace Duthie.Modules.MyVirtualGaming.Tests;
 
@@ -6,9 +7,9 @@ public class MyVirtualGamingApiTests
 {
     private readonly IReadOnlyCollection<string> EXCLUDED_TEAMS = new string[] { "Sabres", "Flames", "Blue Jackets", "Kraken" };
 
-    private static readonly Guid LEAGUE_ID = new Guid("5957b164-7bb5-4324-967a-16c3044260b2");
+    private static readonly Guid TEST_LEAGUE_ID = new Guid("5957b164-7bb5-4324-967a-16c3044260b2");
+    private const int TEST_SEASON_ID = 72;
     private const string EXPECTED_LEAGUE_ID = "vgnhl";
-    private const int EXPECTED_SEASON_ID = 72;
 
     private readonly MyVirtualGamingApi _api;
     private readonly League _league;
@@ -16,7 +17,7 @@ public class MyVirtualGamingApiTests
     public MyVirtualGamingApiTests()
     {
         _api = new MyVirtualGamingApi();
-        _league = new MyVirtualGamingLeagueProvider().Leagues.First(l => l.Id == LEAGUE_ID);
+        _league = new MyVirtualGamingLeagueProvider().Leagues.First(l => l.Id == TEST_LEAGUE_ID);
     }
 
     [Fact]
@@ -26,7 +27,7 @@ public class MyVirtualGamingApiTests
     }
 
     [Fact]
-    public async Task GetLeagueInfoAsync_ReturnsLeagueInfo()
+    public async Task GetLeagueInfoAsync_ReturnsExpectedLeagueInfo()
     {
         var league = await _api.GetLeagueInfoAsync(_league);
         Assert.True(league != null, $"{_api.GetType().Name} does not support league {_league.Id}");
@@ -35,17 +36,13 @@ public class MyVirtualGamingApiTests
 
         var info = (league?.Info as MyVirtualGamingLeagueInfo)!;
         Assert.True(EXPECTED_LEAGUE_ID.Equals(info.LeagueId), $"expected Info.LeagueId to be {EXPECTED_LEAGUE_ID} but got {info.LeagueId}");
-        Assert.True(EXPECTED_SEASON_ID <= info.SeasonId, $"expected Info.SeasonId to be greater than or equal to {EXPECTED_SEASON_ID} but got {info.SeasonId}");
+        Assert.True(TEST_SEASON_ID <= info.SeasonId, $"expected Info.SeasonId to be greater than or equal to {TEST_SEASON_ID} but got {info.SeasonId}");
     }
 
     [Fact]
-    public async Task GetTeamsAsync_ReturnsNHLTeams()
+    public async Task GetTeamsAsync_ReturnsExpectedTeams()
     {
-        var league = await _api.GetLeagueInfoAsync(_league);
-        _league.Name = league?.Name ?? _league.Name;
-        _league.Info = league?.Info ?? _league.Info;
-        (_league.Info as MyVirtualGamingLeagueInfo)!.SeasonId = EXPECTED_SEASON_ID;
-
+        (_league.Info as MyVirtualGamingLeagueInfo)!.SeasonId = TEST_SEASON_ID;
         var teams = await _api.GetTeamsAsync(_league);
         Assert.True(teams != null, $"{_api.GetType().Name} does not support league {_league.Id}");
 

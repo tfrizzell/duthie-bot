@@ -1,4 +1,4 @@
-using Duthie.Types;
+using Duthie.Types.Leagues;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

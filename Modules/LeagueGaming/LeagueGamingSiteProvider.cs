@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
-using Duthie.Types;
+using Duthie.Types.Common;
+using Duthie.Types.Sites;
 
 [assembly: InternalsVisibleTo("Duthie.Modules.LeagueGaming.Tests")]
 namespace Duthie.Modules.LeagueGaming;

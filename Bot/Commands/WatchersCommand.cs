@@ -8,7 +8,9 @@ using Duthie.Services.Leagues;
 using Duthie.Services.Sites;
 using Duthie.Services.Teams;
 using Duthie.Services.Watchers;
-using Duthie.Types;
+using Duthie.Types.Leagues;
+using Duthie.Types.Teams;
+using Duthie.Types.Watchers;
 using Microsoft.Extensions.Logging;
 
 namespace Duthie.Bot.Commands;
@@ -256,8 +258,8 @@ public class WatchersCommand : BaseCommandWithAdminCheck
 
         if (count > 0)
         {
-            _logger.LogDebug($"User {user} added {count} new watchers to guild guild \"{guild.Name}\" [{guild.Id}]");
-            await command.RespondAsync($"Okay! I've added {count} new watchers to your server.", ephemeral: true);
+            _logger.LogDebug($"User {user} added {MessageUtils.Pluralize(count, "watcher")} to guild \"{guild.Name}\" [{guild.Id}]");
+            await command.RespondAsync($"Okay! I've added {MessageUtils.Pluralize(count, "watcher")} to your server.", ephemeral: true);
         }
         else
             await command.RespondAsync($"All of the watchers you requested already exist.", ephemeral: true);
@@ -371,8 +373,8 @@ public class WatchersCommand : BaseCommandWithAdminCheck
 
         if (count > 0)
         {
-            _logger.LogDebug($"User {user} deleted {count} watchers to guild guild \"{guild.Name}\" [{guild.Id}]");
-            await command.RespondAsync($"Okay! I've deleted {count} watchers to your server.", ephemeral: true);
+            _logger.LogDebug($"User {user} deleted {MessageUtils.Pluralize(count, "watcher")} from guild \"{guild.Name}\" [{guild.Id}]");
+            await command.RespondAsync($"Okay! I've deleted {MessageUtils.Pluralize(count, "watcher")} to your server.", ephemeral: true);
         }
         else
             await command.RespondAsync($"None of the watchers you requested exist.", ephemeral: true);

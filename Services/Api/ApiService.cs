@@ -1,6 +1,7 @@
 using System.Reflection;
-using Duthie.Types;
 using Duthie.Types.Api;
+using Duthie.Types.Leagues;
+using Duthie.Types.Sites;
 
 namespace Duthie.Bot.Services;
 
@@ -41,7 +42,7 @@ public class ApiService
         return (T)Apis[siteId][typeof(T)];
     }
 
-    public void Register(params IApi[] apis)
+    public ApiService Register(params IApi[] apis)
     {
         foreach (var api in apis)
         {
@@ -62,5 +63,7 @@ public class ApiService
                 }
             }
         }
+
+        return this;
     }
 }

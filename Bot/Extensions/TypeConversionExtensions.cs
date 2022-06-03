@@ -1,5 +1,5 @@
 using Discord.WebSocket;
-using Duthie.Types;
+using Duthie.Types.Guilds;
 
 namespace Duthie.Bot.Extensions;
 

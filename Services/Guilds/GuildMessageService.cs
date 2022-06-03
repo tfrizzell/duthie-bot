@@ -23,7 +23,7 @@ public class GuildMessageService
         context.Set<GuildMessage>()
             .Include(m => m.Guild)
             .OrderBy(m => m.CreatedAt)
-            .ThenBy(m => m.GuildId);
+                .ThenBy(m => m.GuildId);
 
     public async Task<int> DeleteAsync(IEnumerable<Guid> ids) =>
         await DeleteAsync(ids.ToArray());
@@ -48,27 +48,9 @@ public class GuildMessageService
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            return await context.Set<GuildMessage>().AnyAsync(m => m.Id == id);
-        }
-    }
-
-    public async Task<IEnumerable<GuildMessage>> FindAsync(string text = "", IEnumerable<ulong>? guilds = null)
-    {
-        using (var context = await _contextFactory.CreateDbContextAsync())
-        {
-            var query = CreateQuery(context);
-
-            if (!string.IsNullOrWhiteSpace(text))
-                query = query.Where(m => m.Id.ToString().ToLower().Equals(text.ToLower()));
-
-            if (guilds?.Count() > 0)
-                query = query.Where(m => guilds.Contains(m.GuildId));
-
-            return await query
-                .OrderBy(m => m.Id.ToString().ToLower().Equals(text.ToLower()))
-                .ThenBy(m => m.CreatedAt)
-                .ThenBy(m => m.GuildId)
-                .ToListAsync();
+            return await context.Set<GuildMessage>()
+                .Include(m => m.Guild)
+                .AnyAsync(m => m.Id == id && m.Guild.LeftAt == null);
         }
     }
 
@@ -84,7 +66,15 @@ public class GuildMessageService
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            return await CreateQuery(context).ToListAsync();
+            return await CreateQuery(context).Where(m => m.Guild.LeftAt == null).ToListAsync();
+        }
+    }
+
+    public async Task<IEnumerable<GuildMessage>> GetAllAsync(ulong guildId)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            return await CreateQuery(context).Where(m => m.GuildId == guildId && m.Guild.LeftAt == null).ToListAsync();
         }
     }
 
@@ -92,7 +82,15 @@ public class GuildMessageService
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            return await CreateQuery(context).Where(m => m.SentAt == null).ToListAsync();
+            return await CreateQuery(context).Where(m => m.SentAt == null && m.Guild.LeftAt == null).ToListAsync();
+        }
+    }
+
+    public async Task<IEnumerable<GuildMessage>> GetUnsentAsync(ulong guildId)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            return await CreateQuery(context).Where(m => m.GuildId == guildId && m.SentAt == null && m.Guild.LeftAt == null).ToListAsync();
         }
     }
 
