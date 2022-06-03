@@ -1,28 +1,27 @@
 using Duthie.Types;
 
-namespace Duthie.Modules.MyVirtualGaming.Tests;
+namespace Duthie.Modules.TheSpnhl.Tests;
 
-public class MyVirtualGamingApiTests
+public class TheSpnhlApiTests
 {
-    private readonly IReadOnlyCollection<string> EXCLUDED_TEAMS = new string[] { "Sabres", "Flames", "Blue Jackets", "Kraken" };
+    private readonly IReadOnlyCollection<string> EXCLUDED_TEAMS = new string[] { "Ducks", "Coyotes", "Bruins", "Sabres", "Hurricanes", "Stars", "Red Wings", "Oilers", "Panthers", "Kings", "Predators", "Devils", "Islanders", "Senators", "Sharks", "Blues", "Maple Leafs", "Canucks", "Golden Knights", "Capitals" };
 
-    private static readonly Guid LEAGUE_ID = new Guid("5957b164-7bb5-4324-967a-16c3044260b2");
-    private const string EXPECTED_LEAGUE_ID = "vgnhl";
-    private const int EXPECTED_SEASON_ID = 72;
+    private static readonly Guid LEAGUE_ID = new Guid("6991c990-a4fa-488b-884a-79b00e4e3577");
+    private const int EXPECTED_SEASON_ID = 43;
 
-    private readonly MyVirtualGamingApi _api;
+    private readonly TheSpnhlApi _api;
     private readonly League _league;
 
-    public MyVirtualGamingApiTests()
+    public TheSpnhlApiTests()
     {
-        _api = new MyVirtualGamingApi();
-        _league = new MyVirtualGamingLeagueProvider().Leagues.First(l => l.Id == LEAGUE_ID);
+        _api = new TheSpnhlApi();
+        _league = new TheSpnhlLeagueProvider().Leagues.First(l => l.Id == LEAGUE_ID);
     }
 
     [Fact]
-    public void Supports_MyVirtualGaming()
+    public void Supports_TheSpnhl()
     {
-        Assert.True(_api.Supports.Contains(MyVirtualGamingSiteProvider.SITE_ID), $"{_api.GetType().Name} does not support site {MyVirtualGamingSiteProvider.SITE_ID}");
+        Assert.True(_api.Supports.Contains(TheSpnhlSiteProvider.SITE_ID), $"{_api.GetType().Name} does not support site {TheSpnhlSiteProvider.SITE_ID}");
     }
 
     [Fact]
@@ -31,21 +30,15 @@ public class MyVirtualGamingApiTests
         var league = await _api.GetLeagueInfoAsync(_league);
         Assert.True(league != null, $"{_api.GetType().Name} does not support league {_league.Id}");
         Assert.True(_league.Name.Equals(league!.Name), $"expected Name to be {_league.Name} but got {league.Name}");
-        Assert.True(league?.Info is MyVirtualGamingLeagueInfo, $"expected Info to be of type {typeof(MyVirtualGamingLeagueInfo).Name} but got {league?.Info?.GetType()?.Name ?? "null"}");
+        Assert.True(league?.Info is TheSpnhlLeagueInfo, $"expected Info to be of type {typeof(TheSpnhlLeagueInfo).Name} but got {league?.Info?.GetType()?.Name ?? "null"}");
 
-        var info = (league?.Info as MyVirtualGamingLeagueInfo)!;
-        Assert.True(EXPECTED_LEAGUE_ID.Equals(info.LeagueId), $"expected Info.LeagueId to be {EXPECTED_LEAGUE_ID} but got {info.LeagueId}");
+        var info = (league?.Info as TheSpnhlLeagueInfo)!;
         Assert.True(EXPECTED_SEASON_ID <= info.SeasonId, $"expected Info.SeasonId to be greater than or equal to {EXPECTED_SEASON_ID} but got {info.SeasonId}");
     }
 
     [Fact]
     public async Task GetTeamsAsync_ReturnsNHLTeams()
     {
-        var league = await _api.GetLeagueInfoAsync(_league);
-        _league.Name = league?.Name ?? _league.Name;
-        _league.Info = league?.Info ?? _league.Info;
-        (_league.Info as MyVirtualGamingLeagueInfo)!.SeasonId = EXPECTED_SEASON_ID;
-
         var teams = await _api.GetTeamsAsync(_league);
         Assert.True(teams != null, $"{_api.GetType().Name} does not support league {_league.Id}");
 
@@ -64,9 +57,7 @@ public class MyVirtualGamingApiTests
             var leagueTeam = teams?.FirstOrDefault(t => t.Team.Name.Equals(team.Name) && t.Team.ShortName.Equals(team.ShortName));
             Assert.True(team.Name.Equals(leagueTeam?.Team.Name), $"expected Name {team.Name} but got {leagueTeam?.Team.Name}");
             Assert.True(team.ShortName.Equals(leagueTeam?.Team.ShortName), $"expected ShortName {team.ShortName} but got {leagueTeam?.Team.ShortName}");
-
-            var iidIsInt = int.TryParse(leagueTeam?.IId, out var internalId);
-            Assert.True(iidIsInt && internalId > 0, $"expected IId to be integer greater than 0 but got {leagueTeam?.IId}");
+            Assert.True(!string.IsNullOrWhiteSpace(leagueTeam?.IId), $"expected IId to non-empty but got empty");
         }
     }
 }

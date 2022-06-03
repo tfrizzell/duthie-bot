@@ -59,5 +59,5 @@ public static class ListUtils
     }
 
     private static bool ExceedsCharacterLimit(int length) =>
-        length > MessageUtils.MAX_MESSAGE_LENGTH - 10;
+        MessageUtils.ExceedsCharacterLimit(length + 10);
 }

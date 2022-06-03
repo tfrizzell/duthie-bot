@@ -125,13 +125,13 @@ public abstract class BaseCommand : ICommand
     protected virtual Task<bool> IsAdministratorAsync(SocketGuildUser user) =>
         Task.FromResult(user.GuildPermissions.Administrator);
 
-    internal static Task<SocketTextChannel> GetChannelAsync(SocketSlashCommand command) =>
+    protected static Task<SocketTextChannel> GetChannelAsync(SocketSlashCommand command) =>
         Task.FromResult((command.Channel as SocketTextChannel)!);
 
-    internal static async Task<SocketGuild> GetGuildAsync(SocketSlashCommand command) =>
+    protected static async Task<SocketGuild> GetGuildAsync(SocketSlashCommand command) =>
         (await GetChannelAsync(command)).Guild;
 
-    internal static Task<SocketGuildUser> GetUserAsync(SocketSlashCommand command) =>
+    protected static Task<SocketGuildUser> GetUserAsync(SocketSlashCommand command) =>
         Task.FromResult((command.User as SocketGuildUser)!);
 }
 

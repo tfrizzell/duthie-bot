@@ -16,4 +16,7 @@ public static class MessageUtils
 
         return chunks.ToArray();
     }
+
+    public static bool ExceedsCharacterLimit(int length) =>
+        length > MessageUtils.MAX_MESSAGE_LENGTH;
 }

@@ -1,4 +1,3 @@
-using Duthie.Data;
 using Duthie.Types;
 
 namespace Duthie.Modules.LeagueGaming.Tests;

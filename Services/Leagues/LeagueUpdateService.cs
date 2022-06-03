@@ -33,7 +33,9 @@ public class LeagueUpdateService
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
             var leagues = await context.Set<League>()
-                .Where(l => l.Enabled)
+                .Include(l => l.Site)
+                .Include(l => l.LeagueTeams)
+                .Where(l => l.Enabled && l.Site.Enabled)
                 .ToListAsync();
 
             await Task.WhenAll(leagues.Select(async league =>
@@ -64,8 +66,9 @@ public class LeagueUpdateService
                 .ToDictionary(t => CleanTeamName(t.Name));
 
             var leagues = await context.Set<League>()
+                .Include(l => l.Site)
                 .Include(l => l.LeagueTeams)
-                .Where(l => l.Enabled)
+                .Where(l => l.Enabled && l.Site.Enabled)
                 .ToListAsync();
 
             await Task.WhenAll(leagues.Select(async league =>

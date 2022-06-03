@@ -30,6 +30,9 @@ public class TeamService
                     .ThenInclude(l => l.Site)
             .OrderBy(t => t.Name);
 
+    public async Task<int> DeleteAsync(IEnumerable<Guid> ids) =>
+        await DeleteAsync(ids.ToArray());
+
     public async Task<int> DeleteAsync(params Guid[] ids)
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
@@ -39,19 +42,11 @@ public class TeamService
                 var team = await context.Set<Team>().FirstOrDefaultAsync(t => t.Id == id);
 
                 if (team != null)
-                    await context.RemoveAsync(team);
+                    await context.Set<Team>().RemoveAsync(team);
             }
 
             return await context.SaveChangesAsync();
         }
-    }
-
-    private async Task DeleteAsync(DuthieDbContext context, Guid id)
-    {
-        var team = await context.Set<Team>().FirstOrDefaultAsync(t => t.Id == id);
-
-        if (team != null)
-            await context.RemoveAsync(team);
     }
 
     public async Task<bool> ExistsAsync(Guid id)
@@ -79,27 +74,27 @@ public class TeamService
             if (leagues?.Count() > 0)
                 query = query.Where(t => t.LeagueTeams.Any(m => leagues.Contains(m.League.Id)));
 
-            var results = await query
+            var teams = await query
                 .OrderBy(t => t.Id.ToString().ToLower().Equals(text.ToLower()))
                 .ThenBy(t => t.Name)
                 .ToListAsync();
 
             return tags?.Count() > 0
-                ? results.Where(t => tags.All(tag => t.Tags.Contains(tag)))
-                : results;
+                ? teams.Where(t => tags.All(tag => t.Tags.Contains(tag)))
+                : teams;
         }
     }
 
-    public async Task<Team?> GetAsync(Guid teamId)
+    public async Task<Team?> GetAsync(Guid id)
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            return await CreateQuery(context).FirstOrDefaultAsync(t => t.Id == teamId);
+            return await CreateQuery(context).FirstOrDefaultAsync(t => t.Id == id);
         }
     }
 
-    public Task<IEnumerable<Team>> GetAllAsync() =>
-        _memoryCache.GetOrCreateAsync<IEnumerable<Team>>(new { type = GetType(), method = "GetAllAsync" }, async entry =>
+    public async Task<IEnumerable<Team>> GetAllAsync() =>
+        await _memoryCache.GetOrCreateAsync<IEnumerable<Team>>(new { type = GetType(), method = "GetAllAsync" }, async entry =>
         {
             entry.SetOptions(new MemoryCacheEntryOptions
             {
@@ -111,6 +106,9 @@ public class TeamService
                 return await CreateQuery(context).ToListAsync();
             }
         });
+
+    public async Task<int> SaveAsync(IEnumerable<Team> teams) =>
+        await SaveAsync(teams.ToArray());
 
     public async Task<int> SaveAsync(params Team[] teams)
     {

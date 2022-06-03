@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Discord;
 using Discord.WebSocket;
 using Duthie.Bot.Configuration;
 using Duthie.Bot.Extensions;

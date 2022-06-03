@@ -1,6 +1,4 @@
-using Duthie.Data;
 using Duthie.Services.Background;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -9,17 +7,14 @@ namespace Duthie.Bot.Background;
 public class LeagueUpdateBackgroundService : IHostedService, IDisposable
 {
     private readonly ILogger<LeagueUpdateBackgroundService> _logger;
-    private readonly IDbContextFactory<DuthieDbContext> _contextFactory;
     private readonly LeagueUpdateService _leagueInfoUpdateService;
     private Timer? _timer;
 
     public LeagueUpdateBackgroundService(
         ILogger<LeagueUpdateBackgroundService> logger,
-        IDbContextFactory<DuthieDbContext> contextFactory,
         LeagueUpdateService leagueInfoUpdateService)
     {
         _logger = logger;
-        _contextFactory = contextFactory;
         _leagueInfoUpdateService = leagueInfoUpdateService;
     }
 
@@ -45,14 +40,11 @@ public class LeagueUpdateBackgroundService : IHostedService, IDisposable
     {
         try
         {
-            using (var context = await _contextFactory.CreateDbContextAsync())
-            {
-                _logger.LogDebug("Updating league information");
-                await _leagueInfoUpdateService.UpdateInfo();
+            _logger.LogInformation("Updating league information");
+            await _leagueInfoUpdateService.UpdateInfo();
 
-                _logger.LogDebug("Updating league teams");
-                await _leagueInfoUpdateService.UpdateTeams();
-            }
+            _logger.LogDebug("Updating league teams");
+            await _leagueInfoUpdateService.UpdateTeams();
         }
         catch (Exception e)
         {

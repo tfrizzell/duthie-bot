@@ -35,14 +35,14 @@ public class SiteService
                 query = query.Where(s => s.Id.ToString().ToLower().Equals(text.ToLower())
                     || s.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower()));
 
-            var results = await query
+            var sites = await query
                 .OrderBy(s => s.Id.ToString().ToLower().Equals(text.ToLower()))
                 .ThenBy(s => s.Name)
                 .ToListAsync();
 
             return tags?.Count() > 0
-                ? results.Where(s => tags.All(tag => s.Tags.Contains(tag)))
-                : results;
+                ? sites.Where(s => tags.All(tag => s.Tags.Contains(tag)))
+                : sites;
         }
     }
 
@@ -54,8 +54,8 @@ public class SiteService
         }
     }
 
-    public Task<IEnumerable<Site>> GetAllAsync() =>
-        _memoryCache.GetOrCreateAsync<IEnumerable<Site>>(new { type = GetType(), method = "GetAllAsync" }, async entry =>
+    public async Task<IEnumerable<Site>> GetAllAsync() =>
+        await _memoryCache.GetOrCreateAsync<IEnumerable<Site>>(new { type = GetType(), method = "GetAllAsync" }, async entry =>
         {
             entry.SetOptions(new MemoryCacheEntryOptions
             {

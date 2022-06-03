@@ -29,7 +29,7 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
 
     public async Task<ILeague?> GetLeagueInfoAsync(League league)
     {
-        if (league.Info is not MyVirtualGamingLeagueInfo)
+        if (!Supports.Contains(league.SiteId) || league.Info is not MyVirtualGamingLeagueInfo)
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
@@ -74,14 +74,9 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
         };
     }
 
-    private string? GetUrl(Dictionary<string, object> dictionary)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
     {
-        if (league.Info is not MyVirtualGamingLeagueInfo)
+        if (!Supports.Contains(league.SiteId) || league.Info is not MyVirtualGamingLeagueInfo)
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
@@ -136,6 +131,9 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
         {
             foreach (Match match in shortNameMatches)
             {
+                if (!map.ContainsKey(match.Groups[1].Value))
+                    continue;
+
                 var id = map[match.Groups[1].Value];
 
                 if (!teams.ContainsKey(id))
@@ -151,6 +149,11 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
 
         return teams.Values
             .Where(t => map.Values.Contains(t.IId))
+            .Select(t =>
+            {
+                FixTeam(t.Team);
+                return t;
+            })
             .ToList();
     }
 
@@ -171,5 +174,18 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
             RegexOptions.IgnoreCase | RegexOptions.Singleline)
         .DistinctBy(m => m.Groups[2].Value)
         .ToDictionary(m => m.Groups[2].Value, m => m.Groups[1].Value);
+    }
+
+    private Team FixTeam(Team team)
+    {
+        switch (team.Name.Trim())
+        {
+            case "Nashville Nashville":
+                team.Name = "Nashville Predators";
+                team.ShortName = "Predators";
+                break;
+        }
+
+        return team;
     }
 }

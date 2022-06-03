@@ -5,6 +5,7 @@ using Duthie.Data.Comparers;
 using Duthie.Data.Converters;
 using Duthie.Types;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Duthie.Data;
@@ -18,7 +19,8 @@ public class DuthieDbContext : DbContext
         new LeagueModel(),
         new TeamModel(),
         new LeagueTeamModel(),
-        new WatcherModel()
+        new WatcherModel(),
+        new GuildMessageModel()
     );
 
     public DuthieDbContext(DbContextOptions<DuthieDbContext> options) : base(options) { }
@@ -70,7 +72,20 @@ public class DuthieDbContext : DbContext
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
             // DateTimeOffset
-            var properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(DateTimeOffset)
+            var properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(Guid)
+                                                                        || p.PropertyType == typeof(Guid?));
+
+            foreach (var property in properties)
+            {
+                builder
+                    .Entity(entityType.Name)
+                    .Property(property.Name)
+                    .Metadata
+                    .SetValueComparer(new GuidValueComparer());
+            }
+
+            // DateTimeOffset
+            properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(DateTimeOffset)
                                                                         || p.PropertyType == typeof(DateTimeOffset?));
 
             foreach (var property in properties)
@@ -81,10 +96,5 @@ public class DuthieDbContext : DbContext
                     .HasConversion(new DateTimeOffsetToStringConverter());
             }
         }
-    }
-
-    public Task RemoveAsync(Team team)
-    {
-        throw new NotImplementedException();
     }
 }

@@ -28,7 +28,7 @@ public class LeagueGamingApi : ILeagueInfoApi, ITeamsApi
 
     public async Task<ILeague?> GetLeagueInfoAsync(League league)
     {
-        if (league.Info is not LeagueGamingLeagueInfo)
+        if (!Supports.Contains(league.SiteId) || league.Info is not LeagueGamingLeagueInfo)
             return null;
 
         var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
@@ -43,7 +43,7 @@ public class LeagueGamingApi : ILeagueInfoApi, ITeamsApi
             }));
 
         var info = Regex.Match(html,
-            @$"<li[^>]*\bcustom-tab-{leagueInfo.LeagueId}\b[^>]*>\s*<a[^>]*/league\.(\d+)[^>]*>\s*<span[^>]*>(.*?)</span>\s*</a>",
+            @$"<li[^>]*\bcustom-tab-{leagueInfo.LeagueId}\b[^>]*>\s*<a[^>]*/league\.(\d+)[^>]*.*?<span[^>]*>(.*?)</span>.*?</a>",
             RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         if (!info.Success)
@@ -67,7 +67,7 @@ public class LeagueGamingApi : ILeagueInfoApi, ITeamsApi
 
     public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
     {
-        if (league.Info is not LeagueGamingLeagueInfo)
+        if (!Supports.Contains(league.SiteId) || league.Info is not LeagueGamingLeagueInfo)
             return null;
 
         var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
@@ -82,7 +82,7 @@ public class LeagueGamingApi : ILeagueInfoApi, ITeamsApi
             }));
 
         var nameMatches = Regex.Matches(html,
-            @$"<div[^>]*\bteam_box_icon\b[^>]*>\s*<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
+            @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
             RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         if (nameMatches.Count() == 0)

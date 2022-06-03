@@ -32,6 +32,9 @@ public class WatcherService
             .ThenBy(w => w.Team.Name)
             .ThenBy(w => w.Type);
 
+    public async Task<int> DeleteAsync(IEnumerable<Guid> ids) =>
+        await DeleteAsync(ids.ToArray());
+
     public async Task<int> DeleteAsync(params Guid[] ids)
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
@@ -52,7 +55,7 @@ public class WatcherService
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            return await context.Set<Watcher>().AnyAsync(w => w.Id == id);
+            return await context.Set<Watcher>().AnyAsync(w => w.Id == id && w.ArchivedAt == null);
         }
     }
 
@@ -124,6 +127,9 @@ public class WatcherService
             }
         }
     }
+
+    public async Task<int> SaveAsync(IEnumerable<Watcher> watchers) =>
+        await SaveAsync(watchers.ToArray());
 
     public async Task<int> SaveAsync(params Watcher[] watchers)
     {

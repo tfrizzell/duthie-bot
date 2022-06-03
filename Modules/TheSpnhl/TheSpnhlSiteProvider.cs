@@ -1,5 +1,7 @@
+using System.Runtime.CompilerServices;
 using Duthie.Types;
 
+[assembly: InternalsVisibleTo("Duthie.Modules.TheSpnhl.Tests")]
 namespace Duthie.Modules.TheSpnhl;
 
 public class TheSpnhlSiteProvider : ISiteProvider

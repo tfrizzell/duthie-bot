@@ -71,12 +71,13 @@ public static class CompositionRoot
         services.AddSingleton<IConfiguration>(config);
         services.AddSingleton(databaseConfiguration);
 
-        services.AddSingleton<GuildAdminService>();
         services.AddSingleton<GuildService>();
+        services.AddSingleton<GuildAdminService>();
         services.AddSingleton<SiteService>();
         services.AddSingleton<LeagueService>();
         services.AddSingleton<TeamService>();
         services.AddSingleton<WatcherService>();
+        services.AddSingleton<GuildMessageService>();
 
         services.AddHandler<ProgramEventHandler>();
         return services;

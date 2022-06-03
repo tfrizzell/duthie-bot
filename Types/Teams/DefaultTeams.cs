@@ -1,6 +1,4 @@
-using Duthie.Types;
-
-namespace Duthie.Data;
+namespace Duthie.Types;
 
 public static class DefaultTeams
 {
@@ -1268,4 +1266,68 @@ public static class DefaultTeams
     public static readonly IReadOnlyCollection<Team> AHL = new Team[] { AHLCanucks, AHLCondors, AHLSenators, AHLIslanders, AHLCheckers, AHLWolves, AHLMonsters, AHLFirebirds, AHLEagles, AHLGriffins, AHLWolfPack, AHLSilverKnights, AHLBears, AHLWild, AHLRocket, AHLPhantoms, AHLMoose, AHLAdmirals, AHLReign, AHLBruins, AHLAmericans, AHLIceHogs, AHLRampage, AHLGulls, AHLBarracuda, AHLThunderbirds, AHLHeat, AHLCrunch, AHLStars, AHLMarlies, AHLRoadrunners, AHLComets, AHLPenguins };
     public static readonly IReadOnlyCollection<Team> CHL = new Team[] { CHLTitan, CHLBrakkar, CHLColts, CHLArmada, CHLWheatKings, CHLHitmen, CHLScreamingEagles, CHLIslanders, CHLSagueneens, CHLVoltigeurs, CHLOilKings, CHLOtters, CHLSilvertips, CHLFirebirds, CHLOlympiques, CHLStorm, CHLMooseheads, CHLBulldogs, CHLBlazers, CHLRockets, CHLFrontenacs, CHLRangers, CHLIce, CHLHurricanes, CHLKnights, CHLTigers, CHLSteelheads, CHLWildcats, CHLWarriors, CHLIceDogs, CHLBattalion, CHLGenerals, CHL67s, CHLAttack, CHLPetes, CHLWinterhawks, CHLRaiders, CHLCougars, CHLRemparts, CHLRebels, CHLPats, CHLOceanic, CHLHuskies, CHLSpirit, CHLSeaDogs, CHLSting, CHLBlades, CHLGreyhounds, CHLThunderbirds, CHLCataractes, CHLPhoenix, CHLChiefs, CHLWolves, CHLBroncos, CHLAmericans, CHLForeurs, CHLGiants, CHLRoyals, CHLTigres, CHLSpitfires };
     public static readonly IReadOnlyCollection<Team> NBA = new Team[] { NBAHawks, NBACeltics, NBANets, NBAHornets, NBABulls, NBACavaliers, NBAMavericks, NBANuggets, NBAPistons, NBAWarriors, NBARockets, NBAPacers, NBAClippers, NBALakers, NBAGrizzlies, NBAHeat, NBABucks, NBATimberwolves, NBAPelicans, NBAKnicks, NBAThunder, NBAMagic, NBA76ers, NBASuns, NBATrailBlazers, NBAKings, NBASpurs, NBARaptors, NBAJazz, NBAWizards };
+
+    /*********************
+     *                   *
+     *      MAPPING      *
+     *                   *
+     *********************/
+
+    private static readonly IDictionary<string, Dictionary<string, Team>> AbbreviationMap = new Dictionary<string, Dictionary<string, Team>>
+    {
+        ["NHL"] = new Dictionary<string, Team>
+        {
+            ["ANA"] = DefaultTeams.NHLDucks,
+            ["ARI"] = DefaultTeams.NHLCoyotes,
+            ["BOS"] = DefaultTeams.NHLBruins,
+            ["BUF"] = DefaultTeams.NHLSabres,
+            ["CAR"] = DefaultTeams.NHLHurricanes,
+            ["CBJ"] = DefaultTeams.NHLBlueJackets,
+            ["CGY"] = DefaultTeams.NHLFlames,
+            ["CHI"] = DefaultTeams.NHLBlackhawks,
+            ["COL"] = DefaultTeams.NHLAvalanche,
+            ["DAL"] = DefaultTeams.NHLStars,
+            ["DET"] = DefaultTeams.NHLRedWings,
+            ["EDM"] = DefaultTeams.NHLOilers,
+            ["FLA"] = DefaultTeams.NHLPanthers,
+            ["LAK"] = DefaultTeams.NHLKings,
+            ["MIN"] = DefaultTeams.NHLWild,
+            ["MTL"] = DefaultTeams.NHLCanadiens,
+            ["NJD"] = DefaultTeams.NHLDevils,
+            ["NYI"] = DefaultTeams.NHLIslanders,
+            ["NYR"] = DefaultTeams.NHLRangers,
+            ["OTT"] = DefaultTeams.NHLSenators,
+            ["PHI"] = DefaultTeams.NHLFlyers,
+            ["PIT"] = DefaultTeams.NHLPenguins,
+            ["SEA"] = DefaultTeams.NHLKraken,
+            ["SJS"] = DefaultTeams.NHLSharks,
+            ["STL"] = DefaultTeams.NHLBlues,
+            ["TB"] = DefaultTeams.NHLLightning,
+            ["TBL"] = DefaultTeams.NHLLightning,
+            ["TOR"] = DefaultTeams.NHLMapleLeafs,
+            ["VAN"] = DefaultTeams.NHLCanucks,
+            ["VGK"] = DefaultTeams.NHLGoldenKnights,
+            ["WPG"] = DefaultTeams.NHLJets,
+            ["WSH"] = DefaultTeams.NHLCapitals,
+        },
+    };
+
+    public static Team? GetByAbbreviation(string abbreviation, string? league = null)
+    {
+        if (string.IsNullOrWhiteSpace(league))
+        {
+            foreach (var map in AbbreviationMap.Values)
+            {
+                if (map.ContainsKey(abbreviation.ToUpper()))
+                    return map[abbreviation.ToUpper()];
+            }
+
+            return null;
+        }
+
+        if (!AbbreviationMap.ContainsKey(league.ToUpper()) || !AbbreviationMap[league.ToUpper()].ContainsKey(abbreviation.ToUpper()))
+            return null;
+
+        return AbbreviationMap[league.ToUpper()][abbreviation.ToUpper()];
+    }
 }

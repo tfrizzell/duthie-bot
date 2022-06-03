@@ -13,7 +13,7 @@ public class TheSpnhlLeagueProvider : ILeagueProvider
                 SiteId = TheSpnhlSiteProvider.SITE_ID,
                 Id = new Guid("6991c990-a4fa-488b-884a-79b00e4e3577"),
                 Name = "SPNHL",
-                Info = new TheSpnhlLeagueInfo { LeagueId = "spnhl" },
+                Info = new TheSpnhlLeagueInfo { LeagueType = "NHL" },
                 Tags = new Tags { "psn", "ea nhl", "6v6" },
                 Enabled = true
             },

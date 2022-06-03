@@ -32,23 +32,26 @@ public class LeagueService
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            var query = CreateQuery(context).Where(l => l.Enabled);
+            var query = CreateQuery(context).Where(l => l.Enabled && l.Site.Enabled);
 
             if (!string.IsNullOrWhiteSpace(text))
                 query = query.Where(l => l.Id.ToString().ToLower().Equals(text.ToLower())
-                    || l.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower()));
+                    || l.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower())
+                    || (l.Name.StartsWith("VG") && l.Name.ToLower().StartsWith(text.ToLower())));
 
             if (sites?.Count() > 0)
                 query = query.Where(l => sites.Contains(l.SiteId));
 
-            var results = await query
+            var leagues = await query
                 .OrderBy(l => l.Id.ToString().ToLower().Equals(text.ToLower()))
+                .ThenBy(l => l.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower()))
+                .ThenBy(l => (l.Name.StartsWith("VG") && l.Name.ToLower().StartsWith(text.ToLower())))
                 .ThenBy(l => l.Name)
                 .ToListAsync();
 
             return tags?.Count() > 0
-                ? results.Where(l => tags.All(tag => l.Tags.Contains(tag)))
-                : results;
+                ? leagues.Where(l => tags.All(tag => l.Tags.Contains(tag)))
+                : leagues;
         }
     }
 
@@ -60,8 +63,8 @@ public class LeagueService
         }
     }
 
-    public Task<IEnumerable<League>> GetAllAsync() =>
-        _memoryCache.GetOrCreateAsync<IEnumerable<League>>(new { type = GetType(), method = "GetAllAsync" }, async entry =>
+    public async Task<IEnumerable<League>> GetAllAsync() =>
+        await _memoryCache.GetOrCreateAsync<IEnumerable<League>>(new { type = GetType(), method = "GetAllAsync" }, async entry =>
         {
             entry.SetOptions(new MemoryCacheEntryOptions
             {
@@ -71,7 +74,7 @@ public class LeagueService
             using (var context = await _contextFactory.CreateDbContextAsync())
             {
                 return await CreateQuery(context)
-                    .Where(l => l.Enabled)
+                    .Where(l => l.Enabled && l.Site.Enabled)
                     .ToListAsync();
             }
         });

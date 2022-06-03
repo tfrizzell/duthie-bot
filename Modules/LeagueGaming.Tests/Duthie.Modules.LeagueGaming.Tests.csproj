@@ -24,7 +24,6 @@
   <ItemGroup>
     <ProjectReference Include="..\LeagueGaming\Duthie.Modules.LeagueGaming.csproj" />
     <ProjectReference Include="..\..\Types\Duthie.Types.csproj" />
-    <ProjectReference Include="..\..\Data\Duthie.Data.csproj" />
   </ItemGroup>
 
 </Project>

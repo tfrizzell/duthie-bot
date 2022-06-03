@@ -22,6 +22,9 @@ public class GuildService
     private IQueryable<Guild> CreateQuery(DuthieDbContext context) =>
         context.Set<Guild>().OrderBy(g => g.Name);
 
+    public async Task<int> DeleteAsync(IEnumerable<ulong> ids) =>
+        await DeleteAsync(ids.ToArray());
+
     public async Task<int> DeleteAsync(params ulong[] ids)
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
@@ -114,6 +117,9 @@ public class GuildService
             return (await context.SaveChangesAsync()) > 0;
         }
     }
+
+    public async Task<int> SaveAsync(IEnumerable<Guild> guilds) =>
+        await SaveAsync(guilds.ToArray());
 
     public async Task<int> SaveAsync(params Guild[] guilds)
     {

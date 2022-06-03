@@ -163,7 +163,7 @@ public class ListCommand : BaseCommand
         var (site, siteOption) = await GetSiteAsync(cmd);
         var (tags, tagsOption) = await GetTagsAsync(cmd);
 
-        if (siteOption != null && site?.Enabled != true)
+        if (siteOption != null && site == null)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but that site doesn't seem to exist anymore.", ephemeral: true);
             return;
@@ -228,13 +228,13 @@ public class ListCommand : BaseCommand
         var (site, siteOption) = await GetSiteAsync(cmd);
         var (tags, tagsOption) = await GetTagsAsync(cmd);
 
-        if (siteOption != null && site?.Enabled != true)
+        if (siteOption != null && site == null)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but that site doesn't seem to exist anymore.", ephemeral: true);
             return;
         }
 
-        if (leagueOption != null && league?.Enabled != true)
+        if (leagueOption != null && league == null)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but that league doesn't seem to exist anymore.", ephemeral: true);
             return;

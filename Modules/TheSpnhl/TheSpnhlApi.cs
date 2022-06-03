@@ -5,7 +5,7 @@ using Duthie.Types.Api;
 
 namespace Duthie.Modules.TheSpnhl;
 
-public class TheSpnhlApi : ILeagueInfoApi
+public class TheSpnhlApi : ILeagueInfoApi, ITeamsApi
 {
     private readonly HttpClient _httpClient;
 
@@ -27,89 +27,69 @@ public class TheSpnhlApi : ILeagueInfoApi
 
     public async Task<ILeague?> GetLeagueInfoAsync(League league)
     {
-        if (league.Info is not TheSpnhlLeagueInfo)
+        if (!Supports.Contains(league.SiteId) || league.Info is not TheSpnhlLeagueInfo)
             return null;
 
         var leagueInfo = (league.Info as TheSpnhlLeagueInfo)!;
+        var html = await _httpClient.GetStringAsync("https://thespnhl.com/calendar/fixtures-results/");
 
-        var html = Regex.Replace(await _httpClient.GetStringAsync(GetUrl(new Dictionary<string, object>
-        {
-            ["action"] = "league",
-            ["page"] = "standing",
-            ["leagueid"] = leagueInfo.LeagueId,
-            ["seasonid"] = 1
-        })), @"[\r\n]+", "");
+        var season = Regex.Match(html,
+            @$"Season\s*(\d+)",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
-        var info = Regex.Match(html, @$"<li[^>]* custom-tab-{leagueInfo.LeagueId} [^>]*>.*?<a[^>]*/league\.(\d+)[^>]*>.*?<span[^>]*>(.*?)</span>.*?</a>", RegexOptions.IgnoreCase);
-
-        if (!info.Success)
+        if (!season.Success)
             return null;
-
-        var season = Regex.Match(html, @$"<a[^>]*leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid=(\d+)[^>]*>Roster</a>", RegexOptions.IgnoreCase);
 
         return new League
         {
-            Name = info.Groups[2].Value.Trim(),
+            Name = league.Name,
             Info = new TheSpnhlLeagueInfo
             {
-                LeagueId = leagueInfo.LeagueId
+                LeagueType = leagueInfo.LeagueType,
+                SeasonId = season.Success ? int.Parse(season.Groups[1].Value) : leagueInfo.SeasonId
             }
         };
     }
 
-    // public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
-    // {
-    //     if (league.Info is not TheSpnhlLeagueInfo)
-    //         return null;
+    public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
+    {
+        if (!Supports.Contains(league.SiteId) || league.Info is not TheSpnhlLeagueInfo)
+            return null;
 
-    //     var leagueInfo = (league.Info as TheSpnhlLeagueInfo)!;
+        var leagueInfo = (league.Info as TheSpnhlLeagueInfo)!;
+        var html = await _httpClient.GetStringAsync("https://thespnhl.com/standings/");
 
-    //     var html = await _httpClient.GetStringAsync(GetUrl(new Dictionary<string, object>
-    //     {
-    //         ["action"] = "league",
-    //         ["page"] = "standing",
-    //         ["leagueid"] = leagueInfo.LeagueId,
-    //         ["seasonid"] = leagueInfo.SeasonId
-    //     }));
+        var matches = Regex.Matches(html,
+            @$"<a[^>]*><span[^>]*\bteam-logo\b[^>]*>\s*<img[^>]*>\s*</span>(.*?)</a>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
-    //     var nameMatches = Regex.Matches(html, @$"<div[^>]*class=""team_box_icon""[^>]*>.*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>.*?</div>", RegexOptions.IgnoreCase);
+        if (matches.Count() == 0)
+            return null;
 
-    //     if (nameMatches.Count() == 0)
-    //         return null;
+        var teams = new Dictionary<string, LeagueTeam>();
 
-    //     var teams = new Dictionary<string, LeagueTeam>();
+        foreach (Match match in matches)
+        {
+            var id = match.Groups[1].Value.Trim();
 
-    //     foreach (Match match in nameMatches)
-    //     {
-    //         var id = match.Groups[1].Value;
+            if (teams.ContainsKey(id))
+                continue;
 
-    //         if (!teams.ContainsKey(id))
-    //             teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
+            var team = DefaultTeams.GetByAbbreviation(id, leagueInfo.LeagueType);
 
-    //         teams[id].Team.Name =
-    //         teams[id].Team.ShortName = match.Groups[2].Value.Trim();
-    //         teams[id].IId = id;
-    //     }
+            if (team != null)
+            {
+                teams.Add(id, new LeagueTeam
+                {
+                    LeagueId = league.Id,
+                    League = league,
+                    TeamId = team.Id,
+                    Team = team,
+                    IId = id
+                });
+            }
+        }
 
-    //     var shortNameMatches = Regex.Matches(html, @$"<td[^>]*><img[^>]*/team\d+.png[^>]*> \d+\) .*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>.*?</td>", RegexOptions.IgnoreCase);
-
-    //     if (shortNameMatches.Count() > 0)
-    //     {
-    //         foreach (Match match in shortNameMatches)
-    //         {
-    //             var id = match.Groups[1].Value;
-
-    //             if (!teams.ContainsKey(id))
-    //                 teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
-
-    //             teams[id].Team.ShortName = match.Groups[2].Value.Trim();
-    //             teams[id].IId = id;
-
-    //             if (string.IsNullOrWhiteSpace(teams[id].Team.Name))
-    //                 teams[id].Team.Name = teams[id].Team.ShortName;
-    //         }
-    //     }
-
-    //     return teams.Values.ToList();
-    // }
+        return teams.Values.ToList();
+    }
 }

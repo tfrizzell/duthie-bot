@@ -52,6 +52,38 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.ToTable("GuildAdmins", (string)null);
                 });
 
+            modelBuilder.Entity("Duthie.Types.GuildMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ChannelId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GuildId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SentAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId");
+
+                    b.ToTable("GuildMessages", (string)null);
+                });
+
             modelBuilder.Entity("Duthie.Types.League", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1288,7 +1320,18 @@ namespace Duthie.Bot.Migrations.Sqlite
             modelBuilder.Entity("Duthie.Types.GuildAdmin", b =>
                 {
                     b.HasOne("Duthie.Types.Guild", "Guild")
-                        .WithMany("Admins")
+                        .WithMany()
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+                });
+
+            modelBuilder.Entity("Duthie.Types.GuildMessage", b =>
+                {
+                    b.HasOne("Duthie.Types.Guild", "Guild")
+                        .WithMany()
                         .HasForeignKey("GuildId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1351,11 +1394,6 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.Navigation("League");
 
                     b.Navigation("Team");
-                });
-
-            modelBuilder.Entity("Duthie.Types.Guild", b =>
-                {
-                    b.Navigation("Admins");
                 });
 
             modelBuilder.Entity("Duthie.Types.League", b =>

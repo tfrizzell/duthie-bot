@@ -25,7 +25,8 @@ var host = Host.CreateDefaultBuilder(args)
 
         services
             .AddHostedService<Main>()
-            .AddHostedService<LeagueUpdateBackgroundService>();
+            .AddHostedService<LeagueUpdateBackgroundService>()
+            .AddHostedService<MessagingBackgroundService>();
     })
     .Build();
 

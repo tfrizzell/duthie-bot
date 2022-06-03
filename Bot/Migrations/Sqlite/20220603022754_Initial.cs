@@ -70,6 +70,28 @@ namespace Duthie.Bot.Migrations.Sqlite
                 });
 
             migrationBuilder.CreateTable(
+                name: "GuildMessages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    GuildId = table.Column<string>(type: "TEXT", nullable: false),
+                    ChannelId = table.Column<string>(type: "TEXT", nullable: false),
+                    Message = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<string>(type: "TEXT", nullable: false),
+                    SentAt = table.Column<string>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GuildMessages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GuildMessages_Guilds_GuildId",
+                        column: x => x.GuildId,
+                        principalTable: "Guilds",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Leagues",
                 columns: table => new
                 {
@@ -928,6 +950,11 @@ namespace Duthie.Bot.Migrations.Sqlite
                 values: new object[] { new Guid("ff8968a2-0895-4b0c-a28d-fb3dff7d2b2d"), "Texas Stars", "Stars", "[\"ahl\",\"hockey\"]" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_GuildMessages_GuildId",
+                table: "GuildMessages",
+                column: "GuildId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Leagues_Name",
                 table: "Leagues",
                 column: "Name",
@@ -977,6 +1004,9 @@ namespace Duthie.Bot.Migrations.Sqlite
         {
             migrationBuilder.DropTable(
                 name: "GuildAdmins");
+
+            migrationBuilder.DropTable(
+                name: "GuildMessages");
 
             migrationBuilder.DropTable(
                 name: "LeagueTeams");
