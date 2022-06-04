@@ -41,8 +41,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="../appsettings*.json" />
-    <EmbeddedResource Include="../appsettings*.json">
+    <None Remove="appsettings*.json" />
+    <EmbeddedResource Include="appsettings*.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>

@@ -18,15 +18,15 @@ public class LeagueGamingLeagueProviderTests
         var league = leagueProvider.Leagues.FirstOrDefault(l => l.Id == id);
 
         Assert.True(league != null, $"league {id} not found");
-        Assert.True(LeagueGamingSiteProvider.SITE_ID == league?.SiteId, $"expected SiteId to be {LeagueGamingSiteProvider.SITE_ID} but got {league?.SiteId}");
-        Assert.True(name.Equals(league?.Name), $"expected Name to be {name} but got {league?.Name}");
-        Assert.True(league?.Info is LeagueGamingLeagueInfo, $"expected Info to be of type {typeof(LeagueGamingLeagueInfo).Name} but got {league?.Info?.GetType()?.Name ?? "null"}");
-        Assert.True(league?.Enabled, $"expected Enabled to be {true} but got {league?.Enabled}");
+        Assert.True(LeagueGamingSiteProvider.SITE_ID == league!.SiteId, $"expected SiteId to be {LeagueGamingSiteProvider.SITE_ID} but got {league.SiteId}");
+        Assert.True(name == league.Name, $"expected Name to be {name} but got {league.Name}");
+        Assert.True(league.Info is LeagueGamingLeagueInfo, $"expected Info to be of type {typeof(LeagueGamingLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
+        Assert.True(league.Enabled, $"expected Enabled to be {true} but got {league.Enabled}");
 
-        var actualLeagueId = (league?.Info as LeagueGamingLeagueInfo)?.LeagueId;
+        var actualLeagueId = (league.Info as LeagueGamingLeagueInfo)!.LeagueId;
         Assert.True(leagueId == actualLeagueId, $"expected Info.LeagueId to be {leagueId} but got {actualLeagueId}");
 
-        var count = leagueProvider.Leagues.Count(s => s.Name.Equals(name));
+        var count = leagueProvider.Leagues.Count(s => s.Name == name);
         Assert.True(count == 1, $"expected 1 league with name {name} but found {count}");
     }
 

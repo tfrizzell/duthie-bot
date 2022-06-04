@@ -120,7 +120,7 @@ public class AdminCommand : BaseCommand
             [guild.Owner.Id] = new string[] {
                 $"{guild.Owner.Username}@{guild.Owner.Discriminator}",
                 ROLE_OWNER
-            }
+            },
         };
 
         foreach (var member in guild.Users.Where(m => m.GuildPermissions.Administrator && m.Id != guild.OwnerId).OrderBy(m => m.Mention))
@@ -190,5 +190,5 @@ public class AdminCommand : BaseCommand
     }
 
     private Task<SocketGuildUser> GetTargetUserAsync(SocketSlashCommandDataOption cmd) =>
-        Task.FromResult((SocketGuildUser)cmd.Options.First(o => "user".Equals(o.Name)).Value);
+        Task.FromResult((SocketGuildUser)cmd.Options.First(o => "user" == o.Name).Value);
 }

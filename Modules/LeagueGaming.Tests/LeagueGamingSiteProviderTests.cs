@@ -19,10 +19,10 @@ public class LeagueGamingSiteProviderTests
         var site = siteProvider.Sites.FirstOrDefault(s => s.Id == LeagueGamingSiteProvider.SITE_ID);
 
         Assert.True(site != null, $"no matching site found");
-        Assert.True(name.Equals(site?.Name), $"expected Name to be {name} but got {site?.Name}");
-        Assert.True(site?.Enabled, $"expected Enabled to be {true} but got {site?.Enabled}");
+        Assert.True(name == site!.Name, $"expected Name to be {name} but got {site.Name}");
+        Assert.True(site.Enabled, $"expected Enabled to be {true} but got {site.Enabled}");
 
-        var count = siteProvider.Sites.Count(s => s.Name.Equals(name));
+        var count = siteProvider.Sites.Count(s => s.Name == name);
         Assert.True(count == 1, $"expected 1 site with name {name} but found {count}");
     }
 

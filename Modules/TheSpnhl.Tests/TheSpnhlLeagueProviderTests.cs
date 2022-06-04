@@ -18,11 +18,11 @@ public class TheSpnhlLeagueProviderTests
         var league = leagueProvider.Leagues.FirstOrDefault(l => l.Id == id);
 
         Assert.True(league != null, $"league {id} not found");
-        Assert.True(TheSpnhlSiteProvider.SITE_ID == league?.SiteId, $"expected SiteId to be {TheSpnhlSiteProvider.SITE_ID} but got {league?.SiteId}");
-        Assert.True(name.Equals(league?.Name), $"expected Name to be {name} but got {league?.Name}");
-        Assert.True(league?.Enabled, $"expected Enabled to be {true} but got {league?.Enabled}");
+        Assert.True(TheSpnhlSiteProvider.SITE_ID == league!.SiteId, $"expected SiteId to be {TheSpnhlSiteProvider.SITE_ID} but got {league.SiteId}");
+        Assert.True(name == league.Name, $"expected Name to be {name} but got {league.Name}");
+        Assert.True(league.Enabled, $"expected Enabled to be {true} but got {league.Enabled}");
 
-        var count = leagueProvider.Leagues.Count(s => s.Name.Equals(name));
+        var count = leagueProvider.Leagues.Count(s => s.Name == name);
         Assert.True(count == 1, $"expected 1 league with name {name} but found {count}");
     }
 

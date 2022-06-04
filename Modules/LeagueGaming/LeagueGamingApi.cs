@@ -42,59 +42,41 @@ public class LeagueGamingApi
                 ["seasonid"] = leagueInfo.SeasonId,
             }));
 
-        var matches = Regex.Matches(html,
+        var scheduleMatches = Regex.Matches(html,
             @$"(?:{string.Join("|",
-                @"<h4[^>]*sh4[^>]*>(.*?)</h4>*",
+                @"<h4[^>]*sh4[^>]*>(.*?)</h4>",
                 @"<span[^>]*sweekid[^>]*>Week\s*(\d+)</span>\s*(?:<span[^>]*sgamenumber[^>]*>Game\s*#\s*(\d+)</span>)?\s*<img[^>]*/team(\d+)\.png[^>]*>\s*<a[^>]*&gameid=(\d+)[^>]*>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*<span[^>]*sscore[^>]*>(vs|(\d+)\D+(\d+))</span>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*</a>\s*<img[^>]*/team(\d+)\.png[^>]*>")})",
             RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
-        if (matches.Count() == 0)
+        if (scheduleMatches.Count() == 0)
             return new List<ApiGame>();
 
-        var games = new List<ApiGame>();
         DateTimeOffset? date = null;
 
-        foreach (Match match in matches)
+        return scheduleMatches.Select(m =>
         {
-            if (!string.IsNullOrWhiteSpace(match.Groups[1].Value))
+            if (!string.IsNullOrWhiteSpace(m.Groups[1].Value))
             {
-                var parsed = DateTime.Parse(Regex.Replace(match.Groups[1].Value, @"(\d+)[\S\D]+", @"$1"));
-
-                var present = new DateTimeOffset(parsed, Timezone.GetUtcOffset(parsed));
-                var dPresent = Math.Abs((DateTimeOffset.UtcNow - present).TotalMilliseconds);
-
-                var past = present.AddYears(-1);
-                var dPast = Math.Abs((DateTimeOffset.UtcNow - past).TotalMilliseconds);
-
-                var future = present.AddYears(1);
-                var dFuture = Math.Abs((DateTimeOffset.UtcNow - future).TotalMilliseconds);
-
-                if (dFuture < dPast && dFuture < dPresent)
-                    date = future;
-                else if (dPast < dPresent)
-                    date = past;
-                else
-                    date = present;
-
-                continue;
+                date = IApi.ParseDateWithNoYear(Regex.Replace(m.Groups[1].Value, @"(\d+)[\D\S]{2}", @"$1"));
+                return null;
             }
 
             if (date == null)
-                continue;
+                return null;
 
-            games.Add(new ApiGame
+            return new ApiGame
             {
                 LeagueId = league.Id,
-                GameId = match.Groups[5].Value.Trim(),
+                GameId = m.Groups[5].Value.Trim(),
                 Date = date.GetValueOrDefault(),
-                VisitorIId = match.Groups[4].Value.Trim(),
-                VisitorScore = int.TryParse(match.Groups[8].Value, out var visitorScore) ? visitorScore : null,
-                HomeIId = match.Groups[11].Value.Trim(),
-                HomeScore = int.TryParse(match.Groups[9].Value, out var homeScore) ? homeScore : null,
-            });
-        }
-
-        return games;
+                VisitorIId = m.Groups[4].Value.Trim(),
+                VisitorScore = int.TryParse(m.Groups[8].Value, out var visitorScore) ? visitorScore : null,
+                HomeIId = m.Groups[11].Value.Trim(),
+                HomeScore = int.TryParse(m.Groups[9].Value, out var homeScore) ? homeScore : null,
+            };
+        })
+        .Where(g => g != null)
+        .Cast<ApiGame>();
     }
 
     public async Task<ILeague?> GetLeagueInfoAsync(League league)
@@ -159,39 +141,38 @@ public class LeagueGamingApi
         if (nameMatches.Count() == 0)
             return null;
 
-        var teams = new Dictionary<string, LeagueTeam>();
+        var teams = nameMatches
+            .DistinctBy(m => m.Groups[1].Value)
+            .ToDictionary(
+                m => m.Groups[1].Value,
+                m => new LeagueTeam
+                {
+                    LeagueId = league.Id,
+                    League = league,
+                    Team = new Team
+                    {
+                        Name = m.Groups[2].Value.Trim(),
+                        ShortName = m.Groups[2].Value.Trim(),
+                    },
+                    IId = m.Groups[1].Value,
+                });
 
-        foreach (Match match in nameMatches)
+        var shortNameMatches = Regex.Matches(html,
+            @$"<td[^>]*><img[^>]*/team\d+.png[^>]*> \d+\) .*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>.*?</td>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        foreach (Match match in shortNameMatches)
         {
             var id = match.Groups[1].Value;
 
             if (!teams.ContainsKey(id))
                 teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
 
-            teams[id].Team.Name =
             teams[id].Team.ShortName = match.Groups[2].Value.Trim();
             teams[id].IId = id;
-        }
 
-        var shortNameMatches = Regex.Matches(html,
-            @$"<td[^>]*><img[^>]*/team\d+.png[^>]*> \d+\) .*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>.*?</td>",
-            RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-        if (shortNameMatches.Count() > 0)
-        {
-            foreach (Match match in shortNameMatches)
-            {
-                var id = match.Groups[1].Value;
-
-                if (!teams.ContainsKey(id))
-                    teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
-
-                teams[id].Team.ShortName = match.Groups[2].Value.Trim();
-                teams[id].IId = id;
-
-                if (string.IsNullOrWhiteSpace(teams[id].Team.Name))
-                    teams[id].Team.Name = teams[id].Team.ShortName;
-            }
+            if (string.IsNullOrWhiteSpace(teams[id].Team.Name))
+                teams[id].Team.Name = teams[id].Team.ShortName;
         }
 
         return teams.Values.ToList();

@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Duthie.Types.Games;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
 
@@ -5,19 +7,14 @@ namespace Duthie.Modules.MyVirtualGaming.Tests;
 
 public class MyVirtualGamingApiTests
 {
-    private readonly IReadOnlyCollection<string> EXCLUDED_TEAMS = new string[] { "Sabres", "Flames", "Blue Jackets", "Kraken" };
-
-    private static readonly Guid TEST_LEAGUE_ID = new Guid("5957b164-7bb5-4324-967a-16c3044260b2");
-    private const int TEST_SEASON_ID = 72;
-    private const string EXPECTED_LEAGUE_ID = "vgnhl";
-
     private readonly MyVirtualGamingApi _api;
     private readonly League _league;
 
     public MyVirtualGamingApiTests()
     {
         _api = new MyVirtualGamingApi();
-        _league = new MyVirtualGamingLeagueProvider().Leagues.First(l => l.Id == TEST_LEAGUE_ID);
+        _league = new MyVirtualGamingLeagueProvider().Leagues.First(l => l.Id == new Guid("5957b164-7bb5-4324-967a-16c3044260b2"));
+        (_league.Info as MyVirtualGamingLeagueInfo)!.SeasonId = 72;
     }
 
     [Fact]
@@ -31,39 +28,62 @@ public class MyVirtualGamingApiTests
     {
         var league = await _api.GetLeagueInfoAsync(_league);
         Assert.True(league != null, $"{_api.GetType().Name} does not support league {_league.Id}");
-        Assert.True(_league.Name.Equals(league!.Name), $"expected Name to be {_league.Name} but got {league.Name}");
-        Assert.True(league?.Info is MyVirtualGamingLeagueInfo, $"expected Info to be of type {typeof(MyVirtualGamingLeagueInfo).Name} but got {league?.Info?.GetType()?.Name ?? "null"}");
+        Assert.True(_league.Name == league!.Name, $"expected Name to be {_league.Name} but got {league.Name}");
+        Assert.True(league.Info is MyVirtualGamingLeagueInfo, $"expected Info to be of type {typeof(MyVirtualGamingLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
 
-        var info = (league?.Info as MyVirtualGamingLeagueInfo)!;
-        Assert.True(EXPECTED_LEAGUE_ID.Equals(info.LeagueId), $"expected Info.LeagueId to be {EXPECTED_LEAGUE_ID} but got {info.LeagueId}");
-        Assert.True(TEST_SEASON_ID <= info.SeasonId, $"expected Info.SeasonId to be greater than or equal to {TEST_SEASON_ID} but got {info.SeasonId}");
+        var expectedInfo = JsonSerializer.Deserialize<MyVirtualGamingLeagueInfo>(File.ReadAllText(@"./Files/info.json"))!;
+        var actualInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+        Assert.True(expectedInfo.LeagueId == actualInfo.LeagueId, $"expected Info.LeagueId to be {expectedInfo.LeagueId} but got {actualInfo.LeagueId}");
+        Assert.True(expectedInfo.SeasonId <= actualInfo.SeasonId, $"expected Info.SeasonId to be greater than or equal to {expectedInfo.SeasonId} but got {actualInfo.SeasonId}");
     }
 
     [Fact]
     public async Task GetTeamsAsync_ReturnsExpectedTeams()
     {
-        (_league.Info as MyVirtualGamingLeagueInfo)!.SeasonId = TEST_SEASON_ID;
-        var teams = await _api.GetTeamsAsync(_league);
-        Assert.True(teams != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+        var expectedTeams = JsonSerializer.Deserialize<IEnumerable<LeagueTeam>>(File.ReadAllText(@"./Files/teams.json"))!;
+        var actualTeams = await _api.GetTeamsAsync(_league);
+        Assert.True(actualTeams != null, $"{_api.GetType().Name} does not support league {_league.Id}");
 
-        var expectedCount = DefaultTeams.NHL.Count(t => !EXCLUDED_TEAMS.Contains(t.Name) && !EXCLUDED_TEAMS.Contains(t.ShortName));
-        var actualCount = teams!.Count();
-        Assert.True(expectedCount == actualCount, $"expected {expectedCount} teams but found {actualCount}");
+        var expectedTeamCount = expectedTeams.Count();
+        var actualTeamCount = actualTeams!.Count();
+        Assert.True(expectedTeamCount == actualTeamCount, $"expected {expectedTeamCount} teams but found {actualTeamCount}");
 
-        var badLeagueCount = teams!.Count(t => t.LeagueId != _league.Id);
-        Assert.True(badLeagueCount == 0, $"expected all teams to have LeagueId {_league.Id} but found {badLeagueCount} that did not");
-
-        foreach (var team in DefaultTeams.NHL)
+        foreach (var expectedTeam in expectedTeams)
         {
-            if (EXCLUDED_TEAMS.Contains(team.Name) || EXCLUDED_TEAMS.Contains(team.ShortName))
-                continue;
+            var actualTeam = actualTeams!.FirstOrDefault(t => t.IId == expectedTeam.IId);
+            Assert.True(actualTeam != null, $"team with IId {expectedTeam.IId} not found");
+            Assert.True(expectedTeam.LeagueId == actualTeam!.LeagueId, $"expected LeagueId {expectedTeam.LeagueId} but got {actualTeam.LeagueId}");
+            Assert.True(expectedTeam.TeamId == actualTeam!.TeamId, $"expected TeamId {expectedTeam.TeamId} but got {actualTeam.TeamId}");
+            Assert.True(expectedTeam.IId == actualTeam.IId, $"expected IId {expectedTeam.IId} but got {actualTeam.IId}");
+            Assert.True(expectedTeam.Team.Name == actualTeam.Team.Name, $"expected Name {expectedTeam.Team.Name} but got {actualTeam.Team.Name}");
+            Assert.True(expectedTeam.Team.ShortName == actualTeam.Team.ShortName, $"expected ShortName {expectedTeam.Team.ShortName} but got {actualTeam.Team.ShortName}");
+        }
+    }
 
-            var leagueTeam = teams?.FirstOrDefault(t => t.Team.Name.Equals(team.Name) && t.Team.ShortName.Equals(team.ShortName));
-            Assert.True(team.Name.Equals(leagueTeam?.Team.Name), $"expected Name {team.Name} but got {leagueTeam?.Team.Name}");
-            Assert.True(team.ShortName.Equals(leagueTeam?.Team.ShortName), $"expected ShortName {team.ShortName} but got {leagueTeam?.Team.ShortName}");
+    [Fact]
+    public async Task GetGamesAsync_ReturnsExpectedGames()
+    {
+        var expectedGames = JsonSerializer.Deserialize<IEnumerable<ApiGame>>(File.ReadAllText(@"./Files/games.json"))!;
+        var actualGames = await _api.GetGamesAsync(_league);
+        Assert.True(actualGames != null, $"{_api.GetType().Name} does not support league {_league.Id}");
 
-            var iidIsInt = int.TryParse(leagueTeam?.IId, out var internalId);
-            Assert.True(iidIsInt && internalId > 0, $"expected IId to be integer greater than 0 but got {leagueTeam?.IId}");
+        var expectedTeamCount = expectedGames.Count();
+        var actualGameCount = actualGames!.Count();
+        Assert.True(expectedTeamCount == actualGameCount, $"expected {expectedTeamCount} games but found {actualGameCount}");
+
+        foreach (var expectedGame in expectedGames)
+        {
+            var actualGame = actualGames!.FirstOrDefault(g => g.GameId == expectedGame.GameId);
+            Assert.True(actualGame != null, $"game with GameId {expectedGame.GameId} not found");
+            Assert.True(expectedGame.LeagueId == actualGame!.LeagueId, $"expected LeagueId {expectedGame.LeagueId} but got {actualGame.LeagueId}");
+            Assert.True(expectedGame.GameId == actualGame.GameId, $"expected GameId {expectedGame.GameId} but got {actualGame.GameId}");
+            Assert.True(expectedGame.Date == actualGame.Date, $"expected Date {expectedGame.Date} but got {actualGame.Date}");
+            Assert.True(expectedGame.VisitorIId == actualGame.VisitorIId, $"expected VisitorIId {expectedGame.VisitorIId} but got {actualGame.VisitorIId}");
+            Assert.True(expectedGame.VisitorScore == actualGame.VisitorScore, $"expected VisitorScore {expectedGame.VisitorScore} but got {actualGame.VisitorScore}");
+            Assert.True(expectedGame.HomeIId == actualGame.HomeIId, $"expected LeagueId {expectedGame.HomeIId} but got {actualGame.HomeIId}");
+            Assert.True(expectedGame.HomeScore == actualGame.HomeScore, $"expected LeagueId {expectedGame.HomeScore} but got {actualGame.HomeScore}");
+            Assert.True(expectedGame.Overtime == actualGame.Overtime, $"expected LeagueId {expectedGame.LeagueId} but got {actualGame.Overtime}");
+            Assert.True(expectedGame.Shootout == actualGame.Shootout, $"expected LeagueId {expectedGame.Shootout} but got {actualGame.Shootout}");
         }
     }
 }

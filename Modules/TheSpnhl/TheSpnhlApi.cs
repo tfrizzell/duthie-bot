@@ -1,12 +1,13 @@
 using System.Text.RegularExpressions;
 using System.Web;
 using Duthie.Types.Api;
+using Duthie.Types.Games;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
 
 namespace Duthie.Modules.TheSpnhl;
 
-public class TheSpnhlApi : ILeagueInfoApi, ITeamsApi
+public class TheSpnhlApi : IGamesApi, ILeagueInfoApi, ITeamsApi
 {
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
@@ -17,10 +18,31 @@ public class TheSpnhlApi : ILeagueInfoApi, ITeamsApi
         get => new HashSet<Guid> { TheSpnhlSiteProvider.SITE_ID };
     }
 
-    private string GetUrl(IDictionary<string, object> parameters, string file = "index.php", string path = "leaguegaming/league")
+    public async Task<IEnumerable<ApiGame>?> GetGamesAsync(League league)
     {
-        var queryString = string.Join("&", parameters.Select(p => string.Join("=", HttpUtility.UrlEncode(p.Key), HttpUtility.UrlEncode(p.Value.ToString()))));
-        return $"https://www.leaguegaming.com/forums/{file}?{path}&{queryString}".Replace("?&", "?");
+        if (!Supports.Contains(league.SiteId) || league.Info is not TheSpnhlLeagueInfo)
+            return null;
+
+        var leagueInfo = (league.Info as TheSpnhlLeagueInfo)!;
+        var html = await _httpClient.GetStringAsync("https://thespnhl.com/calendar/fixtures-results/");
+
+        return Regex.Matches(html,
+            @"<span[^>]*\bteam-logo\b[^>]*>\s*<meta(?=[^>]*itemprop=""name"")[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>\s*<img[^>]*>\s*</a>\s*</span>\s*<span[^>]*\bteam-logo\b[^>]*>\s*<meta(?=[^>]*itemprop=""name"")[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>\s*<img[^>]*>\s*</a>\s*</span>\s*<time(?=[^>]*\bsp-event-date\b)[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>.*?</a>\s*</time>\s*<h5[^>]*\bsp-event-results\b[^>]*>\s*<a(?=[^>]*itemprop=""url"")[^>]*/event/(\d+)[^>]*>\s*(?:<span[^>]*>([\dO]+)</span>\s*-\s*<span[^>]*>([\dO]+)</span>|<span[^>]*>.*?</span>)\s*</a>\s*</h5>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+        .Select(m => new ApiGame
+        {
+            LeagueId = league.Id,
+            GameId = m.Groups[4].Value.Trim(),
+            Date = DateTimeOffset.Parse(m.Groups[3].Value.Trim()),
+            VisitorIId = m.Groups[1].Value.Trim(),
+            VisitorScore = m.Groups[5].Value.ToUpper() == "O"
+                ? 0
+                : int.TryParse(m.Groups[5].Value, out var visitorScore) ? visitorScore : null,
+            HomeIId = m.Groups[2].Value.Trim(),
+            HomeScore = m.Groups[6].Value.ToUpper() == "O"
+                ? 0
+                : int.TryParse(m.Groups[6].Value, out var homeScore) ? homeScore : null,
+        });
     }
 
     public async Task<ILeague?> GetLeagueInfoAsync(League league)
@@ -64,30 +86,29 @@ public class TheSpnhlApi : ILeagueInfoApi, ITeamsApi
         if (matches.Count() == 0)
             return null;
 
-        var teams = new Dictionary<string, LeagueTeam>();
-
-        foreach (Match match in matches)
-        {
-            var id = match.Groups[1].Value.Trim();
-
-            if (teams.ContainsKey(id))
-                continue;
-
-            var team = DefaultTeams.GetByAbbreviation(id, leagueInfo.LeagueType);
-
-            if (team != null)
-            {
-                teams.Add(id, new LeagueTeam
+        return matches
+            .DistinctBy(m => m.Groups[1].Value)
+            .ToDictionary(
+                m => m.Groups[1].Value,
+                m =>
                 {
-                    LeagueId = league.Id,
-                    League = league,
-                    TeamId = team.Id,
-                    Team = team,
-                    IId = id
-                });
-            }
-        }
+                    var team = DefaultTeams.GetByAbbreviation(m.Groups[1].Value.Trim(), leagueInfo.LeagueType);
 
-        return teams.Values.ToList();
+                    if (team == null)
+                        return null;
+
+                    return new LeagueTeam
+                    {
+                        LeagueId = league.Id,
+                        League = league,
+                        TeamId = team.Id,
+                        Team = team,
+                        IId = m.Groups[1].Value.Trim()
+                    };
+                })
+            .Values
+            .Where(t => t != null)
+            .Cast<LeagueTeam>()
+            .ToList();
     }
 }
