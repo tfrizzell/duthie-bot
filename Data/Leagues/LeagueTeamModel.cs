@@ -12,7 +12,7 @@ public class LeagueTeamModel : DataModel<LeagueTeam>
 
         model.HasKey(t => new { t.LeagueId, t.TeamId });
 
-        model.Property(l => l.IId)
+        model.Property(l => l.ExternalId)
             .HasColumnName("InternalId");
     }
 }

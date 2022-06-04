@@ -86,11 +86,11 @@ public class GameService
         }
     }
 
-    public async Task<Game?> GetByGameIdAsync(Guid leagueId, string gameId)
+    public async Task<Game?> GetByGameIdAsync(Guid leagueId, ulong gameId)
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            return await CreateQuery(context).FirstOrDefaultAsync(g => g.LeagueId == leagueId && g.GameId.ToLower() == gameId.ToLower());
+            return await CreateQuery(context).FirstOrDefaultAsync(g => g.LeagueId == leagueId && g.GameId == gameId);
         }
     }
 

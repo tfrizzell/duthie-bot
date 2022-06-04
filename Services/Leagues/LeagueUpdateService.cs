@@ -82,7 +82,7 @@ public class LeagueUpdateService
     {
         _logger.LogInformation("Updating teams");
         leagues ??= await GetLeagues(context);
-        var teams = await context.Set<Team>().ToDictionaryAsync(t => CleanTeamName(t.Name));
+        var teams = await context.Set<Team>().ToDictionaryAsync(t => CreateKey(t.Name));
 
         await Task.WhenAll(leagues.Select(async league =>
         {
@@ -98,10 +98,13 @@ public class LeagueUpdateService
 
             foreach (var lt in data)
             {
-                var key = CleanTeamName(lt.Team.Name);
+                var key = CreateKey(lt.Team.Name);
 
                 if (!teams.ContainsKey(key))
+                {
+                    teams.Add(key, lt.Team);
                     continue;
+                }
 
                 lt.TeamId = teams[key]?.Id ?? lt.TeamId;
                 lt.Team = teams[key] ?? lt.Team;
@@ -118,6 +121,6 @@ public class LeagueUpdateService
             .Where(l => l.Enabled && l.Site.Enabled)
             .ToListAsync();
 
-    private static string CleanTeamName(string name) =>
-        Regex.Replace(name, @"[^0-9a-zA-Z]", "");
+    private static string CreateKey(string name) =>
+        Regex.Replace(name, @"[^0-9a-zA-Z]", "").ToUpper();
 }

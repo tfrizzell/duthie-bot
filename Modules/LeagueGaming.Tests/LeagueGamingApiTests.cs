@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Duthie.Types.Games;
+using Duthie.Types.Api;
 using Duthie.Types.Leagues;
 
 namespace Duthie.Modules.LeagueGaming.Tests;
@@ -50,20 +50,20 @@ public class LeagueGamingApiTests
 
         foreach (var expectedTeam in expectedTeams)
         {
-            var actualTeam = actualTeams!.FirstOrDefault(t => t.IId == expectedTeam.IId);
-            Assert.True(actualTeam != null, $"team with IId {expectedTeam.IId} not found");
-            Assert.True(expectedTeam.LeagueId == actualTeam!.LeagueId, $"expected LeagueId {expectedTeam.LeagueId} but got {actualTeam.LeagueId}");
-            Assert.True(expectedTeam.TeamId == actualTeam!.TeamId, $"expected TeamId {expectedTeam.TeamId} but got {actualTeam.TeamId}");
-            Assert.True(expectedTeam.IId == actualTeam.IId, $"expected IId {expectedTeam.IId} but got {actualTeam.IId}");
-            Assert.True(expectedTeam.Team.Name == actualTeam.Team.Name, $"expected Name {expectedTeam.Team.Name} but got {actualTeam.Team.Name}");
-            Assert.True(expectedTeam.Team.ShortName == actualTeam.Team.ShortName, $"expected ShortName {expectedTeam.Team.ShortName} but got {actualTeam.Team.ShortName}");
+            var actualTeam = actualTeams!.FirstOrDefault(t => t.ExternalId == expectedTeam.ExternalId && t.Team.Name == expectedTeam.Team.Name);
+            Assert.True(actualTeam != null, $"[team {expectedTeam.ExternalId}] team not found");
+            Assert.True(expectedTeam.LeagueId == actualTeam!.LeagueId, $"[team {expectedTeam.ExternalId}] expected LeagueId {expectedTeam.LeagueId} but got {actualTeam.LeagueId}");
+            Assert.True(expectedTeam.TeamId == actualTeam!.TeamId, $"[team {expectedTeam.ExternalId}] expected TeamId {expectedTeam.TeamId} but got {actualTeam.TeamId}");
+            Assert.True(expectedTeam.ExternalId == actualTeam.ExternalId, $"[team {expectedTeam.ExternalId}] expected ExternalId {expectedTeam.ExternalId} but got {actualTeam.ExternalId}");
+            Assert.True(expectedTeam.Team.Name == actualTeam.Team.Name, $"[team {expectedTeam.ExternalId}] expected Name {expectedTeam.Team.Name} but got {actualTeam.Team.Name}");
+            Assert.True(expectedTeam.Team.ShortName == actualTeam.Team.ShortName, $"[team {expectedTeam.ExternalId}] expected ShortName {expectedTeam.Team.ShortName} but got {actualTeam.Team.ShortName}");
         }
     }
 
     [Fact]
     public async Task GetGamesAsync_ReturnsExpectedGames()
     {
-        var expectedGames = JsonSerializer.Deserialize<IEnumerable<ApiGame>>(File.ReadAllText(@"./Files/games.json"))!;
+        var expectedGames = JsonSerializer.Deserialize<IEnumerable<Game>>(File.ReadAllText(@"./Files/games.json"))!;
         var actualGames = await _api.GetGamesAsync(_league);
         Assert.True(actualGames != null, $"{_api.GetType().Name} does not support league {_league.Id}");
 
@@ -74,18 +74,18 @@ public class LeagueGamingApiTests
         foreach (var expectedGame in expectedGames)
         {
             var actualGame = actualGames!.FirstOrDefault(g => g.GameId == expectedGame.GameId);
-            Assert.True(actualGame != null, $"game with GameId {expectedGame.GameId} not found");
+            Assert.True(actualGame != null, $"[game {expectedGame.GameId}] game not found");
 
-            actualGame!.Date = actualGame.Date.AddYears(2022 - actualGame.Date.Year);
-            Assert.True(expectedGame.LeagueId == actualGame.LeagueId, $"expected LeagueId {expectedGame.LeagueId} but got {actualGame.LeagueId}");
-            Assert.True(expectedGame.GameId == actualGame.GameId, $"expected GameId {expectedGame.GameId} but got {actualGame.GameId}");
-            Assert.True(expectedGame.Date == actualGame.Date, $"expected Date {expectedGame.Date} but got {actualGame.Date}");
-            Assert.True(expectedGame.VisitorIId == actualGame.VisitorIId, $"expected VisitorIId {expectedGame.VisitorIId} but got {actualGame.VisitorIId}");
-            Assert.True(expectedGame.VisitorScore == actualGame.VisitorScore, $"expected VisitorScore {expectedGame.VisitorScore} but got {actualGame.VisitorScore}");
-            Assert.True(expectedGame.HomeIId == actualGame.HomeIId, $"expected LeagueId {expectedGame.HomeIId} but got {actualGame.HomeIId}");
-            Assert.True(expectedGame.HomeScore == actualGame.HomeScore, $"expected LeagueId {expectedGame.HomeScore} but got {actualGame.HomeScore}");
-            Assert.True(expectedGame.Overtime == actualGame.Overtime, $"expected LeagueId {expectedGame.LeagueId} but got {actualGame.Overtime}");
-            Assert.True(expectedGame.Shootout == actualGame.Shootout, $"expected LeagueId {expectedGame.Shootout} but got {actualGame.Shootout}");
+            actualGame!.Timestamp = actualGame.Timestamp.AddYears(2022 - actualGame.Timestamp.Year);
+            Assert.True(expectedGame.LeagueId == actualGame!.LeagueId, $"[game {expectedGame.GameId}] expected LeagueId to be {expectedGame.LeagueId} but got {actualGame.LeagueId}");
+            Assert.True(expectedGame.GameId == actualGame.GameId, $"[game {expectedGame.GameId}] expected GameId to be {expectedGame.GameId} but got {actualGame.GameId}");
+            Assert.True(expectedGame.Timestamp == actualGame.Timestamp, $"[game {expectedGame.GameId}] expected Timestamp to be {expectedGame.Timestamp} but got {actualGame.Timestamp}");
+            Assert.True(expectedGame.VisitorExternalId == actualGame.VisitorExternalId, $"[game {expectedGame.GameId}] expected VisitorExternalId to be {expectedGame.VisitorExternalId} but got {actualGame.VisitorExternalId}");
+            Assert.True(expectedGame.VisitorScore == actualGame.VisitorScore, $"[game {expectedGame.GameId}] expected VisitorScore to be {expectedGame.VisitorScore} but got {actualGame.VisitorScore}");
+            Assert.True(expectedGame.HomeExternalId == actualGame.HomeExternalId, $"[game {expectedGame.GameId}] expected HomeExternalId to be {expectedGame.HomeExternalId} but got {actualGame.HomeExternalId}");
+            Assert.True(expectedGame.HomeScore == actualGame.HomeScore, $"[game {expectedGame.GameId}] expected HomeScore to be {expectedGame.HomeScore} but got {actualGame.HomeScore}");
+            Assert.True(expectedGame.Overtime == actualGame.Overtime, $"[game {expectedGame.GameId}] expected Overtime to be {expectedGame.Overtime} but got {actualGame.Overtime}");
+            Assert.True(expectedGame.Shootout == actualGame.Shootout, $"[game {expectedGame.GameId}] expected Shootout to be {expectedGame.Shootout} but got {actualGame.Shootout}");
         }
     }
 }

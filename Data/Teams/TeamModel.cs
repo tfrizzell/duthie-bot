@@ -1,3 +1,6 @@
+using Duthie.Data.Comparers;
+using Duthie.Data.Converters;
+using Duthie.Types.Common;
 using Duthie.Types.Teams;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -17,6 +20,9 @@ public class TeamModel : DataModel<Team>
 
         model.Property(t => t.Id)
             .ValueGeneratedOnAdd();
+
+        model.Property(l => l.Tags)
+            .HasConversion(new StringCollectionToJsonConverter<Tags>(), new StringCollectionValueComparer<Tags>());
 
         model.HasMany(t => t.LeagueTeams)
             .WithOne(t => t.Team);

@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Web;
 using Duthie.Types.Api;
-using Duthie.Types.Games;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
 
@@ -26,7 +25,7 @@ public class LeagueGamingApi
         return Regex.Replace($"https://www.leaguegaming.com/forums/{file}?{path}&{queryString}".Replace("?&", "?"), @"[?&]+$", "");
     }
 
-    public async Task<IEnumerable<ApiGame>?> GetGamesAsync(League league)
+    public async Task<IEnumerable<Game>?> GetGamesAsync(League league)
     {
         if (!Supports.Contains(league.SiteId) || league.Info is not LeagueGamingLeagueInfo)
             return null;
@@ -49,7 +48,7 @@ public class LeagueGamingApi
             RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         if (scheduleMatches.Count() == 0)
-            return new List<ApiGame>();
+            return new List<Game>();
 
         DateTimeOffset? date = null;
 
@@ -64,19 +63,19 @@ public class LeagueGamingApi
             if (date == null)
                 return null;
 
-            return new ApiGame
+            return new Game
             {
                 LeagueId = league.Id,
-                GameId = m.Groups[5].Value.Trim(),
-                Date = date.GetValueOrDefault(),
-                VisitorIId = m.Groups[4].Value.Trim(),
+                GameId = ulong.Parse(m.Groups[5].Value.Trim()),
+                Timestamp = date.GetValueOrDefault(),
+                VisitorExternalId = m.Groups[4].Value.Trim(),
                 VisitorScore = int.TryParse(m.Groups[8].Value, out var visitorScore) ? visitorScore : null,
-                HomeIId = m.Groups[11].Value.Trim(),
+                HomeExternalId = m.Groups[11].Value.Trim(),
                 HomeScore = int.TryParse(m.Groups[9].Value, out var homeScore) ? homeScore : null,
             };
         })
         .Where(g => g != null)
-        .Cast<ApiGame>();
+        .Cast<Game>();
     }
 
     public async Task<ILeague?> GetLeagueInfoAsync(League league)
@@ -154,7 +153,7 @@ public class LeagueGamingApi
                         Name = m.Groups[2].Value.Trim(),
                         ShortName = m.Groups[2].Value.Trim(),
                     },
-                    IId = m.Groups[1].Value,
+                    ExternalId = m.Groups[1].Value,
                 });
 
         var shortNameMatches = Regex.Matches(html,
@@ -169,7 +168,7 @@ public class LeagueGamingApi
                 teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
 
             teams[id].Team.ShortName = match.Groups[2].Value.Trim();
-            teams[id].IId = id;
+            teams[id].ExternalId = id;
 
             if (string.IsNullOrWhiteSpace(teams[id].Team.Name))
                 teams[id].Team.Name = teams[id].Team.ShortName;

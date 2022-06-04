@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Duthie.Types.Leagues;
 
 namespace Duthie.Types.Api;
@@ -11,9 +12,9 @@ public interface IApi
     public static DateTimeOffset ParseDateWithNoYear(string value, TimeZoneInfo? timezone = null)
     {
         timezone ??= TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
-        var parsed = DateTime.Parse(value);
+        var dateTime = DateTime.Parse(value);
 
-        var present = new DateTimeOffset(parsed, timezone.GetUtcOffset(parsed));
+        var present = new DateTimeOffset(dateTime, timezone.GetUtcOffset(dateTime));
         var dPresent = Math.Abs((DateTimeOffset.UtcNow - present).TotalMilliseconds);
 
         var past = present.AddYears(-1);
@@ -28,5 +29,17 @@ public interface IApi
             return past;
         else
             return present;
+    }
+
+    public static ulong ParseDollars(string value)
+    {
+        int scalar = 1;
+
+        if (Regex.Match(value, @"\bM\b", RegexOptions.IgnoreCase).Success)
+            scalar = 1000000;
+        else if (Regex.Match(value, @"\bk\b", RegexOptions.IgnoreCase).Success)
+            scalar = 1000;
+
+        return (ulong)(scalar * decimal.Parse(Regex.Replace(value, @"[^\d.]+", "").Trim()));
     }
 }

@@ -38,39 +38,8 @@ public class DuthieDbContext : DbContext
         foreach (var model in DataModels)
             builder.Create(model);
 
-        AddConverters(builder);
-
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
             AddSqlite(builder);
-    }
-
-    private void AddConverters(ModelBuilder builder)
-    {
-        foreach (var entityType in builder.Model.GetEntityTypes())
-        {
-            // ulong
-            var properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(ulong)
-                                                                        || p.PropertyType == typeof(ulong?));
-
-            foreach (var property in properties)
-            {
-                builder
-                    .Entity(entityType.Name)
-                    .Property(property.Name)
-                    .HasConversion(new UlongToStringConverter(), new UlongValueComparer());
-            }
-
-            // Tags
-            properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(Tags));
-
-            foreach (var property in properties)
-            {
-                builder
-                    .Entity(entityType.Name)
-                    .Property(property.Name)
-                    .HasConversion(new TagsToStringConverter(), new TagsValueComparer());
-            }
-        }
     }
 
     private void AddSqlite(ModelBuilder builder)
@@ -87,6 +56,18 @@ public class DuthieDbContext : DbContext
                     .Entity(entityType.Name)
                     .Property(property.Name)
                     .HasConversion(new DateTimeOffsetToStringConverter());
+            }
+
+            // ulong
+            properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(ulong)
+                                                                    || p.PropertyType == typeof(ulong?));
+
+            foreach (var property in properties)
+            {
+                builder
+                    .Entity(entityType.Name)
+                    .Property(property.Name)
+                    .HasConversion<string>();
             }
         }
     }

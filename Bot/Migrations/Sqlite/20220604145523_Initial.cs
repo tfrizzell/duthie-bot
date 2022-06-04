@@ -100,7 +100,8 @@ namespace Duthie.Bot.Migrations.Sqlite
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Info = table.Column<string>(type: "TEXT", nullable: true),
                     Tags = table.Column<string>(type: "TEXT", nullable: false),
-                    Enabled = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Enabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    BidHistory = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -120,7 +121,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     LeagueId = table.Column<Guid>(type: "TEXT", nullable: false),
                     GameId = table.Column<string>(type: "TEXT", nullable: false),
-                    Date = table.Column<string>(type: "TEXT", nullable: false),
+                    Timestamp = table.Column<string>(type: "TEXT", nullable: false),
                     VisitorId = table.Column<Guid>(type: "TEXT", nullable: false),
                     VisitorScore = table.Column<int>(type: "INTEGER", nullable: true),
                     HomeId = table.Column<Guid>(type: "TEXT", nullable: false),

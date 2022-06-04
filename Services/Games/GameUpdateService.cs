@@ -5,11 +5,11 @@ using Duthie.Services.Guilds;
 using Duthie.Services.Leagues;
 using Duthie.Services.Watchers;
 using Duthie.Types.Api;
-using Duthie.Types.Games;
 using Duthie.Types.Guilds;
 using Duthie.Types.Leagues;
 using Duthie.Types.Watchers;
 using Microsoft.Extensions.Logging;
+using Game = Duthie.Types.Games.Game;
 
 namespace Duthie.Services.Background;
 
@@ -63,8 +63,8 @@ public class GameUpdateService
                 try
                 {
                     var g = await _gameService.GetByGameIdAsync(game.LeagueId, game.GameId);
-                    var visitorTeam = FindTeam(league, game.VisitorIId);
-                    var homeTeam = FindTeam(league, game.HomeIId);
+                    var visitorTeam = FindTeam(league, game.VisitorExternalId);
+                    var homeTeam = FindTeam(league, game.HomeExternalId);
 
                     if (g == null)
                     {
@@ -72,7 +72,7 @@ public class GameUpdateService
                         {
                             LeagueId = league.Id,
                             GameId = game.GameId,
-                            Date = game.Date,
+                            Timestamp = game.Timestamp,
                             VisitorId = visitorTeam.TeamId,
                             VisitorScore = game.VisitorScore,
                             HomeId = homeTeam.TeamId,
@@ -81,7 +81,7 @@ public class GameUpdateService
                             Shootout = game.Shootout,
                         });
                     }
-                    else if (g.Date != game.Date || g.VisitorId != visitorTeam.TeamId || g.VisitorScore != game.VisitorScore
+                    else if (g.Timestamp != game.Timestamp || g.VisitorId != visitorTeam.TeamId || g.VisitorScore != game.VisitorScore
                         || g.HomeId != homeTeam.TeamId || g.HomeScore != game.HomeScore || g.Overtime != game.Overtime || g.Shootout != game.Shootout)
                     {
                         games.Add(new Game
@@ -89,7 +89,7 @@ public class GameUpdateService
                             Id = g.Id,
                             LeagueId = league.Id,
                             GameId = game.GameId,
-                            Date = game.Date,
+                            Timestamp = game.Timestamp,
                             VisitorId = visitorTeam.TeamId,
                             VisitorScore = game.VisitorScore,
                             HomeId = homeTeam.TeamId,
@@ -169,12 +169,12 @@ public class GameUpdateService
         await _guildMessageService.SaveAsync(messages);
     }
 
-    private static LeagueTeam FindTeam(League league, string iid)
+    private static LeagueTeam FindTeam(League league, string externalId)
     {
-        var team = league.LeagueTeams.FirstOrDefault(t => t.IId == iid);
+        var team = league.LeagueTeams.FirstOrDefault(t => t.ExternalId == externalId);
 
         if (team == null)
-            throw new KeyNotFoundException($"no team with internal id {iid} was found for league {league.Id}");
+            throw new KeyNotFoundException($"no team with external id {externalId} was found for league {league.Id}");
 
         return team;
     }

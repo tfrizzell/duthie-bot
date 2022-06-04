@@ -6,7 +6,7 @@ public class LeagueTeam
 {
     public Guid LeagueId { get; set; }
     public Guid TeamId { get; set; }
-    public string IId { get; set; } = "";
+    public string ExternalId { get; set; } = "";
 
 #nullable disable
     public virtual League League { get; set; }

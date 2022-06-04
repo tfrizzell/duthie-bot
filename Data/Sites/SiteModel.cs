@@ -1,3 +1,6 @@
+using Duthie.Data.Comparers;
+using Duthie.Data.Converters;
+using Duthie.Types.Common;
 using Duthie.Types.Sites;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -17,5 +20,8 @@ public class SiteModel : DataModel<Site>
 
         model.Property(s => s.Id)
             .ValueGeneratedOnAdd();
+
+        model.Property(l => l.Tags)
+            .HasConversion(new StringCollectionToJsonConverter<Tags>(), new StringCollectionValueComparer<Tags>());
     }
 }

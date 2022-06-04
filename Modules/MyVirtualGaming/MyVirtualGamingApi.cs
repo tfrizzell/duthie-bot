@@ -2,13 +2,13 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
 using Duthie.Types.Api;
-using Duthie.Types.Games;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
 
 namespace Duthie.Modules.MyVirtualGaming;
 
-public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
+public class MyVirtualGamingApi
+    : IBidsApi, IGamesApi, ILeagueInfoApi, ITeamsApi
 {
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
@@ -26,9 +26,49 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
         return Regex.Replace($"https://vghl.myvirtualgaming.com/vghlleagues/{league}/{path}?{queryString}".Replace("?&", "?"), @"[?&]+$", "");
     }
 
-    public async Task<IEnumerable<ApiGame>?> GetGamesAsync(League league)
+    private bool IsSupported(League league) =>
+        Supports.Contains(league.SiteId) || league.Info is MyVirtualGamingLeagueInfo;
+
+    public async Task<IEnumerable<Bid>?> GetBidsAsync(League league)
     {
-        if (!Supports.Contains(league.SiteId) || league.Info is not MyVirtualGamingLeagueInfo)
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+
+        var html = await _httpClient.GetStringAsync(GetUrl(
+            league: leagueInfo.LeagueId,
+            path: "recent-transactions"));
+
+        var closedBids = Regex.Match(html,
+            @"<div[^>]*\bclosed-bids\b[^>]*>.*?<tbody[^>]*\btransaction-list\b[^>]*>(.*?)</tbody>\s*</table>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        if (!closedBids.Success)
+            return new List<Bid>();
+
+        return Regex.Matches(closedBids.Groups[1].Value,
+            @"<td[^>]*\bmvg-col-trans-team-name\b[^>]*>\s*<a[^>]*id=(\d+)[^>]*>\s*<img[^>]*>.*?</a>\s*</td>\s*<td[^>]*\bmvg-col-transaction-detail\b[^>]*>(.*?)</td>\s*<td[^>]*>.*?</td>\s*<td[^>]*>.*?</td>\s*<td[^>]*\bmvg-col-trans-datetime\b[^>]*>(.*?)</td>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+        .Select(m =>
+        {
+            var dateTime = DateTime.Parse(m.Groups[3].Value.Trim());
+
+            return new Bid
+            {
+                LeagueId = league.Id,
+                TeamExternalId = m.Groups[1].Value.Trim(),
+                PlayerName = Regex.Match(m.Groups[2].Value, @"<a[^>]*player&id=(\d+)[^>]*>(.*?)</a>", RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[2].Value.Trim(),
+                Amount = IApi.ParseDollars(Regex.Match(m.Groups[2].Value, @"\$[\d\.]+( \w)?", RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[0].Value),
+                State = BidState.Won,
+                Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+            };
+        });
+    }
+
+    public async Task<IEnumerable<Game>?> GetGamesAsync(League league)
+    {
+        if (!IsSupported(league))
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
@@ -47,7 +87,7 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
                 .Select(m => m.Groups[1].Value);
 
         if (weeks.Count() == 0)
-            return new List<ApiGame>();
+            return new List<Game>();
 
         var teams = await GetTeamMapAsync(league);
 
@@ -69,31 +109,31 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             if (matches.Count() == 0)
-                return new List<ApiGame>();
+                return new List<Game>();
 
             DateTimeOffset? date = null;
-            var games = new List<ApiGame>();
+            var games = new List<Game>();
 
             foreach (Match match in matches)
             {
                 if (!string.IsNullOrWhiteSpace(match.Groups[1].Value))
                 {
-                    var parsed = DateTime.Parse(Regex.Replace(match.Groups[1].Value, @"^(\d+).{2} (\S+) (\d+) @ (.*?)", @"$2 $1, $3 $4"));
-                    date = new DateTimeOffset(parsed, Timezone.GetUtcOffset(parsed));
+                    var dateTime = DateTime.Parse(Regex.Replace(match.Groups[1].Value, @"^(\d+).{2} (\S+) (\d+) @ (.*?)", @"$2 $1, $3 $4"));
+                    date = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime));
                     continue;
                 }
 
                 if (date == null)
                     continue;
 
-                games.Add(new ApiGame
+                games.Add(new Game
                 {
                     LeagueId = league.Id,
-                    GameId = match.Groups[2].Value.Trim(),
-                    Date = date.GetValueOrDefault(),
-                    VisitorIId = teams[match.Groups[3].Value.Trim()],
+                    GameId = ulong.Parse(match.Groups[2].Value.Trim()),
+                    Timestamp = date.GetValueOrDefault(),
+                    VisitorExternalId = teams[match.Groups[3].Value.Trim()],
                     VisitorScore = int.TryParse(match.Groups[4].Value, out var visitorScore) ? visitorScore : null,
-                    HomeIId = teams[match.Groups[5].Value.Trim()],
+                    HomeExternalId = teams[match.Groups[5].Value.Trim()],
                     HomeScore = int.TryParse(match.Groups[6].Value, out var homeScore) ? homeScore : null,
                     Overtime = match.Groups[8].Value.ToUpper().Contains("OT"),
                     Shootout = match.Groups[8].Value.ToUpper().Contains("SO"),
@@ -106,7 +146,7 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
 
     public async Task<ILeague?> GetLeagueInfoAsync(League league)
     {
-        if (!Supports.Contains(league.SiteId) || league.Info is not MyVirtualGamingLeagueInfo)
+        if (!IsSupported(league))
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
@@ -153,7 +193,7 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
 
     public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
     {
-        if (!Supports.Contains(league.SiteId) || league.Info is not MyVirtualGamingLeagueInfo)
+        if (!IsSupported(league))
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
@@ -191,7 +231,7 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
                         Name = m.Groups[2].Value.Trim(),
                         ShortName = m.Groups[2].Value.Trim(),
                     },
-                    IId = m.Groups[1].Value,
+                    ExternalId = m.Groups[1].Value,
                 });
 
         html = await _httpClient.GetStringAsync(GetUrl(
@@ -218,20 +258,15 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
                 teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
 
             teams[id].Team.ShortName = match.Groups[2].Value.Trim();
-            teams[id].IId = id;
+            teams[id].ExternalId = id;
 
             if (string.IsNullOrWhiteSpace(teams[id].Team.Name))
                 teams[id].Team.Name = teams[id].Team.ShortName;
         }
 
-        return teams.Values
-            .Where(t => map.Values.Contains(t.IId))
-            .Select(t =>
-            {
-                FixTeam(t.Team);
-                return t;
-            })
-            .ToList();
+        return FixTeams(teams.Values
+            .Where(t => map.Values.Contains(t.ExternalId))
+            .ToList());
     }
 
     private async Task<IDictionary<string, string>> GetTeamMapAsync(League league)
@@ -253,16 +288,47 @@ public class MyVirtualGamingApi : ILeagueInfoApi, ITeamsApi
         .ToDictionary(m => m.Groups[2].Value, m => m.Groups[1].Value);
     }
 
-    private Team FixTeam(Team team)
+    private IEnumerable<LeagueTeam> FixTeams(List<LeagueTeam> teams)
     {
-        switch (team.Name.Trim())
+        var league = teams.First().League;
+
+        if (league.Id == MyVirtualGamingLeagueProvider.VGNHL.Id)
         {
-            case "Nashville Nashville":
-                team.Name = "Nashville Predators";
-                team.ShortName = "Predators";
-                break;
+            teams.AddRange(
+                teams.Where(t => t.Team.Name == "Nashville Nashville")
+                    .ToList()
+                    .Select(t => new LeagueTeam
+                    {
+                        LeagueId = t.LeagueId,
+                        League = t.League,
+                        Team = new Team
+                        {
+                            Name = "Nashville Predators",
+                            ShortName = "Predators"
+                        },
+                        ExternalId = t.ExternalId,
+                    })
+            );
+        }
+        else if (league.Id == MyVirtualGamingLeagueProvider.VGAHL.Id)
+        {
+            teams.AddRange(
+                teams.Where(t => t.Team.Name == "Bellevile Senators")
+                    .ToList()
+                    .Select(t => new LeagueTeam
+                    {
+                        LeagueId = t.LeagueId,
+                        League = t.League,
+                        Team = new Team
+                        {
+                            Name = "Belleville Senators",
+                            ShortName = "Senators"
+                        },
+                        ExternalId = t.ExternalId,
+                    })
+            );
         }
 
-        return team;
+        return teams;
     }
 }
