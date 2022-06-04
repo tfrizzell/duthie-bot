@@ -64,16 +64,16 @@ public class LeagueService
             var query = CreateQuery(context).Where(l => l.Enabled && l.Site.Enabled);
 
             if (!string.IsNullOrWhiteSpace(text))
-                query = query.Where(l => l.Id.ToString().ToLower().Equals(text.ToLower())
-                    || l.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower())
+                query = query.Where(l => l.Id.ToString().ToLower() == text.ToLower()
+                    || l.Name.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower()
                     || (l.Name.StartsWith("VG") && l.Name.ToLower().StartsWith(text.ToLower())));
 
             if (sites?.Count() > 0)
                 query = query.Where(l => sites.Contains(l.SiteId));
 
             var leagues = await query
-                .OrderBy(l => l.Id.ToString().ToLower().Equals(text.ToLower()))
-                    .ThenBy(l => l.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower()))
+                .OrderBy(l => l.Id.ToString().ToLower() == text.ToLower())
+                    .ThenBy(l => l.Name.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower())
                     .ThenBy(l => (l.Name.StartsWith("VG") && l.Name.ToLower().StartsWith(text.ToLower())))
                     .ThenBy(l => l.Name)
                 .ToListAsync();

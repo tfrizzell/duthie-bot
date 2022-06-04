@@ -333,7 +333,7 @@ public class WatchersCommand : BaseCommandWithAdminCheck
 
         var watchers = new List<Watcher>();
         bool removeAll = false;
-        bool.TryParse(cmd.Options.FirstOrDefault(o => "all".Equals(o.Name))?.Value?.ToString() ?? "", out removeAll);
+        bool.TryParse(cmd.Options.FirstOrDefault(o => "all" == o.Name)?.Value?.ToString() ?? "", out removeAll);
 
         if (!removeAll)
         {
@@ -396,16 +396,16 @@ public class WatchersCommand : BaseCommandWithAdminCheck
     }
 
     private Task<SocketTextChannel?> GetChannelAsync(SocketSlashCommandDataOption cmd) =>
-        Task.FromResult((SocketTextChannel?)cmd.Options.FirstOrDefault(o => "channel".Equals(o.Name))?.Value);
+        Task.FromResult((SocketTextChannel?)cmd.Options.FirstOrDefault(o => "channel" == o.Name)?.Value);
 
     private async Task<(IEnumerable<League>?, string?)> GetLeaguesAsync(SocketSlashCommandDataOption cmd)
     {
-        var leagueOption = cmd.Options.FirstOrDefault(o => "league".Equals(o.Name))?.Value?.ToString();
+        var leagueOption = cmd.Options.FirstOrDefault(o => "league" == o.Name)?.Value?.ToString();
         if (leagueOption == null) return (null, leagueOption);
 
         var leagues = new List<League>();
 
-        if (!leagueOption.Equals(TYPE_ALL.ToString()))
+        if (leagueOption != TYPE_ALL.ToString())
         {
             var league = (await _leagueService.FindAsync(leagueOption)).FirstOrDefault();
             if (league == null) return (null, leagueOption);
@@ -419,12 +419,12 @@ public class WatchersCommand : BaseCommandWithAdminCheck
 
     private async Task<(IEnumerable<Team>?, string?)> GetTeamAsync(SocketSlashCommandDataOption cmd)
     {
-        var teamOption = cmd.Options.FirstOrDefault(o => "team".Equals(o.Name))?.Value?.ToString();
+        var teamOption = cmd.Options.FirstOrDefault(o => "team" == o.Name)?.Value?.ToString();
         if (teamOption == null) return (null, teamOption);
 
         var teams = new List<Team>();
 
-        if (!teamOption.Equals(TYPE_ALL.ToString()))
+        if (teamOption != TYPE_ALL.ToString())
         {
             var team = (await _teamService.FindAsync(teamOption)).FirstOrDefault();
             if (team == null) return (null, teamOption);
@@ -438,16 +438,16 @@ public class WatchersCommand : BaseCommandWithAdminCheck
 
     private Task<(IEnumerable<WatcherType>?, string?)> GetWatcherTypeAsync(SocketSlashCommandDataOption cmd)
     {
-        var watcherType = cmd.Options.FirstOrDefault(o => "type".Equals(o.Name))?.Value?.ToString();
+        var watcherType = cmd.Options.FirstOrDefault(o => "type" == o.Name)?.Value?.ToString();
         if (watcherType == null) return Task.FromResult<(IEnumerable<WatcherType>?, string?)>((null, watcherType));
 
         var watcherTypes = new List<WatcherType>();
 
         if (Enum.TryParse<WatcherType>(watcherType, out var watcherTypeEnum))
             watcherTypes.Add(watcherTypeEnum);
-        else if (watcherType.Equals(TYPE_ALL_NEWS.ToString(), StringComparison.OrdinalIgnoreCase))
+        else if (watcherType == TYPE_ALL_NEWS.ToString())
             watcherTypes.AddRange(Enum.GetValues<WatcherType>().Where(type => type != WatcherType.Games));
-        else if (watcherType.Equals(TYPE_ALL.ToString(), StringComparison.OrdinalIgnoreCase))
+        else if (watcherType == TYPE_ALL.ToString())
             watcherTypes.AddRange(Enum.GetValues<WatcherType>());
         else
             watcherTypes = null;

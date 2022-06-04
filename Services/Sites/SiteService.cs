@@ -60,11 +60,11 @@ public class SiteService
             var query = CreateQuery(context).Where(s => s.Enabled);
 
             if (!string.IsNullOrWhiteSpace(text))
-                query = query.Where(s => s.Id.ToString().ToLower().Equals(text.ToLower())
-                    || s.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower()));
+                query = query.Where(s => s.Id.ToString().ToLower() == text.ToLower()
+                    || s.Name.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower());
 
             var sites = await query
-                .OrderBy(s => s.Id.ToString().ToLower().Equals(text.ToLower()))
+                .OrderBy(s => s.Id.ToString().ToLower() == text.ToLower())
                     .ThenBy(s => s.Name)
                 .ToListAsync();
 

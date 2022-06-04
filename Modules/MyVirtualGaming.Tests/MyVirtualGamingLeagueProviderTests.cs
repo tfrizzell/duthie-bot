@@ -19,14 +19,14 @@ public class MyVirtualGamingLeagueProviderTests
 
         Assert.True(league != null, $"league {id} not found");
         Assert.True(MyVirtualGamingSiteProvider.SITE_ID == league!.SiteId, $"expected SiteId to be {MyVirtualGamingSiteProvider.SITE_ID} but got {league.SiteId}");
-        Assert.True(name.Equals(league.Name), $"expected Name to be {name} but got {league.Name}");
+        Assert.True(name == league.Name, $"expected Name to be {name} but got {league.Name}");
         Assert.True(league.Info is MyVirtualGamingLeagueInfo, $"expected Info to be of type {typeof(MyVirtualGamingLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
         Assert.True(league.Enabled, $"expected Enabled to be {true} but got {league.Enabled}");
 
         var actualLeagueId = (league.Info as MyVirtualGamingLeagueInfo)!.LeagueId;
         Assert.True(leagueId == actualLeagueId, $"expected Info.LeagueId to be {leagueId} but got {actualLeagueId}");
 
-        var count = leagueProvider.Leagues.Count(s => s.Name.Equals(name));
+        var count = leagueProvider.Leagues.Count(s => s.Name == name);
         Assert.True(count == 1, $"expected 1 league with name {name} but found {count}");
     }
 

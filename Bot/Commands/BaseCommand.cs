@@ -99,7 +99,7 @@ public abstract class BaseCommand : ICommand
 
     public virtual async Task HandleAsync(SocketSlashCommand command)
     {
-        if (!Command.Equals(command.Data.Options.FirstOrDefault()?.Name))
+        if (Command != command.Data.Options.FirstOrDefault()?.Name)
             return;
 
         await HandleCommandAsync(command);

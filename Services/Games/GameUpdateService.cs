@@ -171,7 +171,7 @@ public class GameUpdateService
 
     private static LeagueTeam FindTeam(League league, string iid)
     {
-        var team = league.LeagueTeams.FirstOrDefault(t => t.IId.Equals(iid));
+        var team = league.LeagueTeams.FirstOrDefault(t => t.IId == iid);
 
         if (team == null)
             throw new KeyNotFoundException($"no team with internal id {iid} was found for league {league.Id}");

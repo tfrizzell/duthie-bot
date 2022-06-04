@@ -64,9 +64,9 @@ public class TeamService
             var query = CreateQuery(context);
 
             if (!string.IsNullOrWhiteSpace(text))
-                query = query.Where(t => t.Id.ToString().ToLower().Equals(text.ToLower())
-                    || t.Name.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower())
-                        || t.ShortName.Replace(" ", "").ToLower().Equals(text.Replace(" ", "").ToLower()));
+                query = query.Where(t => t.Id.ToString().ToLower() == text.ToLower()
+                    || t.Name.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower()
+                        || t.ShortName.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower());
 
             if (sites?.Count() > 0)
                 query = query.Where(t => t.LeagueTeams.Any(m => sites.Contains(m.League.SiteId)));
@@ -75,7 +75,7 @@ public class TeamService
                 query = query.Where(t => t.LeagueTeams.Any(m => leagues.Contains(m.League.Id)));
 
             var teams = await query
-                .OrderBy(t => t.Id.ToString().ToLower().Equals(text.ToLower()))
+                .OrderBy(t => t.Id.ToString().ToLower() == text.ToLower())
                     .ThenBy(t => t.Name)
                 .ToListAsync();
 

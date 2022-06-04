@@ -152,8 +152,8 @@ public class AdminCommand : BaseCommand
                 "Access Level"
             },
             data: admins.Values
-                .OrderBy(a => ROLE_OWNER.Equals(a[1]))
-                .ThenBy(a => ROLE_ADMINISTRATOR.Equals(a[1]))
+                .OrderBy(a => ROLE_OWNER == a[1])
+                .ThenBy(a => ROLE_ADMINISTRATOR == a[1])
                 .ThenBy(a => a[0])), ephemeral: true);
     }
 

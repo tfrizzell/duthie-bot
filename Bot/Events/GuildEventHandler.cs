@@ -84,7 +84,7 @@ public class GuildEventHandler : IAsyncHandler
 
     private async Task HandleGuildUpdatedAsync(SocketGuild oldGuild, SocketGuild newGuild)
     {
-        if (!oldGuild.Name.Equals(newGuild.Name))
+        if (oldGuild.Name != newGuild.Name)
             await RenameAsync(newGuild.Id, newGuild.Name, oldGuild.Name);
     }
 
@@ -149,7 +149,7 @@ public class GuildEventHandler : IAsyncHandler
                 await LeaveAsync(guild);
             else if (guild.LeftAt != null && activeGuilds.ContainsKey(guild.Id))
                 await JoinAsync(guild);
-            else if (activeGuilds.ContainsKey(guild.Id) && !guild.Name.Equals(activeGuilds[guild.Id].Name))
+            else if (activeGuilds.ContainsKey(guild.Id) && guild.Name != activeGuilds[guild.Id].Name)
                 await RenameAsync(guild.Id, activeGuilds[guild.Id].Name, guild.Name);
         }
 

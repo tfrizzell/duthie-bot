@@ -90,7 +90,7 @@ public class GameService
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            return await CreateQuery(context).FirstOrDefaultAsync(g => g.LeagueId == leagueId && g.GameId.ToLower().Equals(gameId.ToLower()));
+            return await CreateQuery(context).FirstOrDefaultAsync(g => g.LeagueId == leagueId && g.GameId.ToLower() == gameId.ToLower());
         }
     }
 

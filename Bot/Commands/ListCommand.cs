@@ -296,7 +296,7 @@ public class ListCommand : BaseCommand
 
     private async Task<(League?, string?)> GetLeagueAsync(SocketSlashCommandDataOption cmd)
     {
-        var leagueOption = cmd.Options.FirstOrDefault(o => "league".Equals(o.Name))?.Value?.ToString();
+        var leagueOption = cmd.Options.FirstOrDefault(o => "league" == o.Name)?.Value?.ToString();
         return (
             leagueOption == null ? null : (await _leagueService.FindAsync(leagueOption)).FirstOrDefault(),
             leagueOption
@@ -305,7 +305,7 @@ public class ListCommand : BaseCommand
 
     private async Task<(Site?, string?)> GetSiteAsync(SocketSlashCommandDataOption cmd)
     {
-        var siteOption = cmd.Options.FirstOrDefault(o => "site".Equals(o.Name))?.Value?.ToString();
+        var siteOption = cmd.Options.FirstOrDefault(o => "site" == o.Name)?.Value?.ToString();
         return (
             siteOption == null ? null : (await _siteService.FindAsync(siteOption)).FirstOrDefault(),
             siteOption
@@ -314,7 +314,7 @@ public class ListCommand : BaseCommand
 
     private Task<(string[]?, string?)> GetTagsAsync(SocketSlashCommandDataOption cmd)
     {
-        var tagsOption = cmd.Options.FirstOrDefault(o => "tags".Equals(o.Name))?.Value?.ToString();
+        var tagsOption = cmd.Options.FirstOrDefault(o => "tags" == o.Name)?.Value?.ToString();
         return Task.FromResult<(string[]?, string?)>((
             tagsOption == null ? null : Regex.Split(tagsOption, ",").Where(tag => !string.IsNullOrWhiteSpace(tag)).Select(tag => tag.Trim().ToLower()).ToArray(),
             tagsOption
