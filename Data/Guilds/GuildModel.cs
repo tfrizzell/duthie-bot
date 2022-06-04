@@ -2,7 +2,7 @@ using Duthie.Types.Guilds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Duthie.Data;
+namespace Duthie.Data.Guilds;
 
 public class GuildModel : DataModel<Guild>
 {

@@ -4,7 +4,7 @@ using Duthie.Types.Leagues;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Duthie.Data;
+namespace Duthie.Data.Leagues;
 
 public class LeagueModel : DataModel<League>
 {

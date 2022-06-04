@@ -2,7 +2,7 @@ using Duthie.Types.Teams;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Duthie.Data;
+namespace Duthie.Data.Teams;
 
 public class TeamModel : DataModel<Team>
 {

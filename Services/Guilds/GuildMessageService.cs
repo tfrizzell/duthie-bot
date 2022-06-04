@@ -1,6 +1,6 @@
 using Duthie.Data;
 using Duthie.Services.Extensions;
-using Duthie.Types;
+using Duthie.Types.Guilds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

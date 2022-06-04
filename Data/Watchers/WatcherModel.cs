@@ -2,7 +2,7 @@ using Duthie.Types.Watchers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Duthie.Data;
+namespace Duthie.Data.Watchers;
 
 public class WatcherModel : DataModel<Watcher>
 {

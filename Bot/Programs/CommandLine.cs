@@ -1,6 +1,6 @@
 using Duthie.Services.Background;
 using Duthie.Services.Guilds;
-using Duthie.Types;
+using Duthie.Types.Guilds;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

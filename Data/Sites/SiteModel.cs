@@ -2,7 +2,7 @@ using Duthie.Types.Sites;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Duthie.Data;
+namespace Duthie.Data.Sites;
 
 public class SiteModel : DataModel<Site>
 {

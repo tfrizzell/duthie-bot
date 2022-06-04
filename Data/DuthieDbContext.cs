@@ -3,9 +3,14 @@
 using System.Collections.Immutable;
 using Duthie.Data.Comparers;
 using Duthie.Data.Converters;
+using Duthie.Data.Games;
+using Duthie.Data.Guilds;
+using Duthie.Data.Leagues;
+using Duthie.Data.Sites;
+using Duthie.Data.Teams;
+using Duthie.Data.Watchers;
 using Duthie.Types.Common;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Duthie.Data;
@@ -13,15 +18,15 @@ namespace Duthie.Data;
 public class DuthieDbContext : DbContext
 {
     private IEnumerable<DataModel> DataModels { get; } = ImmutableList.Create<DataModel>(
-        new GuildModel(),
+        new GameModel(),
         new GuildAdminModel(),
-        new SiteModel(),
-        new LeagueModel(),
-        new TeamModel(),
-        new LeagueTeamModel(),
-        new WatcherModel(),
         new GuildMessageModel(),
-        new GameModel()
+        new GuildModel(),
+        new LeagueModel(),
+        new LeagueTeamModel(),
+        new SiteModel(),
+        new TeamModel(),
+        new WatcherModel()
     );
 
     public DuthieDbContext(DbContextOptions<DuthieDbContext> options) : base(options) { }

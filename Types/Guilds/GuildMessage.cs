@@ -1,6 +1,4 @@
-using Duthie.Types.Guilds;
-
-namespace Duthie.Types;
+namespace Duthie.Types.Guilds;
 
 public class GuildMessage
 {
