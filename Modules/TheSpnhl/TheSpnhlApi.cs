@@ -14,7 +14,7 @@ public class TheSpnhlApi
 
     public IReadOnlySet<Guid> Supports
     {
-        get => new HashSet<Guid> { TheSpnhlSiteProvider.SITE_ID };
+        get => new HashSet<Guid> { TheSpnhlSiteProvider.SPNHL.Id };
     }
 
     public async Task<IEnumerable<Game>?> GetGamesAsync(League league)

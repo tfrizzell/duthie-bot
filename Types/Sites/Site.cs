@@ -7,6 +7,7 @@ public class Site
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = "";
+    public string Url { get; set; } = "";
     public Tags Tags { get; set; } = new Tags();
     public bool Enabled { get; set; } = true;
 

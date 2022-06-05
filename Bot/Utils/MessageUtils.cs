@@ -19,6 +19,9 @@ public static class MessageUtils
         return chunks.ToArray();
     }
 
+    public static string Escape(string text) =>
+        Regex.Replace(text, @"[*_~`]", @"\$0");
+
     public static bool ExceedsCharacterLimit(int length) =>
         length > MessageUtils.MAX_MESSAGE_LENGTH;
 

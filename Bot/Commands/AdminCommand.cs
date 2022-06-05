@@ -153,8 +153,8 @@ public class AdminCommand : BaseCommand
             },
             data: admins.Values
                 .OrderBy(a => ROLE_OWNER == a[1])
-                .ThenBy(a => ROLE_ADMINISTRATOR == a[1])
-                .ThenBy(a => a[0])), ephemeral: true);
+                    .ThenBy(a => ROLE_ADMINISTRATOR == a[1])
+                    .ThenBy(a => a[0])), ephemeral: true);
 
         _logger.LogTrace($"User {user} viewed administrator list for guild \"{guild.Name}\" [{guild.Id}]");
     }

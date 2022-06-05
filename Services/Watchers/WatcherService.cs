@@ -25,6 +25,7 @@ public class WatcherService
 
     private IQueryable<Watcher> CreateQuery(DuthieDbContext context) =>
         context.Set<Watcher>()
+            .Include(w => w.Guild)
             .Include(w => w.League)
                 .ThenInclude(l => l.Site)
             .Include(w => w.Team)

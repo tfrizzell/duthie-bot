@@ -61,7 +61,8 @@ public class SiteService
 
             if (!string.IsNullOrWhiteSpace(text))
                 query = query.Where(s => s.Id.ToString().ToLower() == text.ToLower()
-                    || s.Name.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower());
+                    || s.Name.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower()
+                    || s.Url.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower());
 
             var sites = await query
                 .OrderBy(s => s.Id.ToString().ToLower() == text.ToLower())

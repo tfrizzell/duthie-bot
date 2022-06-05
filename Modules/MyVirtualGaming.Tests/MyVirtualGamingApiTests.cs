@@ -12,7 +12,7 @@ public class MyVirtualGamingApiTests
     public MyVirtualGamingApiTests()
     {
         _api = new MyVirtualGamingApi();
-        _league = new MyVirtualGamingLeagueProvider().Leagues.First(l => l.Id == new Guid("5957b164-7bb5-4324-967a-16c3044260b2"));
+        _league = new MyVirtualGamingLeagueProvider().Leagues.First(l => l.Id == MyVirtualGamingLeagueProvider.VGNHL.Id);
         (_league.Info as MyVirtualGamingLeagueInfo)!.SeasonId = 72;
         (_league.Info as MyVirtualGamingLeagueInfo)!.ScheduleId = 119;
     }
@@ -20,7 +20,7 @@ public class MyVirtualGamingApiTests
     [Fact]
     public void Supports_MyVirtualGaming()
     {
-        Assert.True(_api.Supports.Contains(MyVirtualGamingSiteProvider.SITE_ID), $"{_api.GetType().Name} does not support site {MyVirtualGamingSiteProvider.SITE_ID}");
+        Assert.True(_api.Supports.Contains(MyVirtualGamingSiteProvider.MyVirtualGaming.Id), $"{_api.GetType().Name} does not support site {MyVirtualGamingSiteProvider.MyVirtualGaming.Id}");
     }
 
     [Fact]

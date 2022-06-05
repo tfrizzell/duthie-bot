@@ -23,6 +23,10 @@ public class CommandLine
                 await BroadcastMessageAsync(args.Skip(1).ToArray());
                 break;
 
+            case "prune":
+                await PruneDataAsync(args.Skip(1).ToArray());
+                break;
+
             case "update":
                 await UpdateDataAsync(args.Skip(1).ToArray());
                 break;
@@ -63,15 +67,29 @@ public class CommandLine
         Environment.Exit(0);
     }
 
+    private static async Task PruneDataAsync(params string[] args)
+    {
+        var serviceProvider = new ServiceCollection()
+            .ConfigureServices()
+            .AddApi()
+            .AddAppInfo()
+            .AddSingleton<PruningBackgroundService>()
+            .BuildServiceProvider();
+
+        await UpdateDatabaseAsync(serviceProvider);
+        await serviceProvider.GetRequiredService<PruningBackgroundService>().ExecuteAsync();
+    }
+
     private static async Task UpdateDataAsync(params string[] args)
     {
         var serviceProvider = new ServiceCollection()
             .ConfigureServices()
             .AddApi()
             .AddAppInfo()
-            .AddSingleton<GameBackgroundService>()
             .AddSingleton<LeagueBackgroundService>()
             .AddSingleton<TeamBackgroundService>()
+            .AddSingleton<GameBackgroundService>()
+            .AddSingleton<BidBackgroundService>()
             .BuildServiceProvider();
 
         await UpdateDatabaseAsync(serviceProvider);
@@ -86,6 +104,9 @@ public class CommandLine
 
         if (types.Intersect(new string[] { "games", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<GameBackgroundService>().ExecuteAsync();
+
+        if (types.Intersect(new string[] { "bids", "all" }).Count() > 0)
+            await serviceProvider.GetRequiredService<BidBackgroundService>().ExecuteAsync();
     }
 
     private static async Task UpdateDatabaseAsync(IServiceProvider serviceProvider)

@@ -1,5 +1,4 @@
 using Duthie.Data;
-using Duthie.Services.Extensions;
 using Duthie.Types.Leagues;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -25,6 +24,7 @@ public class LeagueService
 
     private IQueryable<League> CreateQuery(DuthieDbContext context) =>
         context.Set<League>()
+            .Include(l => l.State)
             .Include(l => l.Site)
             .Include(l => l.LeagueTeams)
                 .ThenInclude(t => t.Team)
@@ -118,6 +118,7 @@ public class LeagueService
             foreach (var league in leagues)
             {
                 var existing = await context.Set<League>()
+                    .Include(l => l.State)
                     .Include(l => l.LeagueTeams)
                     .FirstOrDefaultAsync(l => l.Id == league.Id);
 
@@ -128,6 +129,7 @@ public class LeagueService
 
                     existing.Name = league.Name;
                     existing.Info = league.Info;
+                    existing.State = league.State;
                     existing.Tags = league.Tags;
                     existing.Enabled = league.Enabled;
                     existing.LeagueTeams = league.LeagueTeams;

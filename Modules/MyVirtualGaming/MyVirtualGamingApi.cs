@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
@@ -16,7 +17,7 @@ public class MyVirtualGamingApi
 
     public IReadOnlySet<Guid> Supports
     {
-        get => new HashSet<Guid> { MyVirtualGamingSiteProvider.SITE_ID };
+        get => new HashSet<Guid> { MyVirtualGamingSiteProvider.MyVirtualGaming.Id };
     }
 
     private string GetUrl(string league = "vghl", string path = "", IDictionary<string, object?>? parameters = null)
@@ -36,6 +37,9 @@ public class MyVirtualGamingApi
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
 
+        if (!leagueInfo.Features.HasFlag(MyVirtualGamingFeatures.RecentTransactions))
+            return new List<Bid>();
+
         var html = await _httpClient.GetStringAsync(GetUrl(
             league: leagueInfo.LeagueId,
             path: "recent-transactions"));
@@ -53,12 +57,14 @@ public class MyVirtualGamingApi
         .Select(m =>
         {
             var dateTime = DateTime.Parse(m.Groups[3].Value.Trim());
+            var player = Regex.Match(m.Groups[2].Value, @"<a[^>]*player&id=(\d+)[^>]*>(.*?)</a>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             return new Bid
             {
                 LeagueId = league.Id,
                 TeamExternalId = m.Groups[1].Value.Trim(),
-                PlayerName = Regex.Match(m.Groups[2].Value, @"<a[^>]*player&id=(\d+)[^>]*>(.*?)</a>", RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[2].Value.Trim(),
+                PlayerExternalId = player.Groups[1].Value.Trim(),
+                PlayerName = player.Groups[2].Value.Trim(),
                 Amount = ISiteApi.ParseDollars(Regex.Match(m.Groups[2].Value, @"\$[\d\.]+( \w)?", RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[0].Value),
                 State = BidState.Won,
                 Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
@@ -180,7 +186,7 @@ public class MyVirtualGamingApi
             @"<option[^>]*value=[""']?(\d+)[""']?[^>]*>",
             RegexOptions.IgnoreCase | RegexOptions.Singleline)
         .OrderBy(m => Regex.Match(m.Groups[0].Value, @"<option[^>]*\bselected\b[^>]>").Success)
-        .ThenBy(m => int.Parse(m.Groups[1].Value))
+            .ThenBy(m => int.Parse(m.Groups[1].Value))
         .TakeLast(1)
         .Select(m => int.Parse(m.Groups[1].Value))
         .Cast<int?>()
@@ -197,7 +203,7 @@ public class MyVirtualGamingApi
             @"<option[^>]*value=[""']?(\d+)[""']?[^>]*>",
             RegexOptions.IgnoreCase | RegexOptions.Singleline)
         .OrderBy(m => Regex.Match(m.Groups[0].Value, @"<option[^>]*\bselected\b[^>]>").Success)
-        .ThenBy(m => int.Parse(m.Groups[1].Value))
+            .ThenBy(m => int.Parse(m.Groups[1].Value))
         .TakeLast(1)
         .Select(m => int.Parse(m.Groups[1].Value))
         .Cast<int?>()

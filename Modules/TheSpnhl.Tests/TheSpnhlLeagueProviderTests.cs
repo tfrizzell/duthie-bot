@@ -18,7 +18,7 @@ public class TheSpnhlLeagueProviderTests
         var league = leagueProvider.Leagues.FirstOrDefault(l => l.Id == id);
 
         Assert.True(league != null, $"league {id} not found");
-        Assert.True(TheSpnhlSiteProvider.SITE_ID == league!.SiteId, $"expected SiteId to be {TheSpnhlSiteProvider.SITE_ID} but got {league.SiteId}");
+        Assert.True(TheSpnhlSiteProvider.SPNHL.Id == league!.SiteId, $"expected SiteId to be {TheSpnhlSiteProvider.SPNHL.Id} but got {league.SiteId}");
         Assert.True(name == league.Name, $"expected Name to be {name} but got {league.Name}");
         Assert.True(league.Enabled, $"expected Enabled to be {true} but got {league.Enabled}");
 

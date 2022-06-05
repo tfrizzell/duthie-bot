@@ -12,14 +12,15 @@ public class TheSpnhlSiteProviderTests
 
     [Theory]
     [MemberData(nameof(DefaultSites))]
-    public void DefaultSites_Exist(string id, string name)
+    public void DefaultSites_Exist(string id, string name, string url)
     {
         var siteId = new Guid(id);
         var siteProvider = new TheSpnhlSiteProvider();
-        var site = siteProvider.Sites.FirstOrDefault(s => s.Id == TheSpnhlSiteProvider.SITE_ID);
+        var site = siteProvider.Sites.FirstOrDefault(s => s.Id == siteId);
 
         Assert.True(site != null, $"no matching site found");
         Assert.True(name == site!.Name, $"expected Name to be {name} but got {site.Name}");
+        Assert.True(url == site!.Url, $"expected Url to be {url} but got {site.Url}");
         Assert.True(site.Enabled, $"expected Enabled to be {true} but got {site.Enabled}");
 
         var count = siteProvider.Sites.Count(s => s.Name == name);
@@ -28,6 +29,6 @@ public class TheSpnhlSiteProviderTests
 
     internal static IEnumerable<object[]> DefaultSites()
     {
-        yield return new object[] { "c193a2eb-f6fd-4c1d-bf2b-b77ef05f236c", "thespnhl.com" };
+        yield return new object[] { "c193a2eb-f6fd-4c1d-bf2b-b77ef05f236c", "SPNHL", "thespnhl.com" };
     }
 }

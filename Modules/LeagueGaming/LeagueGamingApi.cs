@@ -15,7 +15,7 @@ public class LeagueGamingApi
 
     public IReadOnlySet<Guid> Supports
     {
-        get => new HashSet<Guid> { LeagueGamingSiteProvider.SITE_ID };
+        get => new HashSet<Guid> { LeagueGamingSiteProvider.Leaguegaming.Id };
     }
 
     private string GetUrl(string file = "index.php", string path = "leaguegaming/league", IDictionary<string, object?>? parameters = null)

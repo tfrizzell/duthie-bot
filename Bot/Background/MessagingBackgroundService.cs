@@ -46,7 +46,9 @@ public class MessagingBackgroundService : ScheduledBackgroundService
 
         try
         {
-            var messages = await _guildMessageService.GetUnsentAsync();
+            var messages = (await _guildMessageService.GetUnsentAsync())
+                .OrderBy(m => m.CreatedAt)
+                    .ThenBy(m => m.Guild.JoinedAt);
 
             if (messages.Count() > 0)
                 _logger.LogTrace($"Sending {MessageUtils.Pluralize(messages.Count(), "message")} to Discord");

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using Duthie.Bot.Utils;
 using Duthie.Services.Api;
 using Duthie.Services.Games;
 using Duthie.Services.Guilds;
@@ -8,6 +9,7 @@ using Duthie.Services.Watchers;
 using Duthie.Types.Api;
 using Duthie.Types.Guilds;
 using Duthie.Types.Leagues;
+using Duthie.Types.Teams;
 using Duthie.Types.Watchers;
 using Microsoft.Extensions.Logging;
 using Game = Duthie.Types.Games.Game;
@@ -77,7 +79,7 @@ public class GameBackgroundService : ScheduledBackgroundService
                         var visitorTeam = FindTeam(league, game.VisitorExternalId);
                         var homeTeam = FindTeam(league, game.HomeExternalId);
 
-                        if (g != null && g.Timestamp == game.Timestamp && g.VisitorId == visitorTeam.TeamId && g.VisitorScore == game.VisitorScore && g.HomeId == homeTeam.TeamId && g.HomeScore == game.HomeScore && g.Overtime == game.Overtime && g.Shootout == game.Shootout)
+                        if (g != null && g.Timestamp == game.Timestamp && g.VisitorId == visitorTeam.Id && g.VisitorScore == game.VisitorScore && g.HomeId == homeTeam.Id && g.HomeScore == game.HomeScore && g.Overtime == game.Overtime && g.Shootout == game.Shootout)
                         {
                             continue;
                         }
@@ -88,41 +90,41 @@ public class GameBackgroundService : ScheduledBackgroundService
                         {
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
-                                teams: new Guid[] { visitorTeam.TeamId, homeTeam.TeamId },
+                                teams: new Guid[] { visitorTeam.Id, homeTeam.Id },
                                 types: new WatcherType[] { WatcherType.Games }
-                            )).GroupBy(w => new { w.GuildId, w.ChannelId });
+                            )).GroupBy(w => new { w.GuildId, ChannelId = w.ChannelId ?? w.Guild.DefaultChannelId });
 
                             foreach (var watcher in watchers)
                             {
                                 var message = league.Tags.Intersect(new string[] { "esports", "tournament", "pickup", "club teams" }).Count() > 0
-                                    ? "{us} has {outcome}  {them} by the score of {score}"
+                                    ? "{us} has {outcome} {them} by the score of {score}"
                                     : "The {us} have {outcome} the {them} by the score of {score}";
 
-                                var (us, usScore) = watcher.Any(w => w.TeamId == homeTeam.TeamId) ? (homeTeam.Team, game.HomeScore) : (visitorTeam.Team, game.VisitorScore);
-                                var (them, themScore) = watcher.Any(w => w.TeamId == homeTeam.TeamId) ? (visitorTeam.Team, game.VisitorScore) : (homeTeam.Team, game.HomeScore);
+                                var (us, usScore) = watcher.Any(w => w.TeamId == homeTeam.Id) ? (homeTeam, game.HomeScore) : (visitorTeam, game.VisitorScore);
+                                var (them, themScore) = watcher.Any(w => w.TeamId == homeTeam.Id) ? (visitorTeam, game.VisitorScore) : (homeTeam, game.HomeScore);
 
                                 if (usScore > themScore)
                                 {
                                     message = message
-                                        .Replace("{us}", $"**{Escape(us.Name)}**")
+                                        .Replace("{us}", $"**{MessageUtils.Escape(us.Name)}**")
                                         .Replace("{outcome}", "defeated")
-                                        .Replace("{them}", $"**{Escape(them.Name)}**")
+                                        .Replace("{them}", $"**{MessageUtils.Escape(them.Name)}**")
                                         .Replace("{score}", $"**{usScore} to {themScore}**!");
                                 }
                                 else if (usScore < themScore)
                                 {
                                     message = message
-                                        .Replace("{us}", $"*{Escape(us.Name)}*")
+                                        .Replace("{us}", $"*{MessageUtils.Escape(us.Name)}*")
                                         .Replace("{outcome}", "been defeated by")
-                                        .Replace("{them}", $"*{Escape(them.Name)}*")
+                                        .Replace("{them}", $"*{MessageUtils.Escape(them.Name)}*")
                                         .Replace("{score}", $"*{themScore} to {usScore}*.");
                                 }
                                 else
                                 {
                                     message = message
-                                        .Replace("{us}", Escape(us.Name))
+                                        .Replace("{us}", MessageUtils.Escape(us.Name))
                                         .Replace("{outcome}", "tied")
-                                        .Replace("{them}", Escape(them.Name))
+                                        .Replace("{them}", MessageUtils.Escape(them.Name))
                                         .Replace("{score}", $"{usScore} to {themScore}.");
                                 }
 
@@ -134,7 +136,7 @@ public class GameBackgroundService : ScheduledBackgroundService
                                 messages.Add(new GuildMessage
                                 {
                                     GuildId = watcher.Key.GuildId,
-                                    ChannelId = watcher.Key.ChannelId ?? 0,
+                                    ChannelId = watcher.Key.ChannelId,
                                     Message = message
                                 });
                             }
@@ -146,9 +148,9 @@ public class GameBackgroundService : ScheduledBackgroundService
                                 LeagueId = league.Id,
                                 GameId = game.GameId,
                                 Timestamp = game.Timestamp,
-                                VisitorId = visitorTeam.TeamId,
+                                VisitorId = visitorTeam.Id,
                                 VisitorScore = game.VisitorScore,
-                                HomeId = homeTeam.TeamId,
+                                HomeId = homeTeam.Id,
                                 HomeScore = game.HomeScore,
                                 Overtime = game.Overtime,
                                 Shootout = game.Shootout,
@@ -173,16 +175,13 @@ public class GameBackgroundService : ScheduledBackgroundService
         }
     }
 
-    private static LeagueTeam FindTeam(League league, string externalId)
+    private static Team FindTeam(League league, string externalId)
     {
         var team = league.LeagueTeams.FirstOrDefault(t => t.ExternalId == externalId);
 
         if (team == null)
             throw new KeyNotFoundException($"no team with external id {externalId} was found for league {league.Id}");
 
-        return team;
+        return team.Team;
     }
-
-    private static string Escape(string text) =>
-        Regex.Replace(text, @"[*_~`]", @"\\$1");
 }

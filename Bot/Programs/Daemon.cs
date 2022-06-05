@@ -31,7 +31,9 @@ public class Daemon
                     .AddHostedService<MessagingBackgroundService>()
                     .AddHostedService<LeagueBackgroundService>()
                     .AddHostedService<TeamBackgroundService>()
-                    .AddHostedService<GameBackgroundService>();
+                    .AddHostedService<GameBackgroundService>()
+                    .AddHostedService<BidBackgroundService>()
+                    .AddHostedService<PruningBackgroundService>();
             })
             .Build();
 

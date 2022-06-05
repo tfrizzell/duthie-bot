@@ -1,25 +1,21 @@
-using System.Runtime.CompilerServices;
 using Duthie.Types.Common;
 using Duthie.Types.Sites;
 
-[assembly: InternalsVisibleTo("Duthie.Modules.TheSpnhl.Tests")]
 namespace Duthie.Modules.TheSpnhl;
 
 public class TheSpnhlSiteProvider : ISiteProvider
 {
-    internal static readonly Guid SITE_ID = new Guid("c193a2eb-f6fd-4c1d-bf2b-b77ef05f236c");
+    internal static readonly Site SPNHL = new Site
+    {
+        Id = new Guid("c193a2eb-f6fd-4c1d-bf2b-b77ef05f236c"),
+        Name = "SPNHL",
+        Url = "thespnhl.com",
+        Tags = new Tags { "psn", "ea nhl" },
+        Enabled = true,
+    };
 
     public IReadOnlyCollection<Site> Sites
     {
-        get => new Site[]
-        {
-            new Site
-            {
-                Id = SITE_ID,
-                Name = "thespnhl.com",
-                Tags = new Tags { "psn", "ea nhl" },
-                Enabled = true
-            },
-        };
+        get => new Site[] { SPNHL };
     }
 }

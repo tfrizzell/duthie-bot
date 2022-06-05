@@ -18,7 +18,7 @@ public class MyVirtualGamingLeagueProviderTests
         var league = leagueProvider.Leagues.FirstOrDefault(l => l.Id == id);
 
         Assert.True(league != null, $"league {id} not found");
-        Assert.True(MyVirtualGamingSiteProvider.SITE_ID == league!.SiteId, $"expected SiteId to be {MyVirtualGamingSiteProvider.SITE_ID} but got {league.SiteId}");
+        Assert.True(MyVirtualGamingSiteProvider.MyVirtualGaming.Id == league!.SiteId, $"expected SiteId to be {MyVirtualGamingSiteProvider.MyVirtualGaming.Id} but got {league.SiteId}");
         Assert.True(name == league.Name, $"expected Name to be {name} but got {league.Name}");
         Assert.True(league.Info is MyVirtualGamingLeagueInfo, $"expected Info to be of type {typeof(MyVirtualGamingLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
         Assert.True(league.Enabled, $"expected Enabled to be {true} but got {league.Enabled}");

@@ -136,7 +136,13 @@ public class GuildEventHandler : IAsyncHandler
         else
             _logger.LogDebug($"Renaming guild \"{newName}\" [{id}]");
 
-        await _guildService.RenameAsync(id, newName);
+        var guild = await _guildService.GetAsync(id);
+
+        if (guild != null)
+        {
+            guild.Name = newName;
+            await _guildService.SaveAsync(guild);
+        }
     }
 
     private async Task UpdateGuildsAsync(DiscordSocketClient client)
@@ -150,8 +156,12 @@ public class GuildEventHandler : IAsyncHandler
                 await LeaveAsync(guild);
             else if (guild.LeftAt != null && activeGuilds.ContainsKey(guild.Id))
                 await JoinAsync(guild);
-            else if (activeGuilds.ContainsKey(guild.Id) && guild.Name != activeGuilds[guild.Id].Name)
-                await RenameAsync(guild.Id, activeGuilds[guild.Id].Name, guild.Name);
+            else if (activeGuilds.ContainsKey(guild.Id))
+            {
+                guild.Name = activeGuilds[guild.Id].Name;
+                guild.DefaultChannelId = activeGuilds[guild.Id].DefaultChannel.Id;
+                await _guildService.SaveAsync(guild);
+            }
         }
 
         var guildIds = guilds.Select(guild => guild.Id);

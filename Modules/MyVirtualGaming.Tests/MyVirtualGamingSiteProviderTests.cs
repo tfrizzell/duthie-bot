@@ -12,14 +12,15 @@ public class MyVirtualGamingSiteProviderTests
 
     [Theory]
     [MemberData(nameof(DefaultSites))]
-    public void DefaultSites_Exist(string id, string name)
+    public void DefaultSites_Exist(string id, string name, string url)
     {
         var siteId = new Guid(id);
         var siteProvider = new MyVirtualGamingSiteProvider();
-        var site = siteProvider.Sites.FirstOrDefault(s => s.Id == MyVirtualGamingSiteProvider.SITE_ID);
+        var site = siteProvider.Sites.FirstOrDefault(s => s.Id == siteId);
 
         Assert.True(site != null, $"no matching site found");
         Assert.True(name == site!.Name, $"expected Name to be {name} but got {site.Name}");
+        Assert.True(url == site!.Url, $"expected Url to be {url} but got {site.Url}");
         Assert.True(site.Enabled, $"expected Enabled to be {true} but got {site.Enabled}");
 
         var count = siteProvider.Sites.Count(s => s.Name == name);
@@ -28,6 +29,6 @@ public class MyVirtualGamingSiteProviderTests
 
     internal static IEnumerable<object[]> DefaultSites()
     {
-        yield return new object[] { "40a06d17-e48f-49f1-9184-7393f035322c", "myvirtualgaming.com" };
+        yield return new object[] { "40a06d17-e48f-49f1-9184-7393f035322c", "VGHL", "vghl.myvirtualgaming.com" };
     }
 }

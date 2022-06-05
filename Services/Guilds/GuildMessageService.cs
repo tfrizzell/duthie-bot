@@ -23,7 +23,7 @@ public class GuildMessageService
         context.Set<GuildMessage>()
             .Include(m => m.Guild)
             .OrderBy(m => m.CreatedAt)
-                .ThenBy(m => m.GuildId);
+                .ThenBy(m => m.Guild.JoinedAt);
 
     public async Task<int> DeleteAsync(IEnumerable<Guid> ids) =>
         await DeleteAsync(ids.ToArray());

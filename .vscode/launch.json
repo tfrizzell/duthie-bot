@@ -16,20 +16,6 @@
             }
         },
         {
-            "name": ".NET Core Launch (console : update games)",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Bot/bin/Debug/net6.0/Duthie.Bot.dll",
-            "args": ["update", "games"],
-            "cwd": "${workspaceFolder}/Bot",
-            "console": "internalConsole",
-            "stopAtEntry": false,
-            "env": {
-                "DOTNET_ENVIRONMENT": "Development"
-            }
-        },
-        {
             "name": ".NET Core Launch (console : update leagues)",
             "type": "coreclr",
             "request": "launch",
@@ -50,6 +36,34 @@
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/Bot/bin/Debug/net6.0/Duthie.Bot.dll",
             "args": ["update", "teams"],
+            "cwd": "${workspaceFolder}/Bot",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": ".NET Core Launch (console : update games)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Bot/bin/Debug/net6.0/Duthie.Bot.dll",
+            "args": ["update", "games"],
+            "cwd": "${workspaceFolder}/Bot",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": ".NET Core Launch (console : update bids)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Bot/bin/Debug/net6.0/Duthie.Bot.dll",
+            "args": ["update", "bids"],
             "cwd": "${workspaceFolder}/Bot",
             "console": "internalConsole",
             "stopAtEntry": false,

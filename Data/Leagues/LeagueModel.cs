@@ -1,6 +1,5 @@
 using Duthie.Data.Comparers;
 using Duthie.Data.Converters;
-using Duthie.Types.Common;
 using Duthie.Types.Leagues;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -29,9 +28,6 @@ public class LeagueModel : DataModel<League>
 
         model.Property(l => l.Tags)
             .HasConversion(new TagsToJsonConverter(), new TagsValueComparer());
-
-        model.HasMany(l => l.LeagueTeams)
-            .WithOne(t => t.League);
 
         model.Ignore(l => l.Teams);
     }

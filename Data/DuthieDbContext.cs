@@ -23,6 +23,7 @@ public class DuthieDbContext : DbContext
         new GuildMessageModel(),
         new GuildModel(),
         new LeagueModel(),
+        new LeagueStateModel(),
         new LeagueTeamModel(),
         new SiteModel(),
         new TeamModel(),

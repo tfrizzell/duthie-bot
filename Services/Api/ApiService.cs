@@ -10,6 +10,7 @@ public class ApiService
     private static readonly IReadOnlyCollection<Type> ApiTypes = new Type[]
     {
         typeof(ISiteApi),
+        typeof(IBidApi),
         typeof(IDailyStarApi),
         typeof(IGameApi),
         typeof(ILeagueInfoApi),

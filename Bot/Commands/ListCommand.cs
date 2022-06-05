@@ -209,10 +209,12 @@ public class ListCommand : BaseCommand
             await command.RespondAsync(ListUtils.DrawBox(
                 headers: new string[] {
                     "Name",
+                    "URL",
                     "Tags"
                 },
                 data: sites.Select(s => new string[] {
                     s.Name,
+                    s.Url,
                     string.Join(", ", s.Tags)
                 })), ephemeral: true);
 

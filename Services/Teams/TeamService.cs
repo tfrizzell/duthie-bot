@@ -66,7 +66,7 @@ public class TeamService
             if (!string.IsNullOrWhiteSpace(text))
                 query = query.Where(t => t.Id.ToString().ToLower() == text.ToLower()
                     || t.Name.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower()
-                        || t.ShortName.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower());
+                    || t.ShortName.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower());
 
             if (sites?.Count() > 0)
                 query = query.Where(t => t.LeagueTeams.Any(m => sites.Contains(m.League.SiteId)));

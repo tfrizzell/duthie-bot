@@ -87,20 +87,6 @@ public class GuildService
         return 0;
     }
 
-    public async Task<bool> RenameAsync(ulong id, string name)
-    {
-        using (var context = await _contextFactory.CreateDbContextAsync())
-        {
-            var guild = await context.Set<Guild>().FirstOrDefaultAsync(g => g.Id == id && g.LeftAt == null);
-
-            if (guild == null)
-                return false;
-
-            guild.Name = name;
-            return (await context.SaveChangesAsync()) > 0;
-        }
-    }
-
     public async Task<int> SaveAsync(IEnumerable<Guild> guilds) =>
         await SaveAsync(guilds.ToArray());
 

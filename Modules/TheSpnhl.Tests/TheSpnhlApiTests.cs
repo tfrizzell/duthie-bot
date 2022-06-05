@@ -14,14 +14,14 @@ public class TheSpnhlApiTests
     public TheSpnhlApiTests()
     {
         _api = new TheSpnhlApi();
-        _league = new TheSpnhlLeagueProvider().Leagues.First(l => l.Id == new Guid("6991c990-a4fa-488b-884a-79b00e4e3577"));
+        _league = new TheSpnhlLeagueProvider().Leagues.First(l => l.Id == TheSpnhlLeagueProvider.SPNHL.Id);
         (_league.Info as TheSpnhlLeagueInfo)!.SeasonId = 43;
     }
 
     [Fact]
     public void Supports_TheSpnhl()
     {
-        Assert.True(_api.Supports.Contains(TheSpnhlSiteProvider.SITE_ID), $"{_api.GetType().Name} does not support site {TheSpnhlSiteProvider.SITE_ID}");
+        Assert.True(_api.Supports.Contains(TheSpnhlSiteProvider.SPNHL.Id), $"{_api.GetType().Name} does not support site {TheSpnhlSiteProvider.SPNHL.Id}");
     }
 
     [Fact]

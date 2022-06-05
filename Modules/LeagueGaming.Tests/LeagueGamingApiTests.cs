@@ -19,7 +19,7 @@ public class LeagueGamingApiTests
     [Fact]
     public void Supports_LeagueGaming()
     {
-        Assert.True(_api.Supports.Contains(LeagueGamingSiteProvider.SITE_ID), $"{_api.GetType().Name} does not support site {LeagueGamingSiteProvider.SITE_ID}");
+        Assert.True(_api.Supports.Contains(LeagueGamingSiteProvider.Leaguegaming.Id), $"{_api.GetType().Name} does not support site {LeagueGamingSiteProvider.Leaguegaming.Id}");
     }
 
     [Fact]
