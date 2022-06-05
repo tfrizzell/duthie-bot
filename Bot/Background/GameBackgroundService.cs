@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Duthie.Services.Api;
 using Duthie.Services.Games;
@@ -44,15 +45,16 @@ public class GameBackgroundService : ScheduledBackgroundService
         {
             "*/30 0-19  * * *",
             "*/5  20-23 * * *",
-            "50 * * * *",
         };
     }
 
     public override async Task ExecuteAsync(CancellationToken? cancellationToken = null)
     {
+        _logger.LogTrace("Starting game update task");
+        var sw = Stopwatch.StartNew();
+
         try
         {
-            _logger.LogInformation("Updating games");
             var leagues = await _leagueService.GetAllAsync();
 
             await Task.WhenAll(leagues.Select(async league =>
@@ -62,12 +64,12 @@ public class GameBackgroundService : ScheduledBackgroundService
                 if (api == null)
                     return;
 
-                var games = await api.GetGamesAsync(league);
+                var data = await api.GetGamesAsync(league);
 
-                if (games == null)
+                if (data == null)
                     return;
 
-                foreach (var game in games)
+                foreach (var game in data)
                 {
                     try
                     {
@@ -125,9 +127,9 @@ public class GameBackgroundService : ScheduledBackgroundService
                                 }
 
                                 if (game.Shootout == true)
-                                    message = Regex.Replace(message, @"[!.]$", @" in a shootout$1");
+                                    message = Regex.Replace(message, @"[!.]$", @" in a shootout$0");
                                 else if (game.Overtime == true)
-                                    message = Regex.Replace(message, @"[!.]$", @" in overtime$1");
+                                    message = Regex.Replace(message, @"[!.]$", @" in overtime$0");
 
                                 messages.Add(new GuildMessage
                                 {
@@ -159,10 +161,15 @@ public class GameBackgroundService : ScheduledBackgroundService
                     }
                 }
             }));
+
+            sw.Stop();
+            _logger.LogTrace($"Game update task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "An unexpected error occurred while updating games.");
+            sw.Stop();
+            _logger.LogTrace($"Game update task failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogError(e, "An unexpected error during game update task.");
         }
     }
 

@@ -33,7 +33,7 @@ public abstract class ScheduledBackgroundService : IHostedService, IDisposable
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation($"Stopping {GetType().Name}");
+        _logger.LogDebug($"Stopping {GetType().Name}");
 
         foreach (var task in _tasks)
             await task.StopAsync(cancellationToken);

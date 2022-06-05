@@ -100,8 +100,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Info = table.Column<string>(type: "TEXT", nullable: true),
                     Tags = table.Column<string>(type: "TEXT", nullable: false),
-                    Enabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    BidHistory = table.Column<string>(type: "TEXT", nullable: false)
+                    Enabled = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {

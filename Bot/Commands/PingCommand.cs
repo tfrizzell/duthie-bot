@@ -32,6 +32,9 @@ public class PingCommand : BaseCommand
 
     protected override async Task HandleCommandAsync(SocketSlashCommand command)
     {
+        var guild = await GetGuildAsync(command);
+        var user = await GetUserAsync(command);
         await command.RespondAsync("Pong!");
+        _logger.LogTrace($"User {user} sent ping from guild \"{guild.Name}\" [{guild.Id}]");
     }
 }

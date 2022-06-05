@@ -86,7 +86,7 @@ public class AdminCommand : BaseCommand
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "An unexpected error has occurred");
+            _logger.LogError(e, "An unexpected error has occurred while handling admin command.");
             await SendErrorAsync(command);
         }
     }
@@ -100,10 +100,12 @@ public class AdminCommand : BaseCommand
             return;
 
         var targetUser = await GetTargetUserAsync(cmd);
-        _logger.LogDebug($"User {user} added administrator {targetUser} to guild \"{guild.Name}\" [{guild.Id}]");
 
         if ((await _guildAdminService.SaveAsync(guild.Id, targetUser.Id)) > 0)
+        {
+            _logger.LogDebug($"User {user} added administrator {targetUser} to guild \"{guild.Name}\" [{guild.Id}]");
             await command.RespondAsync($"Okay! I've added {targetUser} as a {_appInfo.Name} administrator for your server.", ephemeral: true);
+        }
         else
             await command.RespondAsync($"{targetUser} is already a {_appInfo.Name} administrator for your server.", ephemeral: true);
     }
@@ -112,8 +114,6 @@ public class AdminCommand : BaseCommand
     {
         var guild = await GetGuildAsync(command);
         var user = await GetUserAsync(command);
-
-        _logger.LogDebug($"User {user} viewed administrator list for guild \"{guild.Name}\" [{guild.Id}]");
 
         var admins = new Dictionary<ulong, string[]>()
         {
@@ -155,6 +155,8 @@ public class AdminCommand : BaseCommand
                 .OrderBy(a => ROLE_OWNER == a[1])
                 .ThenBy(a => ROLE_ADMINISTRATOR == a[1])
                 .ThenBy(a => a[0])), ephemeral: true);
+
+        _logger.LogTrace($"User {user} viewed administrator list for guild \"{guild.Name}\" [{guild.Id}]");
     }
 
     private async Task RemoveAdminAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -166,10 +168,12 @@ public class AdminCommand : BaseCommand
             return;
 
         var targetUser = await GetTargetUserAsync(cmd);
-        _logger.LogDebug($"User {user} removed administrator {targetUser} from guild \"{guild.Name}\" [{guild.Id}]");
 
         if ((await _guildAdminService.DeleteAsync(guild.Id, targetUser.Id)) > 0)
+        {
+            _logger.LogDebug($"User {user} removed administrator {targetUser} from guild \"{guild.Name}\" [{guild.Id}]");
             await command.RespondAsync($"Okay! I've removed {targetUser} as a {_appInfo.Name} administrator for your server.", ephemeral: true);
+        }
         else
             await command.RespondAsync($"{targetUser} is not a {_appInfo.Name} administrator for your server.", ephemeral: true);
     }

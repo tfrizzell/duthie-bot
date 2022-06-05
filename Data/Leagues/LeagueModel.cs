@@ -28,10 +28,7 @@ public class LeagueModel : DataModel<League>
             .HasConversion(new LeagueInfoToStringConverter(), new LeagueInfoValueComparer());
 
         model.Property(l => l.Tags)
-            .HasConversion(new StringCollectionToJsonConverter<Tags>(), new StringCollectionValueComparer<Tags>());
-
-        model.Property(l => l.BidHistory)
-            .HasConversion(new UlongCollectionToJsonConverter<HashHistory>(), new UlongCollectionValueComparer<HashHistory>());
+            .HasConversion(new TagsToJsonConverter(), new TagsValueComparer());
 
         model.HasMany(l => l.LeagueTeams)
             .WithOne(t => t.League);

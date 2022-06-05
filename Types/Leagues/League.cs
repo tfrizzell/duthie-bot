@@ -13,8 +13,6 @@ public class League : ILeague
     public Tags Tags { get; set; } = new Tags();
     public bool Enabled { get; set; } = true;
 
-    public HashHistory BidHistory { get; set; } = new HashHistory();
-
 #nullable disable
     public virtual Site Site { get; set; }
     public virtual IEnumerable<LeagueTeam> LeagueTeams { get; set; }

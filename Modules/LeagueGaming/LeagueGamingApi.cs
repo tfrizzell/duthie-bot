@@ -95,7 +95,7 @@ public class LeagueGamingApi
             }));
 
         var info = Regex.Match(html,
-            @$"<li[^>]*\bcustom-tab-{leagueInfo.LeagueId}\b[^>]*>\s*<a[^>]*/league\.(\d+)[^>]*.*?<span[^>]*>(.*?)</span>.*?</a>",
+            @$"<li[^>]*\bcustom-tab-{leagueInfo.LeagueId}\b[^>]*>\s*<a[^>]*forums/[^>]*\.(\d+)[^>]*>.*?<span[^>]*>(.*?)</span>.*?</a>",
             RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         if (!info.Success)

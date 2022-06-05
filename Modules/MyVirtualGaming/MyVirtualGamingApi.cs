@@ -89,7 +89,7 @@ public class MyVirtualGamingApi
         if (weeks.Count() == 0)
             return new List<Game>();
 
-        var teams = await GetTeamMapAsync(league);
+        var teams = await GetTeamLookupAsync(league);
 
         return (await Task.WhenAll(weeks.Select(async week =>
         {
@@ -240,7 +240,7 @@ public class MyVirtualGamingApi
         if (nameMatches.Count() == 0)
             return null;
 
-        var map = await GetTeamMapAsync(league);
+        var lookup = await GetTeamLookupAsync(league);
 
         var teams = nameMatches
             .DistinctBy(m => m.Groups[1].Value)
@@ -274,10 +274,10 @@ public class MyVirtualGamingApi
 
         foreach (Match match in shortNameMatches)
         {
-            if (!map.ContainsKey(match.Groups[1].Value))
+            if (!lookup.ContainsKey(match.Groups[1].Value))
                 continue;
 
-            var id = map[match.Groups[1].Value];
+            var id = lookup[match.Groups[1].Value];
 
             if (!teams.ContainsKey(id))
                 teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
@@ -290,11 +290,11 @@ public class MyVirtualGamingApi
         }
 
         return FixTeams(teams.Values
-            .Where(t => map.Values.Contains(t.ExternalId))
+            .Where(t => lookup.Values.Contains(t.ExternalId))
             .ToList());
     }
 
-    private async Task<IDictionary<string, string>> GetTeamMapAsync(League league)
+    private async Task<IDictionary<string, string>> GetTeamLookupAsync(League league)
     {
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
 

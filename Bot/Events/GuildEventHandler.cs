@@ -59,20 +59,21 @@ public class GuildEventHandler : IAsyncHandler
     {
         _client.ShardReady -= HandleReadyAsync;
 
+        _logger.LogDebug("Updating guilds");
         var sw = Stopwatch.StartNew();
-        _logger.LogInformation("Updating guilds");
 
         try
         {
             await UpdateGuildsAsync(client);
-            sw.Stop();
 
-            _logger.LogDebug($"Guild update completed in {sw.Elapsed.TotalMilliseconds} milliseconds");
+            sw.Stop();
+            _logger.LogTrace($"Guild update completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogError(e, $"Guild update failed in {sw.Elapsed.TotalMilliseconds} milliseconds");
+            _logger.LogTrace($"Guild update failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogError(e, "An unexpected error during guild update.");
             Environment.Exit(0);
         }
     }
@@ -96,12 +97,12 @@ public class GuildEventHandler : IAsyncHandler
     private async Task HandleUserLeftAsync(SocketGuild guild, SocketUser user)
     {
         if ((await _guildAdminService.DeleteAsync(guild.Id, user.Id)) > 0)
-            _logger.LogInformation($"{_appInfo.Name} administrator {user} has left guild \"{guild.Name}\" [{guild.Id}]");
+            _logger.LogDebug($"{_appInfo.Name} administrator {user} has left guild \"{guild.Name}\" [{guild.Id}]");
     }
 
     private async Task JoinAsync(Guild guild)
     {
-        _logger.LogInformation($"{_appInfo.Name} has joined guild \"{guild.Name}\" [{guild.Id}]");
+        _logger.LogDebug($"{_appInfo.Name} has joined guild \"{guild.Name}\" [{guild.Id}]");
         guild.LeftAt = null;
         await _guildService.SaveAsync(guild);
 
@@ -116,7 +117,7 @@ public class GuildEventHandler : IAsyncHandler
             {
                 var user = _client.GetUser(memberId);
 
-                _logger.LogInformation($"{_appInfo.Name} administrator {user} is no longer a member of guild \"{guild.Name}\" [{guild.Id}]");
+                _logger.LogDebug($"{_appInfo.Name} administrator {user} is no longer a member of guild \"{guild.Name}\" [{guild.Id}]");
                 await _guildAdminService.DeleteAsync(guild.Id, memberId);
             }
         }
@@ -124,7 +125,7 @@ public class GuildEventHandler : IAsyncHandler
 
     private async Task LeaveAsync(Guild guild)
     {
-        _logger.LogInformation($"{_appInfo.Name} has left guild \"{guild.Name}\" [{guild.Id}]");
+        _logger.LogDebug($"{_appInfo.Name} has left guild \"{guild.Name}\" [{guild.Id}]");
         await _guildService.DeleteAsync(guild.Id);
     }
 

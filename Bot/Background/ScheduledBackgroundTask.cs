@@ -6,9 +6,9 @@ namespace Duthie.Bot.Background;
 
 internal class ScheduledBackgroundTask : IHostedService, IDisposable
 {
-    private CronExpression _cron;
-    Func<CancellationToken?, Task> _worker;
-    private TimeZoneInfo _timeZoneInfo;
+    private readonly CronExpression _cron;
+    private readonly Func<CancellationToken?, Task> _worker;
+    private readonly TimeZoneInfo _timeZoneInfo;
     private System.Timers.Timer? _timer;
 
     public ScheduledBackgroundTask(

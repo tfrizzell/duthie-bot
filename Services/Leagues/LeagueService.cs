@@ -111,21 +111,43 @@ public class LeagueService
     public async Task<int> SaveAsync(IEnumerable<League> leagues) =>
         await SaveAsync(leagues.ToArray());
 
-    // TODO: Updating LeagueTeam entries is encountering issues in this method.
-    //       Futher investigation is needed.
     public async Task<int> SaveAsync(params League[] leagues)
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
             foreach (var league in leagues)
             {
-                if (!await context.Set<League>().AnyAsync(l => l.Id == league.Id))
-                    await context.Set<League>().AddAsync(league);
+                var existing = await context.Set<League>()
+                    .Include(l => l.LeagueTeams)
+                    .FirstOrDefaultAsync(l => l.Id == league.Id);
+
+                if (existing != null)
+                {
+                    if (existing.LeagueTeams.Count() > 0)
+                        await UpdateTeamsAsync(context, existing.LeagueTeams, league.LeagueTeams);
+
+                    existing.Name = league.Name;
+                    existing.Info = league.Info;
+                    existing.Tags = league.Tags;
+                    existing.Enabled = league.Enabled;
+                    existing.LeagueTeams = league.LeagueTeams;
+                }
                 else
-                    await context.Set<League>().UpdateAsync(league);
+                    await context.Set<League>().AddAsync(league);
             }
 
             return await context.SaveChangesAsync();
         }
+    }
+
+    private Task UpdateTeamsAsync(DuthieDbContext context, IEnumerable<LeagueTeam> oldTeams, IEnumerable<LeagueTeam> newTeams)
+    {
+        foreach (var oldTeam in oldTeams)
+            context.Entry(oldTeam).State = EntityState.Deleted;
+
+        foreach (var newTeam in newTeams)
+            context.Entry(newTeam).State = EntityState.Added;
+
+        return Task.CompletedTask;
     }
 }

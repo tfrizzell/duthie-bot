@@ -25,7 +25,7 @@ public class ListCommand : BaseCommand
     private readonly LeagueService _leagueService;
     private readonly TeamService _teamService;
     private readonly AdminCommand _adminCommand;
-    private readonly WatchersCommand _watchersCommand;
+    private readonly WatcherCommand _watchersCommand;
 
     public ListCommand(
         ILogger<ListCommand> logger,
@@ -34,7 +34,7 @@ public class ListCommand : BaseCommand
         LeagueService leagueService,
         TeamService teamService,
         AdminCommand adminCommand,
-        WatchersCommand watchersCommand,
+        WatcherCommand watchersCommand,
         DiscordConfiguration config) : base(config)
     {
         _logger = logger;
@@ -153,7 +153,7 @@ public class ListCommand : BaseCommand
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "An unexpected error has occurred");
+            _logger.LogError(e, "An unexpected error has occurred while handling list command.");
             await SendErrorAsync(command);
         }
     }
@@ -170,8 +170,6 @@ public class ListCommand : BaseCommand
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but that site doesn't seem to exist anymore.", ephemeral: true);
             return;
         }
-
-        _logger.LogDebug($"User {user} viewed league list in guild \"{guild.Name}\" [{guild.Id}]");
 
         var leagues = await _leagueService.FindAsync(
             sites: site == null ? null : new Guid[] { site.Id },
@@ -190,6 +188,8 @@ public class ListCommand : BaseCommand
                     l.Site.Name,
                     string.Join(", ", l.Tags)
                 })), ephemeral: true);
+
+            _logger.LogTrace($"User {user} viewed league list in guild \"{guild.Name}\" [{guild.Id}]");
         }
         else
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find any supported leagues for you.", ephemeral: true);
@@ -200,8 +200,6 @@ public class ListCommand : BaseCommand
         var guild = await GetGuildAsync(command);
         var user = await GetUserAsync(command);
         var (tags, tagsOption) = await GetTagsAsync(cmd);
-
-        _logger.LogDebug($"User {user} viewed site list in guild \"{guild.Name}\" [{guild.Id}]");
 
         var sites = await _siteService.FindAsync(
             tags: tags);
@@ -217,6 +215,8 @@ public class ListCommand : BaseCommand
                     s.Name,
                     string.Join(", ", s.Tags)
                 })), ephemeral: true);
+
+            _logger.LogTrace($"User {user} viewed site list in guild \"{guild.Name}\" [{guild.Id}]");
         }
         else
             await command.RespondAsync("I don't currently have any supported sites.", ephemeral: true);
@@ -242,8 +242,6 @@ public class ListCommand : BaseCommand
             return;
         }
 
-        _logger.LogDebug($"User {user} viewed team list in guild \"{guild.Name}\" [{guild.Id}]");
-
         var teams = await _teamService.FindAsync(
             sites: site == null ? null : new Guid[] { site.Id },
             leagues: league == null ? null : new Guid[] { league.Id },
@@ -264,6 +262,8 @@ public class ListCommand : BaseCommand
                     Regex.Replace(string.Join(", ", t.Leagues.Select(l => l.Name).OrderBy(n => n)), @"^(.{27}).{4,}", @"$1..."),
                     string.Join(", ", t.Tags)
                 })), ephemeral: true);
+
+            _logger.LogTrace($"User {user} viewed team list in guild \"{guild.Name}\" [{guild.Id}]");
         }
         else
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find any supported teams for you.", ephemeral: true);
@@ -273,8 +273,6 @@ public class ListCommand : BaseCommand
     {
         var guild = await GetGuildAsync(command);
         var user = await GetUserAsync(command);
-
-        _logger.LogDebug($"User {user} viewed watcher type list in guild \"{guild.Name}\" [{guild.Id}]");
 
         var watcherTypes = Enum.GetValues<WatcherType>();
 
@@ -289,6 +287,8 @@ public class ListCommand : BaseCommand
                     EnumUtils.GetName(t),
                     EnumUtils.GetDescription(t)
                 })), ephemeral: true);
+
+            _logger.LogTrace($"User {user} viewed watcher type list in guild \"{guild.Name}\" [{guild.Id}]");
         }
         else
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find any supported teams for you.", ephemeral: true);

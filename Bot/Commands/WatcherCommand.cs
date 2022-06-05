@@ -15,20 +15,20 @@ using Microsoft.Extensions.Logging;
 
 namespace Duthie.Bot.Commands;
 
-public class WatchersCommand : BaseCommandWithAdminCheck
+public class WatcherCommand : BaseCommandWithAdminCheck
 {
     private static readonly Guid TYPE_ALL = new Guid("31625d2a-6587-477f-a888-84968d5b5eff");
     private static readonly Guid TYPE_ALL_NEWS = new Guid("1f20dd2c-df09-46ba-9d57-5ab67d8a910a");
 
-    private readonly ILogger<WatchersCommand> _logger;
+    private readonly ILogger<WatcherCommand> _logger;
     private readonly AppInfo _appInfo;
     private readonly WatcherService _watcherService;
     private readonly LeagueService _leagueService;
     private readonly TeamService _teamService;
     private readonly SiteService _siteService;
 
-    public WatchersCommand(
-        ILogger<WatchersCommand> logger,
+    public WatcherCommand(
+        ILogger<WatcherCommand> logger,
         AppInfo appInfo,
         WatcherService watcherService,
         LeagueService leagueService,
@@ -195,7 +195,7 @@ public class WatchersCommand : BaseCommandWithAdminCheck
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "An unexpected error has occurred");
+            _logger.LogError(e, "An unexpected error has occurred while handling watcher command.");
             await SendErrorAsync(command);
         }
     }
@@ -270,8 +270,6 @@ public class WatchersCommand : BaseCommandWithAdminCheck
         var guild = await GetGuildAsync(command);
         var user = await GetUserAsync(command);
 
-        _logger.LogDebug($"User {user} viewed watcher list for guild \"{guild.Name}\" [{guild.Id}]");
-
         var (leagues, leagueOption) = await GetLeaguesAsync(cmd);
         var (teams, teamOption) = await GetTeamAsync(cmd);
         var (watcherTypes, watcherTypeOption) = await GetWatcherTypeAsync(cmd);
@@ -318,6 +316,8 @@ public class WatchersCommand : BaseCommandWithAdminCheck
                     (guild.Channels.FirstOrDefault(c => c.Id == w.ChannelId) ?? guild.DefaultChannel).Name,
                     w.League.Site.Name
                 })), ephemeral: true);
+
+            _logger.LogTrace($"User {user} viewed watcher list for guild \"{guild.Name}\" [{guild.Id}]");
         }
         else
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find any watchers on your server.", ephemeral: true);

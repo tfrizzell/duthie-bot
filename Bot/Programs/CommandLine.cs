@@ -1,6 +1,8 @@
 using Duthie.Bot.Background;
+using Duthie.Data;
 using Duthie.Services.Guilds;
 using Duthie.Types.Guilds;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -34,27 +36,28 @@ public class CommandLine
 
     private static async Task BroadcastMessageAsync(params string[] args)
     {
-        var message = string.Join(" ", args);
-
         var serviceProvider = new ServiceCollection()
             .ConfigureServices()
             .AddAppInfo()
             .BuildServiceProvider();
 
+        await UpdateDatabaseAsync(serviceProvider);
+
+        var message = string.Join(" ", args);
         var logger = serviceProvider.GetRequiredService<ILogger<CommandLine>>();
         var guildService = serviceProvider.GetRequiredService<GuildService>();
         var guildMessageService = serviceProvider.GetRequiredService<GuildMessageService>();
 
         foreach (var guild in await guildService.GetAllAsync())
         {
-            logger.LogInformation($"Sending message to guild \"{guild.Name}\" [{guild.Id}]");
-
             await guildMessageService.SaveAsync(new GuildMessage
             {
                 GuildId = guild.Id,
                 ChannelId = 0,
                 Message = message
             });
+
+            logger.LogTrace($"Sent message to guild \"{guild.Name}\" [{guild.Id}]");
         }
 
         Environment.Exit(0);
@@ -67,19 +70,32 @@ public class CommandLine
             .AddApi()
             .AddAppInfo()
             .AddSingleton<GameBackgroundService>()
-            .AddSingleton<LeagueInfoBackgroundService>()
-            .AddSingleton<LeagueTeamBackgroundService>()
+            .AddSingleton<LeagueBackgroundService>()
+            .AddSingleton<TeamBackgroundService>()
             .BuildServiceProvider();
+
+        await UpdateDatabaseAsync(serviceProvider);
 
         var types = args.Select(arg => arg.Trim().ToLower());
 
         if (types.Intersect(new string[] { "leagues", "all" }).Count() > 0)
-            await serviceProvider.GetRequiredService<LeagueInfoBackgroundService>().ExecuteAsync();
+            await serviceProvider.GetRequiredService<LeagueBackgroundService>().ExecuteAsync();
 
         if (types.Intersect(new string[] { "teams", "all" }).Count() > 0)
-            await serviceProvider.GetRequiredService<LeagueTeamBackgroundService>().ExecuteAsync();
+            await serviceProvider.GetRequiredService<TeamBackgroundService>().ExecuteAsync();
 
         if (types.Intersect(new string[] { "games", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<GameBackgroundService>().ExecuteAsync();
+    }
+
+    private static async Task UpdateDatabaseAsync(IServiceProvider serviceProvider)
+    {
+        var contextFactory = serviceProvider.GetRequiredService<IDbContextFactory<DuthieDbContext>>();
+
+        using (var context = await contextFactory.CreateDbContextAsync())
+        {
+            context.Database.Migrate();
+            await context.PopulateAsync();
+        }
     }
 }

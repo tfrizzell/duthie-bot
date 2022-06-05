@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Duthie.Bot.Migrations.Sqlite
 {
     [DbContext(typeof(DuthieDbContext))]
-    [Migration("20220604145523_Initial")]
+    [Migration("20220605162535_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -142,10 +142,6 @@ namespace Duthie.Bot.Migrations.Sqlite
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("BidHistory")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("Enabled")

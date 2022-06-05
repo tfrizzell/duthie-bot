@@ -22,7 +22,7 @@ public class TeamModel : DataModel<Team>
             .ValueGeneratedOnAdd();
 
         model.Property(l => l.Tags)
-            .HasConversion(new StringCollectionToJsonConverter<Tags>(), new StringCollectionValueComparer<Tags>());
+            .HasConversion(new TagsToJsonConverter(), new TagsValueComparer());
 
         model.HasMany(t => t.LeagueTeams)
             .WithOne(t => t.Team);

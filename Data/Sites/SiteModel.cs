@@ -22,6 +22,6 @@ public class SiteModel : DataModel<Site>
             .ValueGeneratedOnAdd();
 
         model.Property(l => l.Tags)
-            .HasConversion(new StringCollectionToJsonConverter<Tags>(), new StringCollectionValueComparer<Tags>());
+            .HasConversion(new TagsToJsonConverter(), new TagsValueComparer());
     }
 }

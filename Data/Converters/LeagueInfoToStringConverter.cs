@@ -44,7 +44,7 @@ public class LeagueInfoToStringConverter : ValueConverter<object?, string?>
     {
         if (!Types.ContainsKey(type))
         {
-            Types.Add(type, AppDomain.CurrentDomain.GetAssemblies()
+            Types.TryAdd(type, AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(a => a.GetTypes())
                 .FirstOrDefault(t => t.FullName == type));
         }

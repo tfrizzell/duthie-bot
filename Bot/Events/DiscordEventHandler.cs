@@ -54,7 +54,7 @@ public class DiscordEventHandler : IAsyncHandler
         }
         else
         {
-            _logger.LogInformation($"Reconnected to Discord");
+            _logger.LogWarning($"Reconnected to Discord");
             await client.ShowOnlineStatusAsync();
         }
 
@@ -68,7 +68,7 @@ public class DiscordEventHandler : IAsyncHandler
 
     private async Task HandleDisconnectedAsync(Exception e, DiscordSocketClient client)
     {
-        _logger.LogInformation($"Disconnected from Discord");
+        _logger.LogWarning($"Disconnected from Discord");
         await client.ShowDisconnectedStatusAsync();
     }
 }

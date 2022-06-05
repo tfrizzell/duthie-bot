@@ -142,10 +142,6 @@ namespace Duthie.Bot.Migrations.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("BidHistory")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("Enabled")
                         .HasColumnType("INTEGER");
 

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Duthie.Services.Api;
 using Duthie.Services.Leagues;
 using Duthie.Types.Api;
@@ -5,14 +6,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Duthie.Bot.Background;
 
-public class LeagueInfoBackgroundService : ScheduledBackgroundService
+public class LeagueBackgroundService : ScheduledBackgroundService
 {
-    private readonly ILogger<LeagueInfoBackgroundService> _logger;
+    private readonly ILogger<LeagueBackgroundService> _logger;
     private readonly ApiService _apiService;
     private readonly LeagueService _leagueService;
 
-    public LeagueInfoBackgroundService(
-        ILogger<LeagueInfoBackgroundService> logger,
+    public LeagueBackgroundService(
+        ILogger<LeagueBackgroundService> logger,
         ApiService apiService,
         LeagueService leagueService) : base(logger)
     {
@@ -29,20 +30,13 @@ public class LeagueInfoBackgroundService : ScheduledBackgroundService
         };
     }
 
-    public override async Task StartAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation($"Starting {GetType().Name}");
-
-        await Task.WhenAll(
-            ExecuteAsync(cancellationToken),
-            ScheduleAsync(cancellationToken));
-    }
-
     public override async Task ExecuteAsync(CancellationToken? cancellationToken = null)
     {
+        _logger.LogTrace("Starting league update task");
+        var sw = Stopwatch.StartNew();
+
         try
         {
-            _logger.LogInformation("Updating league information");
             var leagues = await _leagueService.GetAllAsync();
 
             await Task.WhenAll(leagues.Select(async league =>
@@ -52,20 +46,25 @@ public class LeagueInfoBackgroundService : ScheduledBackgroundService
                 if (api == null)
                     return;
 
-                var info = await api.GetLeagueInfoAsync(league);
+                var data = await api.GetLeagueInfoAsync(league);
 
-                if (info == null)
+                if (data == null)
                     return;
 
-                league.Name = info.Name;
-                league.Info = info.Info;
+                league.Name = data.Name;
+                league.Info = data.Info;
             }));
 
             await _leagueService.SaveAsync(leagues);
+
+            sw.Stop();
+            _logger.LogTrace($"League update task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "An unexpected error occurred while updating league information.");
+            sw.Stop();
+            _logger.LogTrace($"League update task failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogError(e, "An unexpected error during league update task.");
         }
     }
 }

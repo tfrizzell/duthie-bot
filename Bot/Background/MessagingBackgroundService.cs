@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Discord;
 using Discord.WebSocket;
 using Duthie.Bot.Utils;
@@ -40,13 +41,15 @@ public class MessagingBackgroundService : ScheduledBackgroundService
 
     public override async Task ExecuteAsync(CancellationToken? cancellationToken = null)
     {
+        _logger.LogTrace("Starting message sending task");
+        var sw = Stopwatch.StartNew();
+
         try
         {
-            _logger.LogTrace("Checking for unsent messages");
             var messages = await _guildMessageService.GetUnsentAsync();
 
             if (messages.Count() > 0)
-                _logger.LogDebug($"Sending {MessageUtils.Pluralize(messages.Count(), "message")} to Discord");
+                _logger.LogTrace($"Sending {MessageUtils.Pluralize(messages.Count(), "message")} to Discord");
 
             await Task.WhenAll(messages.Select(async message =>
             {
@@ -67,10 +70,15 @@ public class MessagingBackgroundService : ScheduledBackgroundService
                 message.SentAt = DateTimeOffset.UtcNow;
                 await _guildMessageService.SaveAsync(message);
             }));
+
+            sw.Stop();
+            _logger.LogTrace($"Message sending task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "An unexpected error occurred while sending guild messages.");
+            sw.Stop();
+            _logger.LogTrace($"Message sending task failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogError(e, "An unexpected error during message sending task.");
         }
     }
 }

@@ -10,7 +10,6 @@ using Duthie.Modules.LeagueGaming;
 using Duthie.Modules.MyVirtualGaming;
 using Duthie.Modules.TheSpnhl;
 using Duthie.Services.Api;
-using Duthie.Services.Background;
 using Duthie.Services.Games;
 using Duthie.Services.Guilds;
 using Duthie.Services.Leagues;
@@ -106,14 +105,13 @@ public static class CompositionRoot
             .AddHandler<DiscordEventHandler>()
             .AddCommand<PingCommand>()
             .AddCommand<AdminCommand>()
-            .AddCommand<WatchersCommand>()
+            .AddCommand<WatcherCommand>()
             .AddCommand<ListCommand>();
     }
 
     public static IServiceCollection AddApi(this IServiceCollection services)
     {
         var apiService = new ApiService();
-        services.AddSingleton(apiService);
 
         var apis = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(s => s.GetTypes())
@@ -130,8 +128,7 @@ public static class CompositionRoot
                 new TheSpnhlApi()
             }.Concat(apis.Select(api => (ISiteApi)Activator.CreateInstance(api)!)).ToArray());
 
-        return services
-            .AddSingleton<LeagueUpdateService>();
+        return services.AddSingleton(apiService);
     }
 
     public static IServiceCollection AddAppInfo(this IServiceCollection services)
