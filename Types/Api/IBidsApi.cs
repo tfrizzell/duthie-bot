@@ -2,7 +2,7 @@ using Duthie.Types.Leagues;
 
 namespace Duthie.Types.Api;
 
-public interface IBidsApi : IApi
+public interface IBidApi : ISiteApi
 {
     Task<IEnumerable<Bid>?> GetBidsAsync(League league);
 }

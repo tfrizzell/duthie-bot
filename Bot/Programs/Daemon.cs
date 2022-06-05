@@ -29,7 +29,7 @@ public class Daemon
                 services
                     .AddHostedService<Main>()
                     .AddHostedService<MessagingBackgroundService>()
-                    .AddHostedService<GameDataBackgroundService>()
+                    .AddHostedService<GameBackgroundService>()
                     .AddHostedService<LeagueInfoBackgroundService>();
             })
             .Build();

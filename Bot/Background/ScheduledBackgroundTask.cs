@@ -7,13 +7,13 @@ namespace Duthie.Bot.Background;
 internal class ScheduledBackgroundTask : IHostedService, IDisposable
 {
     private CronExpression _cron;
-    Func<CancellationToken, Task> _worker;
+    Func<CancellationToken?, Task> _worker;
     private TimeZoneInfo _timeZoneInfo;
     private System.Timers.Timer? _timer;
 
     public ScheduledBackgroundTask(
         string cronExpression,
-        Func<CancellationToken, Task> worker,
+        Func<CancellationToken?, Task> worker,
         TimeZoneInfo? timeZoneInfo = null)
     {
         _cron = CronExpression.Parse(cronExpression, Regex.Split(cronExpression, @"\s+").Count() > 5 ? CronFormat.IncludeSeconds : CronFormat.Standard);

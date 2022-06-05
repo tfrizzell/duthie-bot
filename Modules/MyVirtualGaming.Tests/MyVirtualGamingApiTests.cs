@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Duthie.Types.Api;
 using Duthie.Types.Leagues;
-using Duthie.Types.Teams;
 
 namespace Duthie.Modules.MyVirtualGaming.Tests;
 
@@ -15,6 +14,7 @@ public class MyVirtualGamingApiTests
         _api = new MyVirtualGamingApi();
         _league = new MyVirtualGamingLeagueProvider().Leagues.First(l => l.Id == new Guid("5957b164-7bb5-4324-967a-16c3044260b2"));
         (_league.Info as MyVirtualGamingLeagueInfo)!.SeasonId = 72;
+        (_league.Info as MyVirtualGamingLeagueInfo)!.ScheduleId = 119;
     }
 
     [Fact]
@@ -35,6 +35,7 @@ public class MyVirtualGamingApiTests
         var actualInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
         Assert.True(expectedInfo.LeagueId == actualInfo.LeagueId, $"expected Info.LeagueId to be {expectedInfo.LeagueId} but got {actualInfo.LeagueId}");
         Assert.True(expectedInfo.SeasonId <= actualInfo.SeasonId, $"expected Info.SeasonId to be greater than or equal to {expectedInfo.SeasonId} but got {actualInfo.SeasonId}");
+        Assert.True(expectedInfo.ScheduleId <= actualInfo.ScheduleId, $"expected Info.ScheduleId to be greater than or equal to {expectedInfo.ScheduleId} but got {actualInfo.ScheduleId}");
     }
 
     [Fact]

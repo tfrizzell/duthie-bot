@@ -1,4 +1,4 @@
-using Duthie.Services.Background;
+using Duthie.Bot.Background;
 using Duthie.Services.Guilds;
 using Duthie.Types.Guilds;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,33 +66,20 @@ public class CommandLine
             .ConfigureServices()
             .AddApi()
             .AddAppInfo()
+            .AddSingleton<GameBackgroundService>()
+            .AddSingleton<LeagueInfoBackgroundService>()
+            .AddSingleton<LeagueTeamBackgroundService>()
             .BuildServiceProvider();
 
-        await Task.WhenAll(args.Select(async type =>
-        {
-            switch (type.Trim().ToLower())
-            {
-                case "all":
-                    await serviceProvider.GetRequiredService<LeagueUpdateService>().UpdateAll();
-                    await serviceProvider.GetRequiredService<GameUpdateService>().UpdateGames();
-                    break;
+        var types = args.Select(arg => arg.Trim().ToLower());
 
-                case "games":
-                    await serviceProvider.GetRequiredService<GameUpdateService>().UpdateGames();
-                    break;
+        if (types.Intersect(new string[] { "leagues", "all" }).Count() > 0)
+            await serviceProvider.GetRequiredService<LeagueInfoBackgroundService>().ExecuteAsync();
 
-                case "leagues":
-                    await serviceProvider.GetRequiredService<LeagueUpdateService>().UpdateAll();
-                    break;
+        if (types.Intersect(new string[] { "teams", "all" }).Count() > 0)
+            await serviceProvider.GetRequiredService<LeagueTeamBackgroundService>().ExecuteAsync();
 
-                case "league-info":
-                    await serviceProvider.GetRequiredService<LeagueUpdateService>().UpdateInfo();
-                    break;
-
-                case "teams":
-                    await serviceProvider.GetRequiredService<LeagueUpdateService>().UpdateTeams();
-                    break;
-            }
-        }));
+        if (types.Intersect(new string[] { "games", "all" }).Count() > 0)
+            await serviceProvider.GetRequiredService<GameBackgroundService>().ExecuteAsync();
     }
 }

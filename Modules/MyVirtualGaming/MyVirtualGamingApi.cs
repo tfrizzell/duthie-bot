@@ -8,7 +8,7 @@ using Duthie.Types.Teams;
 namespace Duthie.Modules.MyVirtualGaming;
 
 public class MyVirtualGamingApi
-    : IBidsApi, IGamesApi, ILeagueInfoApi, ITeamsApi
+    : IBidApi, IGameApi, ILeagueInfoApi, ITeamApi
 {
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
@@ -59,7 +59,7 @@ public class MyVirtualGamingApi
                 LeagueId = league.Id,
                 TeamExternalId = m.Groups[1].Value.Trim(),
                 PlayerName = Regex.Match(m.Groups[2].Value, @"<a[^>]*player&id=(\d+)[^>]*>(.*?)</a>", RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[2].Value.Trim(),
-                Amount = IApi.ParseDollars(Regex.Match(m.Groups[2].Value, @"\$[\d\.]+( \w)?", RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[0].Value),
+                Amount = ISiteApi.ParseDollars(Regex.Match(m.Groups[2].Value, @"\$[\d\.]+( \w)?", RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[0].Value),
                 State = BidState.Won,
                 Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
             };
@@ -173,12 +173,35 @@ public class MyVirtualGamingApi
             league: leagueInfo.LeagueId,
             path: "schedule"));
 
-        var season = Regex.Match(
+        var seasonId = Regex.Matches(
             Regex.Match(html,
                 @"<select[^>]*\bsingle_seasons\b[^>]*>(.*?)</select>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[1].Value,
-            @"<option(?=[^>]*selected)[^>]*value=[""']?(\d+)[""']?[^>]*>",
-            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            @"<option[^>]*value=[""']?(\d+)[""']?[^>]*>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+        .OrderBy(m => Regex.Match(m.Groups[0].Value, @"<option[^>]*\bselected\b[^>]>").Success)
+        .ThenBy(m => int.Parse(m.Groups[1].Value))
+        .TakeLast(1)
+        .Select(m => int.Parse(m.Groups[1].Value))
+        .Cast<int?>()
+        .FirstOrDefault();
+
+        html = await _httpClient.GetStringAsync(GetUrl(
+            league: leagueInfo.LeagueId,
+            path: "standings"));
+
+        var scheduleId = Regex.Matches(
+            Regex.Match(html,
+                @"<select[^>]*\bfilter_schedule\b[^>]*>(.*?)</select>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[1].Value,
+            @"<option[^>]*value=[""']?(\d+)[""']?[^>]*>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+        .OrderBy(m => Regex.Match(m.Groups[0].Value, @"<option[^>]*\bselected\b[^>]>").Success)
+        .ThenBy(m => int.Parse(m.Groups[1].Value))
+        .TakeLast(1)
+        .Select(m => int.Parse(m.Groups[1].Value))
+        .Cast<int?>()
+        .FirstOrDefault();
 
         return new League
         {
@@ -186,7 +209,8 @@ public class MyVirtualGamingApi
             Info = new MyVirtualGamingLeagueInfo
             {
                 LeagueId = Regex.Split(id.InnerText.Trim(), @"/+")[3] ?? leagueInfo.LeagueId,
-                SeasonId = season.Success ? int.Parse(season.Groups[1].Value) : leagueInfo.SeasonId,
+                SeasonId = seasonId ?? leagueInfo.SeasonId,
+                ScheduleId = scheduleId ?? leagueInfo.ScheduleId,
             }
         };
     }
@@ -203,7 +227,7 @@ public class MyVirtualGamingApi
             path: "player-statistics",
             parameters: new Dictionary<string, object?>
             {
-                ["filter_schedule"] = leagueInfo.SeasonId > 0 ? leagueInfo.SeasonId : null,
+                ["filter_schedule"] = leagueInfo.ScheduleId > 0 ? leagueInfo.ScheduleId : null,
             }));
 
         var nameMatches = Regex.Matches(
@@ -232,14 +256,15 @@ public class MyVirtualGamingApi
                         ShortName = m.Groups[2].Value.Trim(),
                     },
                     ExternalId = m.Groups[1].Value,
-                });
+                },
+                StringComparer.OrdinalIgnoreCase);
 
         html = await _httpClient.GetStringAsync(GetUrl(
             league: leagueInfo.LeagueId,
             path: "schedule",
             parameters: new Dictionary<string, object?>
             {
-                ["filter_schedule"] = leagueInfo.SeasonId > 0 ? leagueInfo.SeasonId : null,
+                ["single_seasons"] = leagueInfo.SeasonId > 0 ? leagueInfo.SeasonId : null,
             }));
 
         var shortNameMatches = Regex.Matches(html,
@@ -275,24 +300,27 @@ public class MyVirtualGamingApi
 
         var html = await _httpClient.GetStringAsync(GetUrl(
             league: leagueInfo.LeagueId,
-            path: "rosters",
+            path: "standings",
             parameters: new Dictionary<string, object?>
             {
-                ["scheduleId"] = leagueInfo.SeasonId > 0 ? leagueInfo.SeasonId : null,
+                ["filter_schedule"] = leagueInfo.ScheduleId > 0 ? leagueInfo.ScheduleId : null,
             }));
 
         return Regex.Matches(html,
             @"<a[^>]*/rosters\?id=(\d+)[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<\/a>",
             RegexOptions.IgnoreCase | RegexOptions.Singleline)
-        .DistinctBy(m => m.Groups[2].Value)
-        .ToDictionary(m => m.Groups[2].Value, m => m.Groups[1].Value);
+        .DistinctBy(m => m.Groups[2].Value.ToUpper())
+        .ToDictionary(
+            m => m.Groups[2].Value.ToUpper(),
+            m => m.Groups[1].Value,
+            StringComparer.OrdinalIgnoreCase);
     }
 
     private IEnumerable<LeagueTeam> FixTeams(List<LeagueTeam> teams)
     {
-        var league = teams.First().League;
+        var league = teams.FirstOrDefault()?.League;
 
-        if (league.Id == MyVirtualGamingLeagueProvider.VGNHL.Id)
+        if (league?.Id == MyVirtualGamingLeagueProvider.VGNHL.Id)
         {
             teams.AddRange(
                 teams.Where(t => t.Team.Name == "Nashville Nashville")
@@ -310,7 +338,7 @@ public class MyVirtualGamingApi
                     })
             );
         }
-        else if (league.Id == MyVirtualGamingLeagueProvider.VGAHL.Id)
+        else if (league?.Id == MyVirtualGamingLeagueProvider.VGAHL.Id)
         {
             teams.AddRange(
                 teams.Where(t => t.Team.Name == "Bellevile Senators")

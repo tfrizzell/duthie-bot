@@ -6,7 +6,7 @@ using Duthie.Types.Teams;
 namespace Duthie.Modules.TheSpnhl;
 
 public class TheSpnhlApi
-    : IGamesApi, ILeagueInfoApi, ITeamsApi
+    : IGameApi, ILeagueInfoApi, ITeamApi
 {
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
@@ -104,7 +104,8 @@ public class TheSpnhlApi
                         Team = team,
                         ExternalId = m.Groups[1].Value.Trim()
                     };
-                })
+                },
+                StringComparer.OrdinalIgnoreCase)
             .Values
             .Where(t => t != null)
             .Cast<LeagueTeam>()

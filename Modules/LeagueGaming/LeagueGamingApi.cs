@@ -7,7 +7,7 @@ using Duthie.Types.Teams;
 namespace Duthie.Modules.LeagueGaming;
 
 public class LeagueGamingApi
-    : IGamesApi, ILeagueInfoApi, ITeamsApi
+    : IGameApi, ILeagueInfoApi, ITeamApi
 {
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
@@ -56,7 +56,7 @@ public class LeagueGamingApi
         {
             if (!string.IsNullOrWhiteSpace(m.Groups[1].Value))
             {
-                date = IApi.ParseDateWithNoYear(Regex.Replace(m.Groups[1].Value, @"(\d+)[\D\S]{2}", @"$1"));
+                date = ISiteApi.ParseDateWithNoYear(Regex.Replace(m.Groups[1].Value, @"(\d+)[\D\S]{2}", @"$1"));
                 return null;
             }
 
@@ -154,7 +154,8 @@ public class LeagueGamingApi
                         ShortName = m.Groups[2].Value.Trim(),
                     },
                     ExternalId = m.Groups[1].Value,
-                });
+                },
+                StringComparer.OrdinalIgnoreCase);
 
         var shortNameMatches = Regex.Matches(html,
             @$"<td[^>]*><img[^>]*/team\d+.png[^>]*> \d+\) .*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>.*?</td>",

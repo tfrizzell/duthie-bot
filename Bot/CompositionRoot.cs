@@ -5,11 +5,11 @@ using Discord.WebSocket;
 using Duthie.Bot.Commands;
 using Duthie.Bot.Configuration;
 using Duthie.Bot.Events;
-using Duthie.Bot.Services;
 using Duthie.Data;
 using Duthie.Modules.LeagueGaming;
 using Duthie.Modules.MyVirtualGaming;
 using Duthie.Modules.TheSpnhl;
+using Duthie.Services.Api;
 using Duthie.Services.Background;
 using Duthie.Services.Games;
 using Duthie.Services.Guilds;
@@ -118,21 +118,20 @@ public static class CompositionRoot
         var apis = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(s => s.GetTypes())
             .Where(t => !t.IsAbstract
-                && typeof(IApi).IsAssignableFrom(t)
+                && typeof(ISiteApi).IsAssignableFrom(t)
                 && typeof(LeagueGamingApi) != t
                 && typeof(MyVirtualGamingApi) != t
                 && typeof(TheSpnhlApi) != t);
 
         apiService.Register(
-            new List<IApi>() {
+            new List<ISiteApi>() {
                 new LeagueGamingApi(),
                 new MyVirtualGamingApi(),
                 new TheSpnhlApi()
-            }.Concat(apis.Select(api => (IApi)Activator.CreateInstance(api)!)).ToArray());
+            }.Concat(apis.Select(api => (ISiteApi)Activator.CreateInstance(api)!)).ToArray());
 
         return services
-            .AddSingleton<LeagueUpdateService>()
-            .AddSingleton<GameUpdateService>();
+            .AddSingleton<LeagueUpdateService>();
     }
 
     public static IServiceCollection AddAppInfo(this IServiceCollection services)

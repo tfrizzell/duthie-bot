@@ -2,7 +2,7 @@ using Duthie.Types.Leagues;
 
 namespace Duthie.Types.Api;
 
-public interface INewsApi : IApi
+public interface INewsApi : ISiteApi
 {
     Task GetNewsAsync(League league);
 }

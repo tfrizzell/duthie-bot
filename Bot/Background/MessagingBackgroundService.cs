@@ -38,7 +38,7 @@ public class MessagingBackgroundService : ScheduledBackgroundService
         };
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    public override async Task ExecuteAsync(CancellationToken? cancellationToken = null)
     {
         try
         {

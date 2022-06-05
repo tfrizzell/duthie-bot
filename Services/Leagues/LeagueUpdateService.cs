@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
-using Duthie.Bot.Services;
 using Duthie.Data;
+using Duthie.Services.Api;
 using Duthie.Types.Api;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
@@ -82,11 +82,11 @@ public class LeagueUpdateService
     {
         _logger.LogInformation("Updating teams");
         leagues ??= await GetLeagues(context);
-        var teams = await context.Set<Team>().ToDictionaryAsync(t => CreateKey(t.Name));
+        var teams = await context.Set<Team>().ToDictionaryAsync(t => CreateKey(t.Name), StringComparer.OrdinalIgnoreCase);
 
         await Task.WhenAll(leagues.Select(async league =>
         {
-            var api = _apiService.Get<ITeamsApi>(league);
+            var api = _apiService.Get<ITeamApi>(league);
 
             if (api == null)
                 return;

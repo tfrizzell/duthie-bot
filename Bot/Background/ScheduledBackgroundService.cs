@@ -29,7 +29,7 @@ public abstract class ScheduledBackgroundService : IHostedService, IDisposable
         await Task.WhenAll(_tasks.Select(async t => await t.StartAsync(cancellationToken)));
     }
 
-    protected abstract Task ExecuteAsync(CancellationToken cancellationToken);
+    public abstract Task ExecuteAsync(CancellationToken? cancellationToken = null);
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
