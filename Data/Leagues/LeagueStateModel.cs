@@ -8,7 +8,7 @@ public class LeagueStateModel : DataModel<LeagueState>
 {
     protected override void Create(EntityTypeBuilder<LeagueState> model)
     {
-        model.ToTable("LeagueState");
+        model.ToTable("LeagueStates");
 
         model.HasKey(s => s.LeagueId);
     }

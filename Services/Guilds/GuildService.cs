@@ -98,14 +98,16 @@ public class GuildService
         {
             foreach (var guild in guilds)
             {
-                if (!await context.Set<Guild>().AnyAsync(g => g.Id == guild.Id))
+                var existing = await context.Set<Guild>().FirstOrDefaultAsync(g => g.Id == guild.Id);
+
+                if (existing != null)
+                    context.Entry(existing).CurrentValues.SetValues(guild);
+                else
                 {
                     guild.JoinedAt = DateTimeOffset.UtcNow;
                     guild.LeftAt = null;
                     await context.Set<Guild>().AddAsync(guild);
                 }
-                else
-                    await context.Set<Guild>().UpdateAsync(guild);
             }
 
             return await context.SaveChangesAsync();

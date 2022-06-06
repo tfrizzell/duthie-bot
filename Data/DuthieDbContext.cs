@@ -1,15 +1,13 @@
 #nullable disable
 
 using System.Collections.Immutable;
-using Duthie.Data.Comparers;
-using Duthie.Data.Converters;
 using Duthie.Data.Games;
 using Duthie.Data.Guilds;
 using Duthie.Data.Leagues;
 using Duthie.Data.Sites;
 using Duthie.Data.Teams;
 using Duthie.Data.Watchers;
-using Duthie.Types.Common;
+using Duthie.Types.Guilds;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -35,6 +33,7 @@ public class DuthieDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Ignore<GuildMessageEmbed>();
 
         foreach (var model in DataModels)
             builder.Create(model);

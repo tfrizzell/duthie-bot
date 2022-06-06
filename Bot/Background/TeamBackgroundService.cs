@@ -63,14 +63,10 @@ public class TeamBackgroundService : ScheduledBackgroundService
                 {
                     var key = CreateKey(lt.Team.Name);
 
-                    if (!teams.ContainsKey(key))
-                    {
+                    if (teams.ContainsKey(key))
+                        lt.TeamId = teams[key].Id;
+                    else
                         teams.Add(key, lt.Team);
-                        continue;
-                    }
-
-                    lt.TeamId = teams[key]?.Id ?? lt.TeamId;
-                    lt.Team = teams[key] ?? lt.Team;
                 }
 
                 league.LeagueTeams = data;

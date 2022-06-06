@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using System.Web;
 using Duthie.Types.Api;
-using Duthie.Types.Api.Types;
+using Duthie.Types.Api.Data;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
 
@@ -84,43 +84,38 @@ public class LeagueGamingApi
                 ["seasonid"] = leagueInfo.SeasonId,
             }));
 
-        var scheduleMatches = Regex.Matches(html,
+        DateTimeOffset? date = null;
+
+        return Regex.Matches(html,
             @$"(?:{string.Join("|",
                 @"<h4[^>]*sh4[^>]*>(.*?)</h4>",
                 @"<span[^>]*sweekid[^>]*>Week\s*(\d+)</span>\s*(?:<span[^>]*sgamenumber[^>]*>Game\s*#\s*(\d+)</span>)?\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<a[^>]*&gameid=(\d+)[^>]*>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*<span[^>]*sscore[^>]*>(vs|(\d+)\D+(\d+))</span>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*</a>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>")})",
-            RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-        if (scheduleMatches.Count() == 0)
-            return new List<Game>();
-
-        DateTimeOffset? date = null;
-
-        return scheduleMatches
-            .Cast<Match>()
-            .Select(m =>
+            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+        .Cast<Match>()
+        .Select(m =>
+        {
+            if (!string.IsNullOrWhiteSpace(m.Groups[1].Value))
             {
-                if (!string.IsNullOrWhiteSpace(m.Groups[1].Value))
-                {
-                    date = ISiteApi.ParseDateWithNoYear(Regex.Replace(m.Groups[1].Value, @"(\d+)[\D\S]{2}", @"$1"));
-                    return null;
-                }
+                date = ISiteApi.ParseDateWithNoYear(Regex.Replace(m.Groups[1].Value, @"(\d+)[\D\S]{2}", @"$1"));
+                return null;
+            }
 
-                if (date == null)
-                    return null;
+            if (date == null)
+                return null;
 
-                return new Game
-                {
-                    LeagueId = league.Id,
-                    GameId = ulong.Parse(m.Groups[5].Value.Trim()),
-                    Timestamp = date.GetValueOrDefault(),
-                    VisitorExternalId = m.Groups[4].Value.Trim(),
-                    VisitorScore = int.TryParse(m.Groups[8].Value, out var visitorScore) ? visitorScore : null,
-                    HomeExternalId = m.Groups[11].Value.Trim(),
-                    HomeScore = int.TryParse(m.Groups[9].Value, out var homeScore) ? homeScore : null,
-                };
-            })
-            .Where(g => g != null)
-            .Cast<Game>();
+            return new Game
+            {
+                LeagueId = league.Id,
+                GameId = ulong.Parse(m.Groups[5].Value.Trim()),
+                Timestamp = date.GetValueOrDefault(),
+                VisitorExternalId = m.Groups[4].Value.Trim(),
+                VisitorScore = int.TryParse(m.Groups[8].Value, out var visitorScore) ? visitorScore : null,
+                HomeExternalId = m.Groups[11].Value.Trim(),
+                HomeScore = int.TryParse(m.Groups[9].Value, out var homeScore) ? homeScore : null,
+            };
+        })
+        .Where(g => g != null)
+        .Cast<Game>();
     }
 
     public async Task<ILeague?> GetLeagueInfoAsync(League league)

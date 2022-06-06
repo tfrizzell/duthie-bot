@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Duthie.Types.Api.Types;
+using Duthie.Types.Api.Data;
 using Duthie.Types.Leagues;
 
 namespace Duthie.Modules.LeagueGaming.Tests;
@@ -12,7 +12,7 @@ public class LeagueGamingApiTests
     public LeagueGamingApiTests()
     {
         _api = new LeagueGamingApi();
-        _league = new LeagueGamingLeagueProvider().Leagues.First(l => l.Id == new Guid("86c4e0fe-056b-450c-9a55-9ab32946ea31"));
+        _league = new LeagueGamingLeagueProvider().Leagues.First(l => l.Id == LeagueGamingLeagueProvider.LGHL_PSN.Id);
         (_league.Info as LeagueGamingLeagueInfo)!.SeasonId = 19;
     }
 
@@ -35,6 +35,7 @@ public class LeagueGamingApiTests
         Assert.True(expectedInfo.LeagueId == actualInfo.LeagueId, $"expected Info.LeagueId to be {expectedInfo.LeagueId} but got {actualInfo.LeagueId}");
         Assert.True(expectedInfo.SeasonId <= actualInfo.SeasonId, $"expected Info.SeasonId to be greater than or equal to {expectedInfo.SeasonId} but got {actualInfo.SeasonId}");
         Assert.True(expectedInfo.ForumId == actualInfo.ForumId, $"expected Info.ForumId to be greater than or equal to {expectedInfo.ForumId} but got {actualInfo.ForumId}");
+        Assert.True(expectedInfo.LogoUrl == actualInfo.LogoUrl, $"expected Info.LogoUrl to be greater than or equal to {expectedInfo.LogoUrl} but got {actualInfo.LogoUrl}");
     }
 
     [Fact]

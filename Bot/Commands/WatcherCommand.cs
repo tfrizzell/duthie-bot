@@ -208,20 +208,25 @@ public class WatcherCommand : BaseCommandWithAdminCheck
         if (!await CheckPrivileges(command))
             return;
 
-        var (leagues, leagueOption) = await GetLeaguesAsync(cmd);
-        var (teams, teamOption) = await GetTeamAsync(cmd);
+        var (league, leagueOption) = await GetLeagueAsync(cmd);
+        var (team, teamOption) = await GetTeamAsync(cmd);
         var (watcherTypes, watcherTypeOption) = await GetWatcherTypeAsync(cmd);
         var channel = await GetChannelAsync(cmd);
 
-        if (leagues == null)
+        if (league == null)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league you requested.", ephemeral: true);
             return;
         }
 
-        if (teams == null || !teams.Any(t => leagues.Any(l => l.Teams.Any(lt => lt.Id == t.Id))))
+        if (team == null)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team you requested.", ephemeral: true);
+            return;
+        }
+        else if (!league.LeagueTeams.Any(lt => lt.TeamId == team.Id))
+        {
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but the team {team.Name} doesn't exist in {league.Name}.", ephemeral: true);
             return;
         }
 
@@ -231,28 +236,15 @@ public class WatcherCommand : BaseCommandWithAdminCheck
             return;
         }
 
-        var watchers = new List<Watcher>();
-
-        foreach (var league in leagues)
-        {
-            foreach (var team in teams)
+        var watchers = watcherTypes.Select(watcherType =>
+            new Watcher
             {
-                if (!league.Teams.Any(t => t.Id == team.Id))
-                    continue;
-
-                foreach (var watcherType in watcherTypes)
-                {
-                    watchers.Add(new Watcher
-                    {
-                        GuildId = guild.Id,
-                        LeagueId = league.Id,
-                        TeamId = team.Id,
-                        Type = watcherType,
-                        ChannelId = channel?.Id
-                    });
-                }
-            }
-        }
+                GuildId = guild.Id,
+                LeagueId = league.Id,
+                TeamId = team.Id,
+                Type = watcherType,
+                ChannelId = channel?.Id
+            });
 
         var count = await _watcherService.SaveAsync(watchers.ToArray());
 
@@ -270,18 +262,18 @@ public class WatcherCommand : BaseCommandWithAdminCheck
         var guild = await GetGuildAsync(command);
         var user = await GetUserAsync(command);
 
-        var (leagues, leagueOption) = await GetLeaguesAsync(cmd);
-        var (teams, teamOption) = await GetTeamAsync(cmd);
+        var (league, leagueOption) = await GetLeagueAsync(cmd, true);
+        var (team, teamOption) = await GetTeamAsync(cmd, true);
         var (watcherTypes, watcherTypeOption) = await GetWatcherTypeAsync(cmd);
         var channel = await GetChannelAsync(cmd);
 
-        if (leagueOption != null && leagues == null)
+        if (leagueOption != null && league == null)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league you requested.", ephemeral: true);
             return;
         }
 
-        if (teamOption != null && teams == null)
+        if (teamOption != null && team == null)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team you requested.", ephemeral: true);
             return;
@@ -294,10 +286,10 @@ public class WatcherCommand : BaseCommandWithAdminCheck
         }
 
         var watchers = await _watcherService.FindAsync(guild.Id,
-            leagues: leagues?.Select(l => l.Id),
-            teams: teams?.Select(t => t.Id),
+            leagues: league == null ? null : new Guid[] { league.Id },
+            teams: team == null ? null : new Guid[] { team.Id },
             types: watcherTypes,
-            channels: channel == null ? null : new List<ulong?>() { channel.Id });
+            channels: channel == null ? null : new ulong?[] { channel.Id });
 
         if (watchers.Count() > 0)
         {
@@ -337,18 +329,18 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         if (!removeAll)
         {
-            var (leagues, leagueOption) = await GetLeaguesAsync(cmd);
-            var (teams, teamOption) = await GetTeamAsync(cmd);
+            var (league, leagueOption) = await GetLeagueAsync(cmd);
+            var (team, teamOption) = await GetTeamAsync(cmd);
             var (watcherTypes, watcherTypeOption) = await GetWatcherTypeAsync(cmd);
             var channel = await GetChannelAsync(cmd);
 
-            if (leagueOption != null && leagues == null)
+            if (leagueOption != null && league == null)
             {
                 await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the leagues you requested.", ephemeral: true);
                 return;
             }
 
-            if (teamOption != null && (teams == null || !teams.Any(t => leagues?.Any(l => l.Teams.Any(lt => lt.Id == t.Id)) != false)))
+            if (teamOption != null && team == null)
             {
                 await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the teams you requested.", ephemeral: true);
                 return;
@@ -361,8 +353,8 @@ public class WatcherCommand : BaseCommandWithAdminCheck
             }
 
             watchers.AddRange(await _watcherService.FindAsync(guild.Id,
-                leagues: leagues?.Select(l => l.Id),
-                teams: teams?.Select(t => t.Id),
+                leagues: league == null ? null : new Guid[] { league.Id },
+                teams: team == null ? null : new Guid[] { team.Id },
                 types: watcherTypes,
                 channels: channel == null ? null : new List<ulong?>() { channel.Id }));
         }
@@ -398,42 +390,22 @@ public class WatcherCommand : BaseCommandWithAdminCheck
     private Task<SocketTextChannel?> GetChannelAsync(SocketSlashCommandDataOption cmd) =>
         Task.FromResult((SocketTextChannel?)cmd.Options.FirstOrDefault(o => "channel" == o.Name)?.Value);
 
-    private async Task<(IEnumerable<League>?, string?)> GetLeaguesAsync(SocketSlashCommandDataOption cmd)
+    private async Task<(League?, string?)> GetLeagueAsync(SocketSlashCommandDataOption cmd, bool returnNullForAll = false)
     {
         var leagueOption = cmd.Options.FirstOrDefault(o => "league" == o.Name)?.Value?.ToString();
         if (leagueOption == null) return (null, leagueOption);
 
-        var leagues = new List<League>();
-
-        if (leagueOption != TYPE_ALL.ToString())
-        {
-            var league = (await _leagueService.FindAsync(leagueOption)).FirstOrDefault();
-            if (league == null) return (null, leagueOption);
-            else leagues.Add(league);
-        }
-        else
-            leagues.AddRange(await _leagueService.GetAllAsync());
-
-        return (leagues, leagueOption);
+        var league = (await _leagueService.FindAsync(leagueOption)).FirstOrDefault();
+        return (league, leagueOption);
     }
 
-    private async Task<(IEnumerable<Team>?, string?)> GetTeamAsync(SocketSlashCommandDataOption cmd)
+    private async Task<(Team?, string?)> GetTeamAsync(SocketSlashCommandDataOption cmd, bool returnNullForAll = false)
     {
         var teamOption = cmd.Options.FirstOrDefault(o => "team" == o.Name)?.Value?.ToString();
         if (teamOption == null) return (null, teamOption);
 
-        var teams = new List<Team>();
-
-        if (teamOption != TYPE_ALL.ToString())
-        {
-            var team = (await _teamService.FindAsync(teamOption)).FirstOrDefault();
-            if (team == null) return (null, teamOption);
-            else teams.Add(team);
-        }
-        else
-            teams.AddRange(await _teamService.GetAllAsync());
-
-        return (teams, teamOption);
+        var team = (await _teamService.FindAsync(teamOption)).FirstOrDefault();
+        return (team, teamOption);
     }
 
     private Task<(IEnumerable<WatcherType>?, string?)> GetWatcherTypeAsync(SocketSlashCommandDataOption cmd)

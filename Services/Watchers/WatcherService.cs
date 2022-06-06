@@ -156,7 +156,7 @@ public class WatcherService
                 var existing = await context.Set<Watcher>().FirstOrDefaultAsync(w => w.GuildId == watcher.GuildId && w.LeagueId == watcher.LeagueId && w.TeamId == watcher.TeamId && w.Type == watcher.Type && w.ChannelId == watcher.ChannelId);
 
                 if (existing != null && existing.ArchivedAt != null)
-                    existing.ArchivedAt = null;
+                    context.Entry(existing).CurrentValues.SetValues(watcher);
                 else if (existing == null)
                     await context.Set<Watcher>().AddAsync(watcher);
             }

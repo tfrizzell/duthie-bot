@@ -56,7 +56,7 @@ public class CommandEventHandler : IAsyncHandler
     {
         if (command.User.IsBot && !_config.AcceptCommandsFromBots)
         {
-            await command.RespondAsync("I'm sorry {command.User.Mention}, but I don't accept commands from other bots.");
+            await command.RespondAsync("I'm sorry {command.User.Mention}, but I don't accept commands from other bots.", ephemeral: true);
             return;
         }
 

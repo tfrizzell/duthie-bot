@@ -2,16 +2,16 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace Duthie.Types.Api.Types;
+namespace Duthie.Types.Api.Data;
 
-public class Contract
+public class Bid : IApiData
 {
     public Guid LeagueId { get; set; }
     public string TeamExternalId { get; set; } = "";
     public string PlayerExternalId { get; set; } = "";
     public string PlayerName { get; set; } = "";
-    public int Length { get; set; } = 1;
     public ulong Amount { get; set; }
+    public BidState State { get; set; }
     public DateTimeOffset Timestamp { get; set; }
 
     public string GetHash()
@@ -24,10 +24,17 @@ public class Contract
                 TeamExternalId,
                 Player = string.IsNullOrWhiteSpace(PlayerExternalId) ? PlayerName : PlayerExternalId,
                 Amount,
+                State,
                 Timestamp,
             })));
 
             return BitConverter.ToString(hash).Replace("-", "");
         }
     }
+}
+
+public enum BidState
+{
+    Active,
+    Won
 }

@@ -104,10 +104,12 @@ public class GameService
         {
             foreach (var game in games)
             {
-                if (!await context.Set<Game>().AnyAsync(g => g.Id == game.Id))
-                    await context.Set<Game>().AddAsync(game);
+                var existing = await context.Set<Game>().FirstOrDefaultAsync(g => g.Id == game.Id);
+
+                if (existing != null)
+                    context.Entry(existing).CurrentValues.SetValues(game);
                 else
-                    await context.Set<Game>().UpdateAsync(game);
+                    await context.Set<Game>().AddAsync(game);
             }
 
             return await context.SaveChangesAsync();

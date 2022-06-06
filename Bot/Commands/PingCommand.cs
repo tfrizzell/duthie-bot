@@ -34,7 +34,7 @@ public class PingCommand : BaseCommand
     {
         var guild = await GetGuildAsync(command);
         var user = await GetUserAsync(command);
-        await command.RespondAsync("Pong!");
+        await command.RespondAsync("Pong!", ephemeral: true);
         _logger.LogTrace($"User {user} sent ping from guild \"{guild.Name}\" [{guild.Id}]");
     }
 }

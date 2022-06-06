@@ -2,9 +2,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace Duthie.Types.Api.Types;
+namespace Duthie.Types.Api.Data;
 
-public class Game
+public class Game : IApiData
 {
     public Guid Id { get; set; }
     public Guid LeagueId { get; set; }

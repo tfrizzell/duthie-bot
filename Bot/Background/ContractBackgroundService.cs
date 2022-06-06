@@ -77,6 +77,12 @@ public class ContractBackgroundService : ScheduledBackgroundService
                             var team = FindTeam(league, contract.TeamExternalId);
                             var messages = new List<GuildMessage>();
 
+                            var (message, embed) = api.GetMessageEmbed(
+                                league.Tags.Intersect(new string[] { "esports", "tournament", "pickup", "club teams" }).Count() > 0
+                                    ? $"**{MessageUtils.Escape(team.Name)}** has signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!"
+                                    : $"The **{MessageUtils.Escape(team.Name)}** have signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!",
+                                contract, league);
+
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
                                 teams: new Guid[] { team.Id },
@@ -89,9 +95,8 @@ public class ContractBackgroundService : ScheduledBackgroundService
                                 {
                                     GuildId = watcher.Key.GuildId,
                                     ChannelId = watcher.Key.ChannelId,
-                                    Message = league.Tags.Intersect(new string[] { "esports", "tournament", "pickup", "club teams" }).Count() > 0
-                                        ? $"`[{MessageUtils.Escape(league.Name)}]`\n**{MessageUtils.Escape(team.Name)}** has signed **{MessageUtils.Escape(contract.PlayerName)}** to a ${contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!"
-                                        : $"`[{MessageUtils.Escape(league.Name)}]`\nThe **{MessageUtils.Escape(team.Name)}** have signed **{MessageUtils.Escape(contract.PlayerName)}** to a ${contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!"
+                                    Message = message,
+                                    Embed = embed,
                                 });
                             }
 

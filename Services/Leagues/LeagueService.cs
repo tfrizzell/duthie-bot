@@ -68,7 +68,7 @@ public class LeagueService
             if (!string.IsNullOrWhiteSpace(text))
                 query = query.Where(l => l.Id.ToString().ToLower() == text.ToLower()
                     || l.Name.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower()
-                    || (l.Name.StartsWith("VG") && l.Name.ToLower().StartsWith(text.ToLower())));
+                    || l.ShortName.Replace(" ", "").ToLower() == text.Replace(" ", "").ToLower());
 
             if (sites?.Count() > 0)
                 query = query.Where(l => sites.Contains(l.SiteId));
@@ -126,12 +126,9 @@ public class LeagueService
 
                 if (existing != null)
                 {
-                    if (existing.LeagueTeams.Count() > 0)
-                        await UpdateTeamsAsync(context, existing, league);
-
                     context.Entry(existing).CurrentValues.SetValues(league);
-                    existing.State = league.State;
-                    existing.LeagueTeams = league.LeagueTeams;
+                    context.Entry(existing.State).CurrentValues.SetValues(league.State);
+                    existing.LeagueTeams = await UpdateTeamsAsync(context, league);
                 }
                 else
                     await context.Set<League>().AddAsync(league);
@@ -141,14 +138,18 @@ public class LeagueService
         }
     }
 
-    private Task UpdateTeamsAsync(DuthieDbContext context, League oldLeague, League newLeague)
+    private async Task<IEnumerable<LeagueTeam>> UpdateTeamsAsync(DuthieDbContext context, League league)
     {
-        foreach (var oldTeam in oldLeague.LeagueTeams)
-            context.Entry(oldTeam).State = EntityState.Deleted;
+        var oldTeams = await context.Set<LeagueTeam>()
+            .Where(lt => lt.LeagueId == league.Id)
+            .ToListAsync();
 
-        foreach (var newTeam in newLeague.LeagueTeams)
-            context.Entry(newTeam).State = EntityState.Added;
+        foreach (var team in oldTeams)
+            context.Entry(team).State = EntityState.Deleted;
 
-        return Task.CompletedTask;
+        foreach (var team in league.LeagueTeams)
+            context.Entry(team).State = EntityState.Added;
+
+        return league.LeagueTeams;
     }
 }

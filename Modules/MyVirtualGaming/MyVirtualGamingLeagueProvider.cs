@@ -10,6 +10,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         SiteId = MyVirtualGamingSiteProvider.MyVirtualGaming.Id,
         Id = new Guid("5957b164-7bb5-4324-967a-16c3044260b2"),
         Name = "VGNHL National League",
+        ShortName = "VGNHL",
         Info = new MyVirtualGamingLeagueInfo
         {
             LeagueId = "vgnhl",
@@ -24,6 +25,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         SiteId = MyVirtualGamingSiteProvider.MyVirtualGaming.Id,
         Id = new Guid("0fc1b6e9-9181-4545-9d32-5edbd67b276a"),
         Name = "VGAHL Affiliate League",
+        ShortName = "VGAHL",
         Info = new MyVirtualGamingLeagueInfo
         {
             LeagueId = "vgahl",
@@ -38,6 +40,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         SiteId = MyVirtualGamingSiteProvider.MyVirtualGaming.Id,
         Id = new Guid("ed4403ee-5ed3-46b2-8dce-d245c1e5b132"),
         Name = "VGPHL Prospect League",
+        ShortName = "VGPHL",
         Info = new MyVirtualGamingLeagueInfo
         {
             LeagueId = "vgphl",
@@ -52,6 +55,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         SiteId = MyVirtualGamingSiteProvider.MyVirtualGaming.Id,
         Id = new Guid("0ec6177f-7e39-437b-9cb9-1551db76bd4e"),
         Name = "VGHL World Championship",
+        ShortName = "VGHLWC",
         Info = new MyVirtualGamingLeagueInfo
         {
             LeagueId = "vghlwc",
@@ -66,6 +70,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         SiteId = MyVirtualGamingSiteProvider.MyVirtualGaming.Id,
         Id = new Guid("8cba4eb0-8722-4415-aa82-b0027ae33702"),
         Name = "VGHL Club League",
+        ShortName = "VGHL Club",
         Info = new MyVirtualGamingLeagueInfo
         {
             LeagueId = "vghlclub",
@@ -80,6 +85,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         SiteId = MyVirtualGamingSiteProvider.MyVirtualGaming.Id,
         Id = new Guid("9545ede8-6948-44e0-8ef8-61668c6ab9e1"),
         Name = "VGHL 3s League",
+        ShortName = "VGHL 3s",
         Info = new MyVirtualGamingLeagueInfo
         {
             LeagueId = "vghl3",

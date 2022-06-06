@@ -110,10 +110,12 @@ public class SiteService
         {
             foreach (var site in sites)
             {
-                if (!await context.Set<Site>().AnyAsync(s => s.Id == site.Id))
-                    await context.Set<Site>().AddAsync(site);
+                var existing = await context.Set<Site>().FirstOrDefaultAsync(s => s.Id == site.Id);
+
+                if (existing != null)
+                    context.Entry(existing).CurrentValues.SetValues(site);
                 else
-                    await context.Set<Site>().UpdateAsync(site);
+                   await context.Set<Site>().AddAsync(site);
             }
 
             return await context.SaveChangesAsync();

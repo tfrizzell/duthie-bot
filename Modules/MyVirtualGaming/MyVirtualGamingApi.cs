@@ -2,7 +2,8 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
 using Duthie.Types.Api;
-using Duthie.Types.Api.Types;
+using Duthie.Types.Api.Data;
+using Duthie.Types.Guilds;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
 
@@ -11,6 +12,7 @@ namespace Duthie.Modules.MyVirtualGaming;
 public class MyVirtualGamingApi
     : IBidApi, IContractApi, IGameApi, ILeagueInfoApi, ITeamApi
 {
+    private const string Url = "https://vghl.myvirtualgaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
     private readonly HttpClient _httpClient = new HttpClient();
@@ -24,7 +26,7 @@ public class MyVirtualGamingApi
     {
         var queryString = parameters == null ? string.Empty
             : string.Join("&", parameters.Where(p => p.Value != null).Select(p => string.Join("=", HttpUtility.UrlEncode(p.Key), HttpUtility.UrlEncode(p.Value!.ToString()))));
-        return Regex.Replace($"https://vghl.myvirtualgaming.com/vghlleagues/{league}/{path}?{queryString}".Replace("?&", "?"), @"[?&]+$", "");
+        return Regex.Replace($"{Url}/vghlleagues/{league}/{path}?{queryString}".Replace("?&", "?"), @"[?&]+$", "");
     }
 
     private bool IsSupported(League league) =>
@@ -162,6 +164,7 @@ public class MyVirtualGamingApi
                 }));
 
             DateTimeOffset? date = null;
+
             return Regex.Matches(_html,
                 @$"(?:{string.Join("|",
                     @"(\d+.{2} \S+ \d{4} @ \d+:\d+[ap]m)",
@@ -227,6 +230,10 @@ public class MyVirtualGamingApi
             league: leagueInfo.LeagueId,
             path: "schedule"));
 
+        var logo = Regex.Match(html,
+            @$"<div[^>]*\bbarlogo\b[^>]*>\s*<a[^>]*vghlleagues/{leagueInfo.LeagueId}/{leagueInfo.LeagueId}[^>]*>\s*<img[^>]*src=[""'](.*?)[""'][^>]*>\s*</a>\s*</div>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
         var seasonId = Regex.Matches(
             Regex.Match(html,
                 @"<select[^>]*\bsingle_seasons\b[^>]*>(.*?)</select>",
@@ -259,14 +266,22 @@ public class MyVirtualGamingApi
         .Cast<int?>()
         .FirstOrDefault();
 
+        var leagueId = Regex.Split(id.InnerText.Trim(), @"/+")[3] ?? leagueInfo.LeagueId;
+        var features = MyVirtualGamingFeatures.None;
+
+        if (Regex.Match(html, @$"/{leagueId}/recent-transactions", RegexOptions.IgnoreCase | RegexOptions.Singleline).Success)
+            features |= MyVirtualGamingFeatures.RecentTransactions;
+
         return new League
         {
             Name = Regex.Replace(title.InnerText.Trim(), @"\s+Home$", ""),
             Info = new MyVirtualGamingLeagueInfo
             {
-                LeagueId = Regex.Split(id.InnerText.Trim(), @"/+")[3] ?? leagueInfo.LeagueId,
+                LeagueId = leagueId,
                 SeasonId = seasonId ?? leagueInfo.SeasonId,
                 ScheduleId = scheduleId ?? leagueInfo.ScheduleId,
+                // Logo = logo.Success ? $"{Url}{logo.Groups[1].Value.Trim().Replace(Url, "")}" : leagueInfo.Logo,
+                Features = features,
             }
         };
     }
@@ -417,5 +432,20 @@ public class MyVirtualGamingApi
         }
 
         return teams;
+    }
+
+    public (string, GuildMessageEmbed?) GetMessageEmbed(string message, Game game, League league)
+    {
+        if (league == null || !IsSupported(league))
+            return (message, null);
+
+        var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+
+        return (message, new GuildMessageEmbed
+        {
+            Title = "Box Score",
+            Thumbnail = $"https://www.leaguegaming.com/images/league/icon/l68_100.png",
+            Url = $"https://vghl.myvirtualgaming.com/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.GameId}",
+        });
     }
 }

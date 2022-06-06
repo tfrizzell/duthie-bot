@@ -7,16 +7,11 @@ namespace Duthie.Services.Api;
 
 public class ApiService
 {
-    private static readonly IReadOnlyCollection<Type> ApiTypes = new Type[]
-    {
-        typeof(ISiteApi),
-        typeof(IBidApi),
-        typeof(IDailyStarApi),
-        typeof(IGameApi),
-        typeof(ILeagueInfoApi),
-        typeof(INewsApi),
-        typeof(ITeamApi),
-    };
+    private static readonly IReadOnlyCollection<Type> ApiTypes = AppDomain.CurrentDomain.GetAssemblies()
+        .Where(a => a.GetName().Name == "Duthie.Types")
+        .SelectMany(a => a.GetTypes())
+        .Where(t => t.IsAbstract && t.FullName?.StartsWith("Duthie.Types.Api") == true && t.FullName?.StartsWith("Duthie.Types.Api.Data") == false)
+        .ToList();
 
     private readonly IDictionary<Guid, Dictionary<Type, ISiteApi>> Apis = new Dictionary<Guid, Dictionary<Type, ISiteApi>>();
 

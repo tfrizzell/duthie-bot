@@ -75,18 +75,18 @@ public class GameBackgroundService : ScheduledBackgroundService
                 {
                     try
                     {
-                        var g = await _gameService.GetByGameIdAsync(game.LeagueId, game.GameId);
+                        var _game = await _gameService.GetByGameIdAsync(game.LeagueId, game.GameId);
                         var visitorTeam = FindTeam(league, game.VisitorExternalId);
                         var homeTeam = FindTeam(league, game.HomeExternalId);
 
-                        if (g != null && g.Timestamp == game.Timestamp && g.VisitorId == visitorTeam.Id && g.VisitorScore == game.VisitorScore && g.HomeId == homeTeam.Id && g.HomeScore == game.HomeScore && g.Overtime == game.Overtime && g.Shootout == game.Shootout)
+                        if (_game != null && _game.Timestamp == game.Timestamp && _game.VisitorId == visitorTeam.Id && _game.VisitorScore == game.VisitorScore && _game.HomeId == homeTeam.Id && _game.HomeScore == game.HomeScore && _game.Overtime == game.Overtime && _game.Shootout == game.Shootout)
                         {
                             continue;
                         }
 
                         var messages = new List<GuildMessage>();
 
-                        if (g != null)
+                        if (_game != null)
                         {
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
@@ -97,8 +97,8 @@ public class GameBackgroundService : ScheduledBackgroundService
                             foreach (var watcher in watchers)
                             {
                                 var message = league.Tags.Intersect(new string[] { "esports", "tournament", "pickup", "club teams" }).Count() > 0
-                                    ? $"`[{MessageUtils.Escape(league.Name)}]`\n{{us}} has {{outcome}} {{them}} by the score of {{score}}"
-                                    : $"`[{MessageUtils.Escape(league.Name)}]`\nThe {{us}} have {{outcome}} the {{them}} by the score of {{score}}";
+                                    ? $"{{us}} has {{outcome}} {{them}} by the score of {{score}}"
+                                    : $"The {{us}} have {{outcome}} the {{them}} by the score of {{score}}";
 
                                 var (us, usScore) = watcher.Any(w => w.TeamId == homeTeam.Id) ? (homeTeam, game.HomeScore) : (visitorTeam, game.VisitorScore);
                                 var (them, themScore) = watcher.Any(w => w.TeamId == homeTeam.Id) ? (visitorTeam, game.VisitorScore) : (homeTeam, game.HomeScore);
@@ -133,11 +133,23 @@ public class GameBackgroundService : ScheduledBackgroundService
                                 else if (game.Overtime == true)
                                     message = Regex.Replace(message, @"[!.]$", @" in overtime$0");
 
+                                (message, var embed) = api.GetMessageEmbed(message, game, league);
+                                
+                                // TODO: Implement all game results as embeds only
+                                // Game result example
+                                // await channel.SendMessageAsync("", embed: new EmbedBuilder()
+                                //     .WithTitle("LGAHL PSN Game Result")
+                                //     .WithThumbnailUrl("https://www.leaguegaming.com/images/league/icon/l68_100.png")
+                                //     .WithDescription("The **Rockford IceHogs** have defeated the **Providence Bruins** by the score of **6 to 5** in overtime!")
+                                //     .WithUrl("https://vghl.myvirtualgaming.com/vghlleagues/vgahl/schedule?view=game&layout=game&id=76795")
+                                //     .Build());
+
                                 messages.Add(new GuildMessage
                                 {
                                     GuildId = watcher.Key.GuildId,
                                     ChannelId = watcher.Key.ChannelId,
-                                    Message = message
+                                    Message = message,
+                                    Embed = embed,
                                 });
                             }
                         }
@@ -145,6 +157,7 @@ public class GameBackgroundService : ScheduledBackgroundService
                         await Task.WhenAll(
                             _gameService.SaveAsync(new Game
                             {
+                                Id = _game?.Id ?? game.Id,
                                 LeagueId = league.Id,
                                 GameId = game.GameId,
                                 Timestamp = game.Timestamp,

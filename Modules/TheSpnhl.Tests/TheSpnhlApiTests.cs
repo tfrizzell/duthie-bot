@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Duthie.Types.Api.Types;
+using Duthie.Types.Api.Data;
 using Duthie.Types.Leagues;
 
 namespace Duthie.Modules.TheSpnhl.Tests;
@@ -36,6 +36,7 @@ public class TheSpnhlApiTests
         var actualInfo = (league.Info as TheSpnhlLeagueInfo)!;
         Assert.True(expectedInfo.LeagueType == actualInfo.LeagueType, $"expected Info.LeagueType to be {expectedInfo.LeagueType} but got {actualInfo.LeagueType}");
         Assert.True(expectedInfo.SeasonId <= actualInfo.SeasonId, $"expected Info.SeasonId to be greater than or equal to {expectedInfo.SeasonId} but got {actualInfo.SeasonId}");
+        Assert.True(expectedInfo.LogoUrl == actualInfo.LogoUrl, $"expected Info.LogoUrl to be greater than or equal to {expectedInfo.LogoUrl} but got {actualInfo.LogoUrl}");
     }
 
     [Fact]

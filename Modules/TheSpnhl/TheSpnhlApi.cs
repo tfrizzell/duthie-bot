@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 using Duthie.Types.Api;
-using Duthie.Types.Api.Types;
+using Duthie.Types.Api.Data;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
 
@@ -105,7 +105,6 @@ public class TheSpnhlApi
                     return new LeagueTeam
                     {
                         LeagueId = league.Id,
-                        League = league,
                         TeamId = team.Id,
                         Team = team,
                         ExternalId = m.Groups[1].Value.Trim()

@@ -104,13 +104,15 @@ public class GuildMessageService
         {
             foreach (var message in messages)
             {
-                if (!await context.Set<GuildMessage>().AnyAsync(m => m.Id == message.Id))
+                var existing = await context.Set<GuildMessage>().FirstOrDefaultAsync(m => m.Id == message.Id);
+
+                if (existing != null)
+                    context.Entry(existing).CurrentValues.SetValues(message);
+                else
                 {
                     message.CreatedAt = DateTimeOffset.UtcNow;
                     await context.Set<GuildMessage>().AddAsync(message);
                 }
-                else
-                    await context.Set<GuildMessage>().UpdateAsync(message);
             }
 
             return await context.SaveChangesAsync();

@@ -77,6 +77,12 @@ public class BidBackgroundService : ScheduledBackgroundService
                             var team = FindTeam(league, bid.TeamExternalId);
                             var messages = new List<GuildMessage>();
 
+                            var (message, embed) = api.GetMessageEmbed(
+                                league.Tags.Intersect(new string[] { "esports", "tournament", "pickup", "club teams" }).Count() > 0
+                                    ? $"**{MessageUtils.Escape(team.Name)}** has won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!"
+                                    : $"The **{MessageUtils.Escape(team.Name)}** have won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!",
+                                bid, league);
+
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
                                 teams: new Guid[] { team.Id },
@@ -89,9 +95,8 @@ public class BidBackgroundService : ScheduledBackgroundService
                                 {
                                     GuildId = watcher.Key.GuildId,
                                     ChannelId = watcher.Key.ChannelId,
-                                    Message = league.Tags.Intersect(new string[] { "esports", "tournament", "pickup", "club teams" }).Count() > 0
-                                        ? $"`[{MessageUtils.Escape(league.Name)}]`\n**{MessageUtils.Escape(team.Name)}** has won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!"
-                                        : $"`[{MessageUtils.Escape(league.Name)}]`\nThe **{MessageUtils.Escape(team.Name)}** have won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!"
+                                    Message = message,
+                                    Embed = embed,
                                 });
                             }
 

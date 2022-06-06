@@ -9,7 +9,8 @@ public class League : ILeague
     public Guid Id { get; set; }
     public Guid SiteId { get; set; }
     public string Name { get; set; } = "";
-    public object? Info { get; set; } = null;
+    public string ShortName { get; set; } = "";
+    public object? Info { get; set; }
     public LeagueState State { get; set; } = new LeagueState();
     public Tags Tags { get; set; } = new Tags();
     public bool Enabled { get; set; } = true;

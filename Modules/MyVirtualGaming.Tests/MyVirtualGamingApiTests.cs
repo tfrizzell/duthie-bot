@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Duthie.Types.Api.Types;
+using Duthie.Types.Api.Data;
 using Duthie.Types.Leagues;
 
 namespace Duthie.Modules.MyVirtualGaming.Tests;
@@ -36,6 +36,7 @@ public class MyVirtualGamingApiTests
         Assert.True(expectedInfo.LeagueId == actualInfo.LeagueId, $"expected Info.LeagueId to be {expectedInfo.LeagueId} but got {actualInfo.LeagueId}");
         Assert.True(expectedInfo.SeasonId <= actualInfo.SeasonId, $"expected Info.SeasonId to be greater than or equal to {expectedInfo.SeasonId} but got {actualInfo.SeasonId}");
         Assert.True(expectedInfo.ScheduleId <= actualInfo.ScheduleId, $"expected Info.ScheduleId to be greater than or equal to {expectedInfo.ScheduleId} but got {actualInfo.ScheduleId}");
+        Assert.True(expectedInfo.LogoUrl == actualInfo.LogoUrl, $"expected Info.LogoUrl to be greater than or equal to {expectedInfo.LogoUrl} but got {actualInfo.LogoUrl}");
     }
 
     [Fact]

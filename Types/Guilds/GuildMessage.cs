@@ -6,6 +6,7 @@ public class GuildMessage
     public ulong GuildId { get; set; }
     public ulong ChannelId { get; set; }
     public string Message { get; set; } = "";
+    public GuildMessageEmbed? Embed { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? SentAt { get; set; }
 

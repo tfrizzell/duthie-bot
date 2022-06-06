@@ -66,7 +66,28 @@ public class MessagingBackgroundService : ScheduledBackgroundService
                     return;
 
                 await channel.TriggerTypingAsync();
-                await channel.SendMessageAsync(message.Message);
+                Embed? embed = null;
+
+                if (message.Embed != null)
+                {
+                    var builder = new EmbedBuilder()
+                        .WithColor((Color?)message.Embed.Color ?? Color.Default)
+                        .WithTitle(message.Embed.Title)
+                        .WithThumbnailUrl(message.Embed.Thumbnail)
+                        .WithDescription(message.Embed.Content)
+                        .WithFooter(message.Embed.Footer)
+                        .WithUrl(message.Embed.Url);
+
+                    if (string.IsNullOrWhiteSpace(message.Message))
+                        builder.WithAuthor(_client.CurrentUser);
+
+                    if (message.Embed.Timestamp != null)
+                        builder.WithTimestamp(message.Embed.Timestamp.GetValueOrDefault());
+
+                    embed = builder.Build();
+                }
+
+                await channel.SendMessageAsync(message.Message, embed: embed);
 
                 message.ChannelId = channel.Id;
                 message.SentAt = DateTimeOffset.UtcNow;

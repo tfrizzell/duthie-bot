@@ -72,6 +72,20 @@
             }
         },
         {
+            "name": ".NET Core Launch (console : update contracts)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Bot/bin/Debug/net6.0/Duthie.Bot.dll",
+            "args": ["update", "contracts"],
+            "cwd": "${workspaceFolder}/Bot",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"

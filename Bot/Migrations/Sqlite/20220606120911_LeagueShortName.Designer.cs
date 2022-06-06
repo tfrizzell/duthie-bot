@@ -3,6 +3,7 @@ using System;
 using Duthie.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Duthie.Bot.Migrations.Sqlite
 {
     [DbContext(typeof(DuthieDbContext))]
-    partial class DuthieDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220606120911_LeagueShortName")]
+    partial class LeagueShortName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.5");
@@ -122,9 +124,6 @@ namespace Duthie.Bot.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Embed")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("GuildId")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -194,7 +193,7 @@ namespace Duthie.Bot.Migrations.Sqlite
 
                     b.HasKey("LeagueId");
 
-                    b.ToTable("LeagueStates", (string)null);
+                    b.ToTable("LeagueState", (string)null);
                 });
 
             modelBuilder.Entity("Duthie.Types.Leagues.LeagueTeam", b =>

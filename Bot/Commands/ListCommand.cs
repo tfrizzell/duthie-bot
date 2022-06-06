@@ -180,11 +180,13 @@ public class ListCommand : BaseCommand
             await command.RespondAsync(ListUtils.DrawBox(
                 headers: new string[] {
                     "Name",
+                    "Short Name",
                     "Site",
                     "Tags"
                 },
                 data: leagues.Select(l => new string[] {
                     l.Name,
+                    l.ShortName,
                     l.Site.Name,
                     string.Join(", ", l.Tags)
                 })), ephemeral: true);
