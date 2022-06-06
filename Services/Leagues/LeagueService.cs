@@ -1,4 +1,5 @@
 using Duthie.Data;
+using Duthie.Services.Extensions;
 using Duthie.Types.Leagues;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -24,6 +25,7 @@ public class LeagueService
 
     private IQueryable<League> CreateQuery(DuthieDbContext context) =>
         context.Set<League>()
+            .AsNoTracking()
             .Include(l => l.State)
             .Include(l => l.Site)
             .Include(l => l.LeagueTeams)
@@ -125,13 +127,10 @@ public class LeagueService
                 if (existing != null)
                 {
                     if (existing.LeagueTeams.Count() > 0)
-                        await UpdateTeamsAsync(context, existing.LeagueTeams, league.LeagueTeams);
+                        await UpdateTeamsAsync(context, existing, league);
 
-                    existing.Name = league.Name;
-                    existing.Info = league.Info;
+                    context.Entry(existing).CurrentValues.SetValues(league);
                     existing.State = league.State;
-                    existing.Tags = league.Tags;
-                    existing.Enabled = league.Enabled;
                     existing.LeagueTeams = league.LeagueTeams;
                 }
                 else
@@ -142,12 +141,12 @@ public class LeagueService
         }
     }
 
-    private Task UpdateTeamsAsync(DuthieDbContext context, IEnumerable<LeagueTeam> oldTeams, IEnumerable<LeagueTeam> newTeams)
+    private Task UpdateTeamsAsync(DuthieDbContext context, League oldLeague, League newLeague)
     {
-        foreach (var oldTeam in oldTeams)
+        foreach (var oldTeam in oldLeague.LeagueTeams)
             context.Entry(oldTeam).State = EntityState.Deleted;
 
-        foreach (var newTeam in newTeams)
+        foreach (var newTeam in newLeague.LeagueTeams)
             context.Entry(newTeam).State = EntityState.Added;
 
         return Task.CompletedTask;

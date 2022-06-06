@@ -1,13 +1,14 @@
 using System.Text.RegularExpressions;
 using System.Web;
 using Duthie.Types.Api;
+using Duthie.Types.Api.Types;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
 
 namespace Duthie.Modules.LeagueGaming;
 
 public class LeagueGamingApi
-    : IGameApi, ILeagueInfoApi, ITeamApi
+    : IBidApi, IGameApi, ILeagueInfoApi, ITeamApi
 {
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
@@ -25,9 +26,51 @@ public class LeagueGamingApi
         return Regex.Replace($"https://www.leaguegaming.com/forums/{file}?{path}&{queryString}".Replace("?&", "?"), @"[?&]+$", "");
     }
 
+    private bool IsSupported(League league) =>
+        Supports.Contains(league.SiteId) || league.Info is LeagueGamingLeagueInfo;
+
+    public async Task<IEnumerable<Bid>?> GetBidsAsync(League league)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+
+        var html = await _httpClient.GetStringAsync(GetUrl(
+            parameters: new Dictionary<string, object?>
+            {
+                ["action"] = "league",
+                ["page"] = "team_news",
+                ["teamid"] = 0,
+                ["typeid"] = LeagueGamingNewsType.Bid,
+                ["displaylimit"] = 200,
+                ["leagueid"] = leagueInfo.LeagueId,
+                ["seasonid"] = leagueInfo.SeasonId,
+            }));
+
+        return Regex.Matches(html,
+            @"<h3[^>]*>\s*<img[^>]*team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(.*?)</span>\s*have earned the player rights for\s*<span[^>]*\bnewsfeed_atn\b[^>]*>(.*?)</span>\s*with a bid amount of\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(\$[\d,]+)</span>.*?</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+        .Cast<Match>()
+        .Select(m =>
+        {
+            var dateTime = DateTime.Parse(m.Groups[5].Value.Trim());
+
+            return new Bid
+            {
+                LeagueId = league.Id,
+                TeamExternalId = m.Groups[1].Value.Trim(),
+                PlayerName = m.Groups[3].Value.Trim(),
+                Amount = ISiteApi.ParseDollars(m.Groups[4].Value),
+                State = BidState.Won,
+                Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+            };
+        });
+    }
+
     public async Task<IEnumerable<Game>?> GetGamesAsync(League league)
     {
-        if (!Supports.Contains(league.SiteId) || league.Info is not LeagueGamingLeagueInfo)
+        if (!IsSupported(league))
             return null;
 
         var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
@@ -44,7 +87,7 @@ public class LeagueGamingApi
         var scheduleMatches = Regex.Matches(html,
             @$"(?:{string.Join("|",
                 @"<h4[^>]*sh4[^>]*>(.*?)</h4>",
-                @"<span[^>]*sweekid[^>]*>Week\s*(\d+)</span>\s*(?:<span[^>]*sgamenumber[^>]*>Game\s*#\s*(\d+)</span>)?\s*<img[^>]*/team(\d+)\.png[^>]*>\s*<a[^>]*&gameid=(\d+)[^>]*>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*<span[^>]*sscore[^>]*>(vs|(\d+)\D+(\d+))</span>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*</a>\s*<img[^>]*/team(\d+)\.png[^>]*>")})",
+                @"<span[^>]*sweekid[^>]*>Week\s*(\d+)</span>\s*(?:<span[^>]*sgamenumber[^>]*>Game\s*#\s*(\d+)</span>)?\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<a[^>]*&gameid=(\d+)[^>]*>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*<span[^>]*sscore[^>]*>(vs|(\d+)\D+(\d+))</span>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*</a>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>")})",
             RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         if (scheduleMatches.Count() == 0)
@@ -52,35 +95,37 @@ public class LeagueGamingApi
 
         DateTimeOffset? date = null;
 
-        return scheduleMatches.Select(m =>
-        {
-            if (!string.IsNullOrWhiteSpace(m.Groups[1].Value))
+        return scheduleMatches
+            .Cast<Match>()
+            .Select(m =>
             {
-                date = ISiteApi.ParseDateWithNoYear(Regex.Replace(m.Groups[1].Value, @"(\d+)[\D\S]{2}", @"$1"));
-                return null;
-            }
+                if (!string.IsNullOrWhiteSpace(m.Groups[1].Value))
+                {
+                    date = ISiteApi.ParseDateWithNoYear(Regex.Replace(m.Groups[1].Value, @"(\d+)[\D\S]{2}", @"$1"));
+                    return null;
+                }
 
-            if (date == null)
-                return null;
+                if (date == null)
+                    return null;
 
-            return new Game
-            {
-                LeagueId = league.Id,
-                GameId = ulong.Parse(m.Groups[5].Value.Trim()),
-                Timestamp = date.GetValueOrDefault(),
-                VisitorExternalId = m.Groups[4].Value.Trim(),
-                VisitorScore = int.TryParse(m.Groups[8].Value, out var visitorScore) ? visitorScore : null,
-                HomeExternalId = m.Groups[11].Value.Trim(),
-                HomeScore = int.TryParse(m.Groups[9].Value, out var homeScore) ? homeScore : null,
-            };
-        })
-        .Where(g => g != null)
-        .Cast<Game>();
+                return new Game
+                {
+                    LeagueId = league.Id,
+                    GameId = ulong.Parse(m.Groups[5].Value.Trim()),
+                    Timestamp = date.GetValueOrDefault(),
+                    VisitorExternalId = m.Groups[4].Value.Trim(),
+                    VisitorScore = int.TryParse(m.Groups[8].Value, out var visitorScore) ? visitorScore : null,
+                    HomeExternalId = m.Groups[11].Value.Trim(),
+                    HomeScore = int.TryParse(m.Groups[9].Value, out var homeScore) ? homeScore : null,
+                };
+            })
+            .Where(g => g != null)
+            .Cast<Game>();
     }
 
     public async Task<ILeague?> GetLeagueInfoAsync(League league)
     {
-        if (!Supports.Contains(league.SiteId) || league.Info is not LeagueGamingLeagueInfo)
+        if (!IsSupported(league))
             return null;
 
         var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
@@ -119,7 +164,7 @@ public class LeagueGamingApi
 
     public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
     {
-        if (!Supports.Contains(league.SiteId) || league.Info is not LeagueGamingLeagueInfo)
+        if (!IsSupported(league))
             return null;
 
         var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
@@ -141,6 +186,7 @@ public class LeagueGamingApi
             return null;
 
         var teams = nameMatches
+            .Cast<Match>()
             .DistinctBy(m => m.Groups[1].Value)
             .ToDictionary(
                 m => m.Groups[1].Value,
@@ -158,10 +204,11 @@ public class LeagueGamingApi
                 StringComparer.OrdinalIgnoreCase);
 
         var shortNameMatches = Regex.Matches(html,
-            @$"<td[^>]*><img[^>]*/team\d+.png[^>]*> \d+\) .*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>.*?</td>",
-            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            @$"<td[^>]*><img[^>]*/team\d+\.\w{3,4}[^>]*> \d+\) .*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>.*?</td>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+        .Cast<Match>();
 
-        foreach (Match match in shortNameMatches)
+        foreach (var match in shortNameMatches)
         {
             var id = match.Groups[1].Value;
 

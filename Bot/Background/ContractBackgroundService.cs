@@ -13,16 +13,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Duthie.Bot.Background;
 
-public class BidBackgroundService : ScheduledBackgroundService
+public class ContractBackgroundService : ScheduledBackgroundService
 {
-    private readonly ILogger<BidBackgroundService> _logger;
+    private readonly ILogger<ContractBackgroundService> _logger;
     private readonly ApiService _apiService;
     private readonly LeagueService _leagueService;
     private readonly WatcherService _watcherService;
     private readonly GuildMessageService _guildMessageService;
 
-    public BidBackgroundService(
-        ILogger<BidBackgroundService> logger,
+    public ContractBackgroundService(
+        ILogger<ContractBackgroundService> logger,
         ApiService apiService,
         LeagueService leagueService,
         WatcherService watcherService,
@@ -45,7 +45,7 @@ public class BidBackgroundService : ScheduledBackgroundService
 
     public override async Task ExecuteAsync(CancellationToken? cancellationToken = null)
     {
-        _logger.LogTrace("Starting bid tracking task");
+        _logger.LogTrace("Starting contract tracking task");
         var sw = Stopwatch.StartNew();
 
         try
@@ -54,33 +54,33 @@ public class BidBackgroundService : ScheduledBackgroundService
 
             await Task.WhenAll(leagues.Select(async league =>
             {
-                var api = _apiService.Get<IBidApi>(league);
+                var api = _apiService.Get<IContractApi>(league);
 
                 if (api == null)
                     return;
 
-                var data = (await api.GetBidsAsync(league))?
+                var data = (await api.GetContractsAsync(league))?
                     .OrderBy(b => b.Timestamp)
                     .ToList();
 
-                if (data?.Count() > 0 && league.State.LastBid != null)
+                if (data?.Count() > 0 && league.State.LastContract != null)
                 {
-                    var lastBidIndex = data.FindIndex(b => b.GetHash() == league.State.LastBid);
+                    var LastContractIndex = data.FindIndex(b => b.GetHash() == league.State.LastContract);
 
-                    if (lastBidIndex >= 0)
-                        data.RemoveRange(0, lastBidIndex + 1);
+                    if (LastContractIndex >= 0)
+                        data.RemoveRange(0, LastContractIndex + 1);
 
-                    foreach (var bid in data)
+                    foreach (var contract in data)
                     {
                         try
                         {
-                            var team = FindTeam(league, bid.TeamExternalId);
+                            var team = FindTeam(league, contract.TeamExternalId);
                             var messages = new List<GuildMessage>();
 
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
                                 teams: new Guid[] { team.Id },
-                                types: new WatcherType[] { WatcherType.Bids }
+                                types: new WatcherType[] { WatcherType.Contracts }
                             )).GroupBy(w => new { w.GuildId, ChannelId = w.ChannelId ?? w.Guild.DefaultChannelId });
 
                             foreach (var watcher in watchers)
@@ -90,8 +90,8 @@ public class BidBackgroundService : ScheduledBackgroundService
                                     GuildId = watcher.Key.GuildId,
                                     ChannelId = watcher.Key.ChannelId,
                                     Message = league.Tags.Intersect(new string[] { "esports", "tournament", "pickup", "club teams" }).Count() > 0
-                                        ? $"`[{MessageUtils.Escape(league.Name)}]`\n**{MessageUtils.Escape(team.Name)}** has won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!"
-                                        : $"`[{MessageUtils.Escape(league.Name)}]`\nThe **{MessageUtils.Escape(team.Name)}** have won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!"
+                                        ? $"`[{MessageUtils.Escape(league.Name)}]`\n**{MessageUtils.Escape(team.Name)}** has signed **{MessageUtils.Escape(contract.PlayerName)}** to a ${contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!"
+                                        : $"`[{MessageUtils.Escape(league.Name)}]`\nThe **{MessageUtils.Escape(team.Name)}** have signed **{MessageUtils.Escape(contract.PlayerName)}** to a ${contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!"
                                 });
                             }
 
@@ -99,26 +99,26 @@ public class BidBackgroundService : ScheduledBackgroundService
                         }
                         catch (Exception e)
                         {
-                            _logger.LogError(e, $"Failed to map teams for bid {bid.GetHash()} in league {league.Id}");
+                            _logger.LogError(e, $"Failed to map teams for contract {contract.GetHash()} in league {league.Id}");
                         }
 
-                        league.State.LastBid = bid.GetHash();
+                        league.State.LastContract = contract.GetHash();
                     }
                 }
                 else
-                    league.State.LastBid = data?.LastOrDefault()?.GetHash() ?? "";
+                    league.State.LastContract = data?.LastOrDefault()?.GetHash() ?? "";
 
                 await _leagueService.SaveAsync(league);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Bid tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Contract tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Bid tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
-            _logger.LogError(e, "An unexpected error during bid tracking task.");
+            _logger.LogTrace($"Contract tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogError(e, "An unexpected error during contract tracking task.");
         }
     }
 

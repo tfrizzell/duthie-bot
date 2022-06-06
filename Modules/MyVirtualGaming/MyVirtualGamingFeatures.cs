@@ -5,5 +5,5 @@ internal enum MyVirtualGamingFeatures
 {
     None = 0,
     RecentTransactions = 1,
-    All = RecentTransactions
+    All = RecentTransactions,
 }

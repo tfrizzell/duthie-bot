@@ -90,6 +90,7 @@ public class CommandLine
             .AddSingleton<TeamBackgroundService>()
             .AddSingleton<GameBackgroundService>()
             .AddSingleton<BidBackgroundService>()
+            .AddSingleton<ContractBackgroundService>()
             .BuildServiceProvider();
 
         await UpdateDatabaseAsync(serviceProvider);
@@ -107,6 +108,9 @@ public class CommandLine
 
         if (types.Intersect(new string[] { "bids", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<BidBackgroundService>().ExecuteAsync();
+
+        if (types.Intersect(new string[] { "contracts", "all" }).Count() > 0)
+            await serviceProvider.GetRequiredService<ContractBackgroundService>().ExecuteAsync();
     }
 
     private static async Task UpdateDatabaseAsync(IServiceProvider serviceProvider)

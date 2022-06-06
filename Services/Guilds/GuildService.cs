@@ -20,7 +20,9 @@ public class GuildService
     }
 
     private IQueryable<Guild> CreateQuery(DuthieDbContext context) =>
-        context.Set<Guild>().OrderBy(g => g.Name);
+        context.Set<Guild>()
+            .AsNoTracking()
+            .OrderBy(g => g.Name);
 
     public async Task<int> DeleteAsync(IEnumerable<ulong> ids) =>
         await DeleteAsync(ids.ToArray());

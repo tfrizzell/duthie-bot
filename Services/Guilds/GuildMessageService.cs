@@ -21,6 +21,7 @@ public class GuildMessageService
 
     private IQueryable<GuildMessage> CreateQuery(DuthieDbContext context) =>
         context.Set<GuildMessage>()
+            .AsNoTracking()
             .Include(m => m.Guild)
             .OrderBy(m => m.CreatedAt)
                 .ThenBy(m => m.Guild.JoinedAt);

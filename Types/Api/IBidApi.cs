@@ -1,3 +1,4 @@
+using Duthie.Types.Api.Types;
 using Duthie.Types.Leagues;
 
 namespace Duthie.Types.Api;

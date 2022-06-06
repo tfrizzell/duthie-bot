@@ -25,6 +25,7 @@ public class TeamService
 
     private IQueryable<Team> CreateQuery(DuthieDbContext context) =>
         context.Set<Team>()
+            .AsNoTracking()
             .Include(t => t.LeagueTeams)
                 .ThenInclude(m => m.League)
                     .ThenInclude(l => l.Site)
@@ -116,10 +117,13 @@ public class TeamService
         {
             foreach (var team in teams)
             {
-                if (!await context.Set<Team>().AnyAsync(t => t.Id == team.Id))
-                    await context.Set<Team>().AddAsync(team);
+                context.Entry(team).Collection(t => t.LeagueTeams).IsModified = false;
+                var existing = await context.Set<Team>().FirstOrDefaultAsync(t => t.Id == team.Id);
+
+                if (existing != null)
+                    context.Entry(existing).CurrentValues.SetValues(team);
                 else
-                    await context.Set<Team>().UpdateAsync(team);
+                    await context.Set<Team>().AddAsync(team);
             }
 
             return await context.SaveChangesAsync();

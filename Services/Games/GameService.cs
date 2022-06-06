@@ -21,6 +21,7 @@ public class GameService
 
     private IQueryable<Game> CreateQuery(DuthieDbContext context) =>
         context.Set<Game>()
+            .AsNoTracking()
             .Include(g => g.League)
                 .ThenInclude(l => l.Site)
             .Include(g => g.VisitorTeam)

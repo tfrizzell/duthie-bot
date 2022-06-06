@@ -97,8 +97,8 @@ public class GameBackgroundService : ScheduledBackgroundService
                             foreach (var watcher in watchers)
                             {
                                 var message = league.Tags.Intersect(new string[] { "esports", "tournament", "pickup", "club teams" }).Count() > 0
-                                    ? "{us} has {outcome} {them} by the score of {score}"
-                                    : "The {us} have {outcome} the {them} by the score of {score}";
+                                    ? $"`[{MessageUtils.Escape(league.Name)}]`\n{{us}} has {{outcome}} {{them}} by the score of {{score}}"
+                                    : $"`[{MessageUtils.Escape(league.Name)}]`\nThe {{us}} have {{outcome}} the {{them}} by the score of {{score}}";
 
                                 var (us, usScore) = watcher.Any(w => w.TeamId == homeTeam.Id) ? (homeTeam, game.HomeScore) : (visitorTeam, game.VisitorScore);
                                 var (them, themScore) = watcher.Any(w => w.TeamId == homeTeam.Id) ? (visitorTeam, game.VisitorScore) : (homeTeam, game.HomeScore);

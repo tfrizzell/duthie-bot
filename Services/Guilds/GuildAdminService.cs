@@ -20,7 +20,7 @@ public class GuildAdminService
     }
 
     private IQueryable<GuildAdmin> CreateQuery(DuthieDbContext context) =>
-        context.Set<GuildAdmin>();
+        context.Set<GuildAdmin>().AsNoTracking();
 
     public async Task<int> DeleteAsync(ulong guildId, params ulong[] memberIds)
     {

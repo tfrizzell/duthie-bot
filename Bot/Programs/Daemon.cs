@@ -33,6 +33,7 @@ public class Daemon
                     .AddHostedService<TeamBackgroundService>()
                     .AddHostedService<GameBackgroundService>()
                     .AddHostedService<BidBackgroundService>()
+                    .AddHostedService<ContractBackgroundService>()
                     .AddHostedService<PruningBackgroundService>();
             })
             .Build();

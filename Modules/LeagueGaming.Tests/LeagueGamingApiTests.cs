@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Duthie.Types.Api;
+using Duthie.Types.Api.Types;
 using Duthie.Types.Leagues;
 
 namespace Duthie.Modules.LeagueGaming.Tests;
@@ -86,6 +86,19 @@ public class LeagueGamingApiTests
             Assert.True(expectedGame.HomeScore == actualGame.HomeScore, $"[game {expectedGame.GameId}] expected HomeScore to be {expectedGame.HomeScore} but got {actualGame.HomeScore}");
             Assert.True(expectedGame.Overtime == actualGame.Overtime, $"[game {expectedGame.GameId}] expected Overtime to be {expectedGame.Overtime} but got {actualGame.Overtime}");
             Assert.True(expectedGame.Shootout == actualGame.Shootout, $"[game {expectedGame.GameId}] expected Shootout to be {expectedGame.Shootout} but got {actualGame.Shootout}");
+        }
+    }
+
+    [Fact]
+    public async Task GetBidsAsync_ReturnsNotNull()
+    {
+        var bids = await _api.GetBidsAsync(_league);
+        Assert.True(bids != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+
+        foreach (var bid in bids!)
+        {
+            Assert.True(_league.Id == bid.LeagueId, $"expected LeagueId to be {_league.Id} but got {bid.LeagueId}");
+            Assert.True(BidState.Won == bid.State, $"expected State to be {BidState.Won} but got {bid.State}");
         }
     }
 }

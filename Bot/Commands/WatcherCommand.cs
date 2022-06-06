@@ -215,19 +215,19 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         if (leagues == null)
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league(s) you requested.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league you requested.", ephemeral: true);
             return;
         }
 
         if (teams == null || !teams.Any(t => leagues.Any(l => l.Teams.Any(lt => lt.Id == t.Id))))
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team(s) you requested.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team you requested.", ephemeral: true);
             return;
         }
 
         if (watcherTypes == null)
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher type(s) you requested.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher types you requested.", ephemeral: true);
             return;
         }
 
@@ -344,19 +344,19 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
             if (leagueOption != null && leagues == null)
             {
-                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league(s) you requested.", ephemeral: true);
+                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the leagues you requested.", ephemeral: true);
                 return;
             }
 
             if (teamOption != null && (teams == null || !teams.Any(t => leagues?.Any(l => l.Teams.Any(lt => lt.Id == t.Id)) != false)))
             {
-                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team(s) you requested.", ephemeral: true);
+                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the teams you requested.", ephemeral: true);
                 return;
             }
 
             if (watcherTypeOption != null && watcherTypes == null)
             {
-                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher type(s) you requested.", ephemeral: true);
+                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher types you requested.", ephemeral: true);
                 return;
             }
 

@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Duthie.Types.Api;
+using Duthie.Types.Api.Types;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
 
@@ -17,9 +18,12 @@ public class TheSpnhlApi
         get => new HashSet<Guid> { TheSpnhlSiteProvider.SPNHL.Id };
     }
 
+    private bool IsSupported(League league) =>
+        Supports.Contains(league.SiteId) || league.Info is TheSpnhlLeagueInfo;
+
     public async Task<IEnumerable<Game>?> GetGamesAsync(League league)
     {
-        if (!Supports.Contains(league.SiteId) || league.Info is not TheSpnhlLeagueInfo)
+        if (!IsSupported(league))
             return null;
 
         var leagueInfo = (league.Info as TheSpnhlLeagueInfo)!;
@@ -28,6 +32,7 @@ public class TheSpnhlApi
         return Regex.Matches(html,
             @"<span[^>]*\bteam-logo\b[^>]*>\s*<meta(?=[^>]*itemprop=""name"")[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>\s*<img[^>]*>\s*</a>\s*</span>\s*<span[^>]*\bteam-logo\b[^>]*>\s*<meta(?=[^>]*itemprop=""name"")[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>\s*<img[^>]*>\s*</a>\s*</span>\s*<time(?=[^>]*\bsp-event-date\b)[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>.*?</a>\s*</time>\s*<h5[^>]*\bsp-event-results\b[^>]*>\s*<a(?=[^>]*itemprop=""url"")[^>]*/event/(\d+)[^>]*>\s*(?:<span[^>]*>([\dO]+)</span>\s*-\s*<span[^>]*>([\dO]+)</span>|<span[^>]*>.*?</span>)\s*</a>\s*</h5>",
             RegexOptions.IgnoreCase | RegexOptions.Singleline)
+        .Cast<Match>()
         .Select(m => new Game
         {
             LeagueId = league.Id,
@@ -46,14 +51,14 @@ public class TheSpnhlApi
 
     public async Task<ILeague?> GetLeagueInfoAsync(League league)
     {
-        if (!Supports.Contains(league.SiteId) || league.Info is not TheSpnhlLeagueInfo)
+        if (!IsSupported(league))
             return null;
 
         var leagueInfo = (league.Info as TheSpnhlLeagueInfo)!;
         var html = await _httpClient.GetStringAsync("https://thespnhl.com/calendar/fixtures-results/");
 
         var season = Regex.Match(html,
-            @$"Season\s*(\d+)",
+            @"Season\s*(\d+)",
             RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         if (!season.Success)
@@ -72,20 +77,21 @@ public class TheSpnhlApi
 
     public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
     {
-        if (!Supports.Contains(league.SiteId) || league.Info is not TheSpnhlLeagueInfo)
+        if (!IsSupported(league))
             return null;
 
         var leagueInfo = (league.Info as TheSpnhlLeagueInfo)!;
         var html = await _httpClient.GetStringAsync("https://thespnhl.com/standings/");
 
         var matches = Regex.Matches(html,
-            @$"<a[^>]*><span[^>]*\bteam-logo\b[^>]*>\s*<img[^>]*>\s*</span>(.*?)</a>",
+            @"<a[^>]*><span[^>]*\bteam-logo\b[^>]*>\s*<img[^>]*>\s*</span>(.*?)</a>",
             RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
         if (matches.Count() == 0)
             return null;
 
         return matches
+            .Cast<Match>()
             .DistinctBy(m => m.Groups[1].Value)
             .ToDictionary(
                 m => m.Groups[1].Value,

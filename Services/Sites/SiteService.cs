@@ -24,7 +24,9 @@ public class SiteService
     }
 
     private IQueryable<Site> CreateQuery(DuthieDbContext context) =>
-        context.Set<Site>().OrderBy(s => s.Name);
+        context.Set<Site>()
+            .AsNoTracking()
+            .OrderBy(s => s.Name);
 
     public async Task<int> DeleteAsync(IEnumerable<Guid> ids) =>
         await DeleteAsync(ids.ToArray());

@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Duthie.Types.Api;
+using Duthie.Types.Api.Types;
 using Duthie.Types.Leagues;
 
 namespace Duthie.Modules.TheSpnhl.Tests;

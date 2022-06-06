@@ -2,16 +2,16 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace Duthie.Types.Api;
+namespace Duthie.Types.Api.Types;
 
-public class Bid
+public class Contract
 {
     public Guid LeagueId { get; set; }
     public string TeamExternalId { get; set; } = "";
     public string PlayerExternalId { get; set; } = "";
     public string PlayerName { get; set; } = "";
+    public int Length { get; set; } = 1;
     public ulong Amount { get; set; }
-    public BidState State { get; set; }
     public DateTimeOffset Timestamp { get; set; }
 
     public string GetHash()
@@ -24,27 +24,10 @@ public class Bid
                 TeamExternalId,
                 Player = string.IsNullOrWhiteSpace(PlayerExternalId) ? PlayerName : PlayerExternalId,
                 Amount,
-                State,
-                Timestamp
+                Timestamp,
             })));
 
-            return BitConverter.ToString(hash);
+            return BitConverter.ToString(hash).Replace("-", "");
         }
     }
-
-    public override int GetHashCode() =>
-        HashCode.Combine(
-            GetType().GetHashCode(),
-            LeagueId.GetHashCode(),
-            TeamExternalId.GetHashCode(),
-            (string.IsNullOrWhiteSpace(PlayerExternalId) ? PlayerName : PlayerExternalId).GetHashCode(),
-            Amount.GetHashCode(),
-            State.GetHashCode(),
-            Timestamp.GetHashCode());
-}
-
-public enum BidState
-{
-    Active,
-    Won
 }
