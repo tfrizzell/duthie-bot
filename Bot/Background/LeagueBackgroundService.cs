@@ -52,6 +52,7 @@ public class LeagueBackgroundService : ScheduledBackgroundService
                     return;
 
                 league.Name = data.Name;
+                league.LogoUrl = data.LogoUrl;
                 league.Info = data.Info;
             }));
 

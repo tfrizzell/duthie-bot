@@ -78,7 +78,7 @@ public class MessagingBackgroundService : ScheduledBackgroundService
                         .WithFooter(message.Embed.Footer)
                         .WithUrl(message.Embed.Url);
 
-                    if (string.IsNullOrWhiteSpace(message.Message))
+                    if (message.Embed.ShowAuthor)
                         builder.WithAuthor(_client.CurrentUser);
 
                     if (message.Embed.Timestamp != null)

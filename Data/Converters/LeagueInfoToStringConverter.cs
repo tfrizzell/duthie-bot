@@ -10,8 +10,6 @@ public class LeagueInfoToStringConverter : ValueConverter<object?, string?>
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    private static readonly IDictionary<string, Type?> Types = new Dictionary<string, Type?>();
-
     public LeagueInfoToStringConverter()
         : base(
             value => Serialize(value),
@@ -32,24 +30,14 @@ public class LeagueInfoToStringConverter : ValueConverter<object?, string?>
             return null;
 
         var info = JsonSerializer.Deserialize<LeagueInfo>(value, JsonOptions)!;
-        var type = GetType(info.Type);
+        var type = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(a => a.GetTypes())
+            .FirstOrDefault(t => t.FullName == info.Type);
 
         if (type == null)
             return info.Data;
 
         return JsonSerializer.Deserialize(JsonSerializer.Serialize(info.Data, JsonOptions), type, JsonOptions);
-    }
-
-    private static Type? GetType(string type)
-    {
-        if (!Types.ContainsKey(type))
-        {
-            Types.TryAdd(type, AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a => a.GetTypes())
-                .FirstOrDefault(t => t.FullName == type));
-        }
-
-        return Types[type];
     }
 
     private record LeagueInfo

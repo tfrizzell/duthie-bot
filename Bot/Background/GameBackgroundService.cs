@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using Discord;
 using Duthie.Bot.Utils;
 using Duthie.Services.Api;
 using Duthie.Services.Games;
@@ -133,23 +134,25 @@ public class GameBackgroundService : ScheduledBackgroundService
                                 else if (game.Overtime == true)
                                     message = Regex.Replace(message, @"[!.]$", @" in overtime$0");
 
-                                (message, var embed) = api.GetMessageEmbed(message, game, league);
-                                
-                                // TODO: Implement all game results as embeds only
-                                // Game result example
-                                // await channel.SendMessageAsync("", embed: new EmbedBuilder()
-                                //     .WithTitle("LGAHL PSN Game Result")
-                                //     .WithThumbnailUrl("https://www.leaguegaming.com/images/league/icon/l68_100.png")
-                                //     .WithDescription("The **Rockford IceHogs** have defeated the **Providence Bruins** by the score of **6 to 5** in overtime!")
-                                //     .WithUrl("https://vghl.myvirtualgaming.com/vghlleagues/vgahl/schedule?view=game&layout=game&id=76795")
-                                //     .Build());
-
                                 messages.Add(new GuildMessage
                                 {
                                     GuildId = watcher.Key.GuildId,
                                     ChannelId = watcher.Key.ChannelId,
-                                    Message = message,
-                                    Embed = embed,
+                                    Message = "",
+                                    Embed = new GuildMessageEmbed
+                                    {
+                                        ShowAuthor = false,
+                                        Color = usScore > themScore
+                                            ? Color.DarkGreen
+                                            : (usScore < themScore
+                                                ? Color.DarkRed
+                                                : Color.DarkerGrey),
+                                        Title = $"{league.ShortName} Game Result",
+                                        Thumbnail = league.LogoUrl,
+                                        Content = message,
+                                        Timestamp = game.Timestamp,
+                                        Url = api.GetGameUrl(league, game),
+                                    }
                                 });
                             }
                         }

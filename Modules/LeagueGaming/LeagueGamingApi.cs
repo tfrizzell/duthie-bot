@@ -148,6 +148,7 @@ public class LeagueGamingApi
         return new League
         {
             Name = info.Groups[2].Value.Trim(),
+            LogoUrl = $"https://www.leaguegaming.com/images/league/icon/l{leagueInfo.LeagueId}_100.png",
             Info = new LeagueGamingLeagueInfo
             {
                 LeagueId = leagueInfo.LeagueId,

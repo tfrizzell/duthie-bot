@@ -275,13 +275,13 @@ public class MyVirtualGamingApi
         return new League
         {
             Name = Regex.Replace(title.InnerText.Trim(), @"\s+Home$", ""),
+            LogoUrl = logo.Success ? $"{Url}/{Regex.Replace(logo.Groups[1].Value.Trim(), @$"^{Url}/?", "")}" : league.LogoUrl,
             Info = new MyVirtualGamingLeagueInfo
             {
+                Features = features,
                 LeagueId = leagueId,
                 SeasonId = seasonId ?? leagueInfo.SeasonId,
                 ScheduleId = scheduleId ?? leagueInfo.ScheduleId,
-                // Logo = logo.Success ? $"{Url}{logo.Groups[1].Value.Trim().Replace(Url, "")}" : leagueInfo.Logo,
-                Features = features,
             }
         };
     }
@@ -434,18 +434,12 @@ public class MyVirtualGamingApi
         return teams;
     }
 
-    public (string, GuildMessageEmbed?) GetMessageEmbed(string message, Game game, League league)
+    public string? GetGameUrl(League league, Game game)
     {
-        if (league == null || !IsSupported(league))
-            return (message, null);
+        if (!IsSupported(league))
+            return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-
-        return (message, new GuildMessageEmbed
-        {
-            Title = "Box Score",
-            Thumbnail = $"https://www.leaguegaming.com/images/league/icon/l68_100.png",
-            Url = $"https://vghl.myvirtualgaming.com/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.GameId}",
-        });
+        return $"https://vghl.myvirtualgaming.com/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.GameId}";
     }
 }

@@ -30,13 +30,13 @@ public class TheSpnhlApiTests
         var league = await _api.GetLeagueInfoAsync(_league);
         Assert.True(league != null, $"{_api.GetType().Name} does not support league {_league.Id}");
         Assert.True(_league.Name == league!.Name, $"expected Name to be {_league.Name} but got {league.Name}");
+        Assert.True(_league.LogoUrl == league.LogoUrl, $"expected LogoUrl to be {_league.LogoUrl} but got {league.LogoUrl}");
         Assert.True(league.Info is TheSpnhlLeagueInfo, $"expected Info to be of type {typeof(TheSpnhlLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
 
         var expectedInfo = JsonSerializer.Deserialize<TheSpnhlLeagueInfo>(File.ReadAllText(@"./Files/info.json"))!;
         var actualInfo = (league.Info as TheSpnhlLeagueInfo)!;
         Assert.True(expectedInfo.LeagueType == actualInfo.LeagueType, $"expected Info.LeagueType to be {expectedInfo.LeagueType} but got {actualInfo.LeagueType}");
         Assert.True(expectedInfo.SeasonId <= actualInfo.SeasonId, $"expected Info.SeasonId to be greater than or equal to {expectedInfo.SeasonId} but got {actualInfo.SeasonId}");
-        Assert.True(expectedInfo.LogoUrl == actualInfo.LogoUrl, $"expected Info.LogoUrl to be greater than or equal to {expectedInfo.LogoUrl} but got {actualInfo.LogoUrl}");
     }
 
     [Fact]

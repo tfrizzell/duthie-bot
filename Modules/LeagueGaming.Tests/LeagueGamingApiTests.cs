@@ -28,6 +28,7 @@ public class LeagueGamingApiTests
         var league = await _api.GetLeagueInfoAsync(_league);
         Assert.True(league != null, $"{_api.GetType().Name} does not support league {_league.Id}");
         Assert.True(_league.Name == league!.Name, $"expected Name to be {_league.Name} but got {league.Name}");
+        Assert.True(_league.LogoUrl == league.LogoUrl, $"expected LogoUrl to be {_league.LogoUrl} but got {league.LogoUrl}");
         Assert.True(league.Info is LeagueGamingLeagueInfo, $"expected Info to be of type {typeof(LeagueGamingLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
 
         var expectedInfo = JsonSerializer.Deserialize<LeagueGamingLeagueInfo>(File.ReadAllText(@"./Files/info.json"))!;
@@ -35,7 +36,6 @@ public class LeagueGamingApiTests
         Assert.True(expectedInfo.LeagueId == actualInfo.LeagueId, $"expected Info.LeagueId to be {expectedInfo.LeagueId} but got {actualInfo.LeagueId}");
         Assert.True(expectedInfo.SeasonId <= actualInfo.SeasonId, $"expected Info.SeasonId to be greater than or equal to {expectedInfo.SeasonId} but got {actualInfo.SeasonId}");
         Assert.True(expectedInfo.ForumId == actualInfo.ForumId, $"expected Info.ForumId to be greater than or equal to {expectedInfo.ForumId} but got {actualInfo.ForumId}");
-        Assert.True(expectedInfo.LogoUrl == actualInfo.LogoUrl, $"expected Info.LogoUrl to be greater than or equal to {expectedInfo.LogoUrl} but got {actualInfo.LogoUrl}");
     }
 
     [Fact]

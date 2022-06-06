@@ -10,6 +10,7 @@ public class League : ILeague
     public Guid SiteId { get; set; }
     public string Name { get; set; } = "";
     public string ShortName { get; set; } = "";
+    public string? LogoUrl { get; set; }
     public object? Info { get; set; }
     public LeagueState State { get; set; } = new LeagueState();
     public Tags Tags { get; set; } = new Tags();
@@ -25,5 +26,6 @@ public class League : ILeague
 public interface ILeague
 {
     string Name { get; set; }
+    string? LogoUrl { get; set; }
     object? Info { get; set; }
 }
