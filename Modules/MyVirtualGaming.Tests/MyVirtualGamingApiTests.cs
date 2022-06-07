@@ -79,9 +79,9 @@ public class MyVirtualGamingApiTests
             Assert.True(expectedGame.LeagueId == actualGame!.LeagueId, $"[game {expectedGame.Id}] expected LeagueId to be {expectedGame.LeagueId} but got {actualGame.LeagueId}");
             Assert.True(expectedGame.Id == actualGame.Id, $"[game {expectedGame.Id}] expected GameId to be {expectedGame.Id} but got {actualGame.Id}");
             Assert.True(expectedGame.Timestamp == actualGame.Timestamp, $"[game {expectedGame.Id}] expected Timestamp to be {expectedGame.Timestamp} but got {actualGame.Timestamp}");
-            Assert.True(expectedGame.VisitorId == actualGame.VisitorId, $"[game {expectedGame.Id}] expected VisitorExternalId to be {expectedGame.VisitorId} but got {actualGame.VisitorId}");
+            Assert.True(expectedGame.VisitorId == actualGame.VisitorId, $"[game {expectedGame.Id}] expected VisitorId to be {expectedGame.VisitorId} but got {actualGame.VisitorId}");
             Assert.True(expectedGame.VisitorScore == actualGame.VisitorScore, $"[game {expectedGame.Id}] expected VisitorScore to be {expectedGame.VisitorScore} but got {actualGame.VisitorScore}");
-            Assert.True(expectedGame.HomeId == actualGame.HomeId, $"[game {expectedGame.Id}] expected HomeExternalId to be {expectedGame.HomeId} but got {actualGame.HomeId}");
+            Assert.True(expectedGame.HomeId == actualGame.HomeId, $"[game {expectedGame.Id}] expected HomeId to be {expectedGame.HomeId} but got {actualGame.HomeId}");
             Assert.True(expectedGame.HomeScore == actualGame.HomeScore, $"[game {expectedGame.Id}] expected HomeScore to be {expectedGame.HomeScore} but got {actualGame.HomeScore}");
             Assert.True(expectedGame.Overtime == actualGame.Overtime, $"[game {expectedGame.Id}] expected Overtime to be {expectedGame.Overtime} but got {actualGame.Overtime}");
             Assert.True(expectedGame.Shootout == actualGame.Shootout, $"[game {expectedGame.Id}] expected Shootout to be {expectedGame.Shootout} but got {actualGame.Shootout}");
@@ -97,8 +97,8 @@ public class MyVirtualGamingApiTests
         foreach (var bid in bids!)
         {
             Assert.True(_league.Id == bid.LeagueId, $"expected LeagueId to be {_league.Id} but got {bid.LeagueId}");
-            Assert.True(int.TryParse(bid.TeamId, out var t), $"expected numeric TeamExternalId but got {bid.TeamId}");
-            Assert.True(int.TryParse(bid.PlayerId, out var p), $"expected numeric PlayerExternalId but got {bid.PlayerId}");
+            Assert.True(int.TryParse(bid.TeamId, out var t), $"expected numeric TeamId but got {bid.TeamId}");
+            Assert.True(int.TryParse(bid.PlayerId, out var p), $"expected numeric PlayerId but got {bid.PlayerId}");
             Assert.True(!string.IsNullOrWhiteSpace(bid.PlayerName), $"expected numeric PlayerName to not be empty but got {bid.PlayerName}");
             Assert.True(bid.Amount > 0, $"expected Amount to be greater than 0 but got {bid.Amount}");
             Assert.True(BidState.Won == bid.State, $"expected State to be {BidState.Won} but got {bid.State}");
@@ -114,10 +114,25 @@ public class MyVirtualGamingApiTests
         foreach (var contract in contracts!)
         {
             Assert.True(_league.Id == contract.LeagueId, $"expected LeagueId to be {_league.Id} but got {contract.LeagueId}");
-            Assert.True(int.TryParse(contract.TeamId, out var t), $"expected numeric TeamExternalId but got {contract.TeamId}");
+            Assert.True(int.TryParse(contract.TeamId, out var t), $"expected numeric TeamId but got {contract.TeamId}");
             Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected numeric PlayerName to not be empty but got {contract.PlayerName}");
             Assert.True(contract.Length > 0, $"expected Length to be greater than 0 but got {contract.Length}");
             Assert.True(contract.Amount > 0, $"expected Amount to be greater than 0 but got {contract.Amount}");
+        }
+    }
+
+    [Fact]
+    public async Task GetTradesAsync_ReturnsNotNull()
+    {
+        var trades = await _api.GetTradesAsync(_league);
+        Assert.True(trades != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+
+        foreach (var trade in trades!)
+        {
+            Assert.True(_league.Id == trade.LeagueId, $"expected LeagueId to be {_league.Id} but got {trade.LeagueId}");
+            Assert.True(int.TryParse(trade.FromId, out var f), $"expected numeric FromId but got {trade.FromId}");
+            Assert.True(int.TryParse(trade.ToId, out var t), $"expected numeric ToId but got {trade.ToId}");
+            Assert.True(trade.Assets.Count() == 1, $"expected exactly 1 Asset but got {trade.Assets.Count()}");
         }
     }
 }

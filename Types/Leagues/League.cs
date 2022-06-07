@@ -4,7 +4,7 @@ using Duthie.Types.Teams;
 
 namespace Duthie.Types.Leagues;
 
-public class League : ILeague
+public class League
 {
     public Guid Id { get; set; }
     public Guid SiteId { get; set; }
@@ -21,11 +21,4 @@ public class League : ILeague
     public virtual IEnumerable<LeagueTeam> LeagueTeams { get; set; }
     public virtual IEnumerable<Team> Teams => LeagueTeams?.Select(t => t.Team);
 #nullable enable
-}
-
-public interface ILeague
-{
-    string Name { get; set; }
-    string? LogoUrl { get; set; }
-    object? Info { get; set; }
 }

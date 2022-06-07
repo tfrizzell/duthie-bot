@@ -8,9 +8,9 @@ using League = Duthie.Types.Leagues.League;
 namespace Duthie.Modules.MyVirtualGaming;
 
 public class MyVirtualGamingApi
-    : IBidApi, IContractApi, IGameApi, ILeagueApi, ITeamApi
+    : IBidApi, IContractApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi
 {
-    private const string Host = "https://vghl.myvirtualgaming.com";
+    private const string Host = "vghl.myvirtualgaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
     private readonly HttpClient _httpClient = new HttpClient();
@@ -47,14 +47,14 @@ public class MyVirtualGamingApi
                 path: "recent-transactions"));
 
             var closedBids = Regex.Match(html,
-                @"<div[^>]*\bclosed-bids\b[^>]*>.*?<tbody[^>]*\btransaction-list\b[^>]*>(.*?)</tbody>\s*</table>",
+                @"<div[^>]*\bclosed-bids\b[^>]*>.*?<tbody[^>]*>(.*?)</tbody>\s*</table>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             if (!closedBids.Success)
                 return new List<Bid>();
 
             return Regex.Matches(closedBids.Groups[1].Value,
-                @"<td[^>]*\bmvg-col-trans-team-name\b[^>]*>\s*<a[^>]*id=(\d+)[^>]*>\s*<img[^>]*>.*?</a>\s*</td>\s*<td[^>]*\bmvg-col-transaction-detail\b[^>]*>(.*?)</td>\s*<td[^>]*>.*?</td>\s*<td[^>]*>.*?</td>\s*<td[^>]*\bmvg-col-trans-datetime\b[^>]*>(.*?)</td>",
+                @"<td[^>]*>\s*<a[^>]*id=(\d+)[^>]*>\s*<img[^>]*>.*?</a>\s*</td>\s*<td[^>]*>(.*?)</td>\s*<td[^>]*>.*?</td>\s*<td[^>]*>.*?</td>\s*<td[^>]*>(.*?)</td>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(m =>
@@ -101,9 +101,8 @@ public class MyVirtualGamingApi
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(c =>
-            {
-                return Regex.Matches(c.Groups[2].Value,
-                    @"<td[^>]*\bmvg-col-trans-team-name\b[^>]*>\s*<a[^>]*id=(\d+)[^>]*>\s*<img[^>]*>.*?</a>\s*</td>\s*<td[^>]*\bmvg-col-transaction-detail\b[^>]*>(.*?)</td>\s*<td[^>]*\bmvg-col-trans-datetime\b[^>]*>(.*?)</td>",
+                Regex.Matches(c.Groups[2].Value,
+                    @"<td[^>]*>\s*<a[^>]*id=(\d+)[^>]*>\s*<img[^>]*>.*?</a>\s*</td>\s*<td[^>]*>(.*?)</td>\s*<td[^>]*>(.*?)</td>",
                     RegexOptions.IgnoreCase | RegexOptions.Singleline)
                 .Cast<Match>()
                 .Select(m =>
@@ -127,8 +126,7 @@ public class MyVirtualGamingApi
                         Amount = ISiteApi.ParseDollars(contract.Groups[2].Value),
                         Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
                     };
-                });
-            })
+                }))
             .SelectMany(c => c)
             .Where(c => c != null)
             .Cast<Contract>();
@@ -442,6 +440,7 @@ public class MyVirtualGamingApi
         {
             teams.AddRange(
                 teams.Where(t => "Nashville Nashville" == t.Name)
+                    .ToList()
                     .Select(t => new Team
                     {
                         LeagueId = t.LeagueId,
@@ -454,6 +453,7 @@ public class MyVirtualGamingApi
         {
             teams.AddRange(
                 teams.Where(t => "Bellevile Senators" == t.Name)
+                    .ToList()
                     .Select(t => new Team
                     {
                         LeagueId = t.LeagueId,
@@ -466,12 +466,100 @@ public class MyVirtualGamingApi
         return teams;
     }
 
+    public async Task<IEnumerable<Trade>?> GetTradesAsync(League league)
+    {
+        try
+        {
+            if (!IsSupported(league))
+                return null;
+
+            var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+
+            if (!leagueInfo.Features.HasFlag(MyVirtualGamingFeatures.RecentTransactions))
+                return new List<Trade>();
+
+            var html = await _httpClient.GetStringAsync(GetUrl(
+                league: leagueInfo.LeagueId,
+                path: "recent-transactions"));
+
+            var trades = Regex.Match(html,
+                @"<div[^>]*\bTrades\b[^>]*>.*?<tbody[^>]*>(.*?)</tbody>\s*</table>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+            if (!trades.Success)
+                return new List<Trade>();
+
+            var lookup = await GetTeamLookupAsync(league);
+
+var m = Regex.Matches(trades.Groups[1].Value,
+                @"<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<i[^>]*>\s*</i>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>(.*?)</td>\s*<td[^>]*>(.*?)</td>",
+                // @"<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<i[^>]*>\s*</i>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>();
+
+            return Regex.Matches(trades.Groups[1].Value,
+                @"<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<i[^>]*>\s*</i>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>(.*?)</td>\s*<td[^>]*>(.*?)</td>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(m =>
+            {
+                var dateTime = DateTime.Parse(m.Groups[4].Value.Trim());
+                var trade = Regex.Match(m.Groups[3].Value, @"The .*? have traded (.*?)\s*(\w+/\w+ .*?\$[\d,.]+)?\s*to the .*?.", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                if (!trade.Success || !lookup.ContainsKey(m.Groups[1].Value.Trim()) || !lookup.ContainsKey(m.Groups[2].Value.Trim()))
+                    return null;
+
+                return new Trade
+                {
+                    LeagueId = league.Id,
+                    FromId = lookup[m.Groups[1].Value.Trim()],
+                    ToId = lookup[m.Groups[2].Value.Trim()],
+                    Assets = new string[] { trade.Groups[1].Value.Trim() },
+                    Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+                };
+            })
+            .Where(t => t != null)
+            .Cast<Trade>();
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching bids for league \"{league.Name}\" [{league.Id}]", e);
+        }
+    }
+
+    public string? GetBidUrl(League league, Bid bid)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+        return $"{Host}/vghlleagues/{leagueInfo.LeagueId}/recent-transactions#closed-bids";
+    }
+
+    public string? GetContractUrl(League league, Contract contract)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+        return $"{Host}/vghlleagues/{leagueInfo.LeagueId}/recent-transactions#Signings";
+    }
+
     public string? GetGameUrl(League league, Game game)
     {
         if (!IsSupported(league))
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-        return $"https://vghl.myvirtualgaming.com/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.Id}";
+        return $"{Host}/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.Id}";
+    }
+
+    public string? GetTradeUrl(League league, Trade trade)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+        return $"{Host}/vghlleagues/{leagueInfo.LeagueId}/recent-transactions#Trades";
     }
 }
