@@ -62,7 +62,8 @@ public class ContractBackgroundService : ScheduledBackgroundService
                     return;
 
                 var data = (await api.GetContractsAsync(league))?
-                    .OrderBy(b => b.Timestamp)
+                    .OrderBy(c => c.Timestamp)
+                        .ThenBy(c => c.GetHash())
                     .ToList();
 
                 if (data?.Count() > 0 && league.State.LastContract != null)

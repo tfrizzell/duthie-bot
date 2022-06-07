@@ -116,6 +116,7 @@ public class MyVirtualGamingApiTests
             Assert.True(_league.Id == contract.LeagueId, $"expected LeagueId to be {_league.Id} but got {contract.LeagueId}");
             Assert.True(int.TryParse(contract.TeamId, out var t), $"expected numeric TeamExternalId but got {contract.TeamId}");
             Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected numeric PlayerName to not be empty but got {contract.PlayerName}");
+            Assert.True(contract.Length > 0, $"expected Length to be greater than 0 but got {contract.Length}");
             Assert.True(contract.Amount > 0, $"expected Amount to be greater than 0 but got {contract.Amount}");
         }
     }

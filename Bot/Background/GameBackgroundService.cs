@@ -68,7 +68,10 @@ public class GameBackgroundService : ScheduledBackgroundService
                 if (api == null)
                     return;
 
-                var data = await api.GetGamesAsync(league);
+                var data = (await api.GetGamesAsync(league))?
+                    .OrderBy(g => g.Timestamp)
+                        .ThenBy(c => c.Id)
+                        .ThenBy(g => g.GetHash());
 
                 if (data == null)
                     return;

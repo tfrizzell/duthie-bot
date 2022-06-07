@@ -63,6 +63,7 @@ public class BidBackgroundService : ScheduledBackgroundService
 
                 var data = (await api.GetBidsAsync(league))?
                     .OrderBy(b => b.Timestamp)
+                        .ThenBy(b => b.GetHash())
                     .ToList();
 
                 if (data?.Count() > 0 && league.State.LastBid != null)

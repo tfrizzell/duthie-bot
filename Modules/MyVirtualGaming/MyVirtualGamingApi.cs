@@ -442,7 +442,6 @@ public class MyVirtualGamingApi
         {
             teams.AddRange(
                 teams.Where(t => "Nashville Nashville" == t.Name)
-                    .ToList()
                     .Select(t => new Team
                     {
                         LeagueId = t.LeagueId,
@@ -455,7 +454,6 @@ public class MyVirtualGamingApi
         {
             teams.AddRange(
                 teams.Where(t => "Bellevile Senators" == t.Name)
-                    .ToList()
                     .Select(t => new Team
                     {
                         LeagueId = t.LeagueId,

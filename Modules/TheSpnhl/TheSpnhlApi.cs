@@ -132,8 +132,7 @@ public class TheSpnhlApi
                     StringComparer.OrdinalIgnoreCase)
                 .Values
                 .Where(t => t != null)
-                .Cast<Team>()
-                .ToList();
+                .Cast<Team>();
         }
         catch (Exception e)
         {

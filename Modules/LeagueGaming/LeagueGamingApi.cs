@@ -7,7 +7,7 @@ using League = Duthie.Types.Leagues.League;
 namespace Duthie.Modules.LeagueGaming;
 
 public class LeagueGamingApi
-    : IBidApi, IGameApi, ILeagueApi, ITeamApi
+    : IBidApi, IContractApi, IGameApi, ILeagueApi, ITeamApi
 {
     private const string Host = "https://www.leaguegaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
@@ -51,27 +51,91 @@ public class LeagueGamingApi
                 }));
 
             return Regex.Matches(html,
-                @"<h3[^>]*>\s*<img[^>]*team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(.*?)</span>\s*have earned the player rights for\s*<span[^>]*\bnewsfeed_atn\b[^>]*>(.*?)</span>\s*with a bid amount of\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(\$[\d,]+)</span>.*?</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(m =>
             {
-                var dateTime = DateTime.Parse(m.Groups[5].Value.Trim());
+                var bid = Regex.Match(m.Groups[1].Value,
+                    @"<h3[^>]*>\s*<img[^>]*team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(.*?)</span>\s*have earned the player rights for\s*<span[^>]*\bnewsfeed_atn\b[^>]*>(.*?)</span>\s*with a bid amount of\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(\$[\d,]+)</span>.*?</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                if (!bid.Success)
+                    return null;
+
+                var dateTime = DateTime.Parse(bid.Groups[5].Value.Trim());
 
                 return new Bid
                 {
                     LeagueId = league.Id,
-                    TeamId = m.Groups[1].Value.Trim(),
-                    PlayerName = m.Groups[3].Value.Trim(),
-                    Amount = ISiteApi.ParseDollars(m.Groups[4].Value),
+                    TeamId = bid.Groups[1].Value.Trim(),
+                    PlayerName = bid.Groups[3].Value.Trim(),
+                    Amount = ISiteApi.ParseDollars(bid.Groups[4].Value),
                     State = BidState.Won,
                     Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
                 };
-            });
+            })
+            .Where(b => b != null)
+            .Cast<Bid>();
         }
         catch (Exception e)
         {
             throw new ApiException($"An unexpected error occurred while fetching bids for league \"{league.Name}\" [{league.Id}]", e);
+        }
+    }
+
+    public async Task<IEnumerable<Contract>?> GetContractsAsync(League league)
+    {
+        try
+        {
+            if (!IsSupported(league))
+                return null;
+
+            var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+
+            var html = await _httpClient.GetStringAsync(GetUrl(
+                parameters: new Dictionary<string, object?>
+                {
+                    ["action"] = "league",
+                    ["page"] = "team_news",
+                    ["teamid"] = 0,
+                    ["typeid"] = LeagueGamingNewsType.Contracts,
+                    ["displaylimit"] = 200,
+                    ["leagueid"] = leagueInfo.LeagueId,
+                    ["seasonid"] = leagueInfo.SeasonId,
+                }));
+
+            return Regex.Matches(html,
+                @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(m =>
+            {
+                var contract = Regex.Match(m.Groups[1].Value,
+                    @"<h3[^>]*>\s*<span[^>]*\bnewsfeed_atn\b[^>]*>(.*?)</span>\s*and the\s*<img[^>]*/team(\d+).\w{3,4}[^>]*>\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(.*?)</span>\s*have agreed to a (\d+) season deal at (\$[\d,]+) per season</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                if (!contract.Success)
+                    return null;
+
+                var dateTime = DateTime.Parse(contract.Groups[6].Value.Trim());
+
+                return new Contract
+                {
+                    LeagueId = league.Id,
+                    TeamId = contract.Groups[2].Value.Trim(),
+                    PlayerName = contract.Groups[1].Value.Trim(),
+                    Length = int.TryParse(contract.Groups[4].Value.Trim(), out var length) ? length : 1,
+                    Amount = ISiteApi.ParseDollars(contract.Groups[5].Value),
+                    Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+                };
+            })
+            .Where(c => c != null)
+            .Cast<Contract>();
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching contracts for league \"{league.Name}\" [{league.Id}]", e);
         }
     }
 
@@ -237,7 +301,7 @@ public class LeagueGamingApi
                     teams[id].Name = teams[id].ShortName;
             }
 
-            return teams.Values.ToList();
+            return teams.Values;
         }
         catch (Exception e)
         {
