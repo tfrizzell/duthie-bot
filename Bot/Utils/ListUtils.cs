@@ -1,30 +1,35 @@
 using System.Text.RegularExpressions;
+using Discord;
 
 namespace Duthie.Bot.Utils;
 
 public static class ListUtils
 {
-    public const int STYLE_BOLD = 1;
-    public const int STYLE_ITALIC = 2;
-    public const int STYLE_UNDERLINE = 4;
-    public const int STYLE_STRIKETHROUGH = 8;
+    public static IEnumerable<Embed> CreateEmbeddedTable(IEnumerable<IEnumerable<string>> data, IEnumerable<string>? headers = null, string? title = null) =>
+        CreateTable(EmbedBuilder.MaxDescriptionLength, data, headers)
+            .Select((message, i) => new EmbedBuilder().WithTitle(i == 0 ? title : null).WithDescription(message).Build());
 
-    public static IEnumerable<string> DrawBox(IEnumerable<IEnumerable<string>> data, IEnumerable<string>? headers = null)
+    public static IEnumerable<string> CreateTable(IEnumerable<IEnumerable<string>> data, IEnumerable<string>? headers = null) =>
+        CreateTable(DiscordConfig.MaxMessageSize, data, headers);
+
+    private static IEnumerable<string> CreateTable(int maxSize, IEnumerable<IEnumerable<string>> data, IEnumerable<string>? headers = null)
     {
+        var messages = new List<string>();
+        var numCols = new int[] { headers?.Count() ?? 0 }.Concat(data.Select(row => row.Count())).Max();
+
         var rows = headers == null ? data : data.Concat(new List<IEnumerable<string>>() { headers });
         var widths = Enumerable.Range(0, rows.Max(row => row.Count()))
             .Select(i => rows.Max(row => row.ElementAtOrDefault(i)?.Trim()?.Length ?? 0))
             .ToArray();
         var format = $"│ {string.Join(" │ ", widths.Select((width, i) => $"{{{i},-{width}}}"))} │";
-        var messages = new List<string>();
 
         var header = string.Join("\n", new string[] {
             "┌" + string.Join("┬", widths.Select(width => new String('─', width + 2))) + "┐",
         }.Concat(headers == null
             ? new string[] { }
             : new string[] {
-                headers == null ? "" : string.Format(format, headers.ToArray()),
-                headers == null ? "" : "├" + string.Join("┼", widths.Select(width => new String('─', width + 2))) + "┤",
+                string.Format(format, Enumerable.Range(0, numCols).Select((_, i) => headers?.ElementAtOrDefault(i)?.Trim() ?? "").ToArray()),
+                "├" + string.Join("┼", widths.Select(width => new String('─', width + 2))) + "┤",
             }));
 
         var footer = string.Join("\n", new string[] {
@@ -34,9 +39,9 @@ public static class ListUtils
 
         foreach (var row in data)
         {
-            var buf = string.Format(format, row.ToArray());
+            var buf = string.Format(format, row.Select(MessageUtils.Escape).ToArray());
 
-            if (ExceedsCharacterLimit(buffer.Length + buf.Length))
+            if (buffer.Length + buf.Length + 10 > maxSize)
             {
                 messages.Add($"```\n{buffer}\n```");
                 buffer = buf;
@@ -47,7 +52,7 @@ public static class ListUtils
                 buffer = buf;
         }
 
-        if (ExceedsCharacterLimit(buffer.Length + footer.Length))
+        if (buffer.Length + footer.Length + 10 > maxSize)
         {
             var lines = buffer.Split("\n");
             messages.Add($"```\n{string.Join("\n", lines.SkipLast(1))}\n```");
@@ -57,7 +62,4 @@ public static class ListUtils
         messages.Add($"```{buffer}\n{footer}\n```");
         return messages;
     }
-
-    private static bool ExceedsCharacterLimit(int length) =>
-        MessageUtils.ExceedsCharacterLimit(length + 10);
 }

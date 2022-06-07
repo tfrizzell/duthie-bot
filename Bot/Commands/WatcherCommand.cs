@@ -215,24 +215,24 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         if (league == null)
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league you requested.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league `{leagueOption}`.", ephemeral: true);
             return;
         }
 
         if (team == null)
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team you requested.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team `{teamOption}`.", ephemeral: true);
             return;
         }
         else if (!league.LeagueTeams.Any(lt => lt.TeamId == team.Id))
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but the team {team.Name} doesn't exist in {league.Name}.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team `{team.Name}` in the league {league.Name}.", ephemeral: true);
             return;
         }
 
         if (watcherTypes == null)
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher types you requested.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher type `{watcherTypeOption}`.", ephemeral: true);
             return;
         }
 
@@ -254,7 +254,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
             await command.RespondAsync($"Okay! I've added {MessageUtils.Pluralize(count, "watcher")} to your server.", ephemeral: true);
         }
         else
-            await command.RespondAsync($"All of the watchers you requested already exist.", ephemeral: true);
+            await command.RespondAsync($"Okay! There were no new watchers to add.", ephemeral: true);
     }
 
     public async Task ListWatchersAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -269,19 +269,19 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         if (leagueOption != null && league == null)
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league you requested.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league `{leagueOption}`.", ephemeral: true);
             return;
         }
 
         if (teamOption != null && team == null)
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team you requested.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team `{teamOption}`.", ephemeral: true);
             return;
         }
 
         if (watcherTypeOption != null && watcherTypes == null)
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher type you requested.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher type `{watcherTypeOption}`.", ephemeral: true);
             return;
         }
 
@@ -293,7 +293,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         if (watchers.Count() > 0)
         {
-            await command.RespondAsync(ListUtils.DrawBox(
+            await command.RespondAsync(ListUtils.CreateTable(
                 headers: new string[] {
                     "League",
                     "Team",
@@ -312,7 +312,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
             _logger.LogTrace($"User {user} viewed watcher list for guild \"{guild.Name}\" [{guild.Id}]");
         }
         else
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find any watchers on your server.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any watchers that matched your request.", ephemeral: true);
     }
 
     private async Task RemoveWatchersAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -336,19 +336,19 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
             if (leagueOption != null && league == null)
             {
-                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the leagues you requested.", ephemeral: true);
+                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league `{leagueOption}`.", ephemeral: true);
                 return;
             }
 
             if (teamOption != null && team == null)
             {
-                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the teams you requested.", ephemeral: true);
+                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the teams `{teamOption}`.", ephemeral: true);
                 return;
             }
 
             if (watcherTypeOption != null && watcherTypes == null)
             {
-                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher types you requested.", ephemeral: true);
+                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher types `{watcherTypeOption}`.", ephemeral: true);
                 return;
             }
 
@@ -369,7 +369,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
             await command.RespondAsync($"Okay! I've deleted {MessageUtils.Pluralize(count, "watcher")} to your server.", ephemeral: true);
         }
         else
-            await command.RespondAsync($"None of the watchers you requested exist.", ephemeral: true);
+            await command.RespondAsync($"Okay! There were no watchers to delete.", ephemeral: true);
     }
 
     private async Task<bool> CheckPrivileges(SocketSlashCommand command)

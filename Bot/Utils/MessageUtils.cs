@@ -1,12 +1,11 @@
 using System.Text.RegularExpressions;
+using Discord;
 
 namespace Duthie.Bot.Utils;
 
 public static class MessageUtils
 {
-    public const int MAX_MESSAGE_LENGTH = 2000;
-
-    public static string[]? Chunk(string? message = null, int chunkSize = MAX_MESSAGE_LENGTH)
+    public static string[]? Chunk(string? message = null, int chunkSize = DiscordConfig.MaxMessageSize)
     {
         if (message == null)
             return null;
@@ -21,9 +20,6 @@ public static class MessageUtils
 
     public static string Escape(string text) =>
         Regex.Replace(text, @"[*_~`]", @"\$0");
-
-    public static bool ExceedsCharacterLimit(int length) =>
-        length > MessageUtils.MAX_MESSAGE_LENGTH;
 
     public static string Pluralize(int value, string text)
     {

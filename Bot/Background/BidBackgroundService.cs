@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Duthie.Bot.Extensions;
 using Duthie.Bot.Utils;
 using Duthie.Services.Api;
 using Duthie.Services.Guilds;
@@ -78,9 +79,9 @@ public class BidBackgroundService : ScheduledBackgroundService
                             var messages = new List<GuildMessage>();
 
                             var (message, embed) = api.GetMessageEmbed(
-                                league.Tags.Intersect(new string[] { "esports", "tournament", "pickup", "club teams" }).Count() > 0
-                                    ? $"**{MessageUtils.Escape(team.Name)}** has won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!"
-                                    : $"The **{MessageUtils.Escape(team.Name)}** have won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!",
+                                league.HasPluralTeamNames()
+                                    ? $"The **{MessageUtils.Escape(team.Name)}** have won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!"
+                                    : $"**{MessageUtils.Escape(team.Name)}** has won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!",
                                 bid, league);
 
                             var watchers = (await _watcherService.FindAsync(

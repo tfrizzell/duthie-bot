@@ -146,7 +146,7 @@ public class AdminCommand : BaseCommand
             }
         }
 
-        await command.RespondAsync(ListUtils.DrawBox(
+        await command.RespondAsync(ListUtils.CreateTable(
             headers: new string[] {
                 "User",
                 "Access Level"

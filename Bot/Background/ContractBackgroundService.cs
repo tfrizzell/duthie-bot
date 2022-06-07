@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Duthie.Bot.Extensions;
 using Duthie.Bot.Utils;
 using Duthie.Services.Api;
 using Duthie.Services.Guilds;
@@ -78,9 +79,9 @@ public class ContractBackgroundService : ScheduledBackgroundService
                             var messages = new List<GuildMessage>();
 
                             var (message, embed) = api.GetMessageEmbed(
-                                league.Tags.Intersect(new string[] { "esports", "tournament", "pickup", "club teams" }).Count() > 0
-                                    ? $"**{MessageUtils.Escape(team.Name)}** has signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!"
-                                    : $"The **{MessageUtils.Escape(team.Name)}** have signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!",
+                                league.HasPluralTeamNames()
+                                    ? $"The **{MessageUtils.Escape(team.Name)}** have signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!"
+                                    : $"**{MessageUtils.Escape(team.Name)}** has signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!",
                                 contract, league);
 
                             var watchers = (await _watcherService.FindAsync(

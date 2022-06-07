@@ -167,7 +167,7 @@ public class ListCommand : BaseCommand
 
         if (siteOption != null && site == null)
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but that site doesn't seem to exist anymore.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the site `{siteOption}`.", ephemeral: true);
             return;
         }
 
@@ -177,7 +177,7 @@ public class ListCommand : BaseCommand
 
         if (leagues.Count() > 0)
         {
-            await command.RespondAsync(ListUtils.DrawBox(
+            await command.RespondAsync(ListUtils.CreateTable(
                 headers: new string[] {
                     "Name",
                     "Short Name",
@@ -194,7 +194,7 @@ public class ListCommand : BaseCommand
             _logger.LogTrace($"User {user} viewed league list in guild \"{guild.Name}\" [{guild.Id}]");
         }
         else
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find any supported leagues for you.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any leagues that matched your request.", ephemeral: true);
     }
 
     private async Task ListSitesAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -208,7 +208,7 @@ public class ListCommand : BaseCommand
 
         if (sites.Count() > 0)
         {
-            await command.RespondAsync(ListUtils.DrawBox(
+            await command.RespondAsync(ListUtils.CreateTable(
                 headers: new string[] {
                     "Name",
                     "URL",
@@ -223,7 +223,7 @@ public class ListCommand : BaseCommand
             _logger.LogTrace($"User {user} viewed site list in guild \"{guild.Name}\" [{guild.Id}]");
         }
         else
-            await command.RespondAsync("I don't currently have any supported sites.", ephemeral: true);
+            await command.RespondAsync("I'm sorry {command.User.Mention}, but I didn't find any sites that matched your request.", ephemeral: true);
     }
 
     private async Task ListTeamsAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -236,13 +236,13 @@ public class ListCommand : BaseCommand
 
         if (siteOption != null && site == null)
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but that site doesn't seem to exist anymore.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the site `{siteOption}`.", ephemeral: true);
             return;
         }
 
         if (leagueOption != null && league == null)
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but that league doesn't seem to exist anymore.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league `{leagueOption}`.", ephemeral: true);
             return;
         }
 
@@ -253,7 +253,7 @@ public class ListCommand : BaseCommand
 
         if (teams.Count() > 0)
         {
-            await command.RespondAsync(ListUtils.DrawBox(
+            await command.RespondAsync(ListUtils.CreateTable(
                 headers: new string[] {
                     "Name",
                     "Short Name",
@@ -270,7 +270,7 @@ public class ListCommand : BaseCommand
             _logger.LogTrace($"User {user} viewed team list in guild \"{guild.Name}\" [{guild.Id}]");
         }
         else
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find any supported teams for you.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any teams that matched your request.", ephemeral: true);
     }
 
     private async Task ListWatcherTypes(SocketSlashCommand command)
@@ -282,7 +282,7 @@ public class ListCommand : BaseCommand
 
         if (watcherTypes.Count() > 0)
         {
-            await command.RespondAsync(ListUtils.DrawBox(
+            await command.RespondAsync(ListUtils.CreateTable(
                 headers: new string[] {
                     "Name",
                     "Description"
@@ -295,7 +295,7 @@ public class ListCommand : BaseCommand
             _logger.LogTrace($"User {user} viewed watcher type list in guild \"{guild.Name}\" [{guild.Id}]");
         }
         else
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find any supported teams for you.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any watcher types that matched your request.", ephemeral: true);
     }
 
     private async Task<(League?, string?)> GetLeagueAsync(SocketSlashCommandDataOption cmd)

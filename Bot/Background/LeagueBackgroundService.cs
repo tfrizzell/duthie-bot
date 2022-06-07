@@ -41,12 +41,12 @@ public class LeagueBackgroundService : ScheduledBackgroundService
 
             await Task.WhenAll(leagues.Select(async league =>
             {
-                var api = _apiService.Get<ILeagueInfoApi>(league);
+                var api = _apiService.Get<ILeagueApi>(league);
 
                 if (api == null)
                     return;
 
-                var data = await api.GetLeagueInfoAsync(league);
+                var data = await api.GetLeagueAsync(league);
 
                 if (data == null)
                     return;

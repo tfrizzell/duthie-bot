@@ -26,7 +26,7 @@ public class MyVirtualGamingApiTests
     [Fact]
     public async Task GetLeagueInfoAsync_ReturnsExpectedLeagueInfo()
     {
-        var league = await _api.GetLeagueInfoAsync(_league);
+        var league = await _api.GetLeagueAsync(_league);
         Assert.True(league != null, $"{_api.GetType().Name} does not support league {_league.Id}");
         Assert.True(_league.Name == league!.Name, $"expected Name to be {_league.Name} but got {league.Name}");
         Assert.True(_league.LogoUrl == league.LogoUrl, $"expected LogoUrl to be {_league.LogoUrl} but got {league.LogoUrl}");

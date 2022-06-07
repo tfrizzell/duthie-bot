@@ -83,6 +83,8 @@ public class MessagingBackgroundService : ScheduledBackgroundService
 
                     if (message.Embed.Timestamp != null)
                         builder.WithTimestamp(message.Embed.Timestamp.GetValueOrDefault());
+                    else
+                        builder.WithCurrentTimestamp();
 
                     embed = builder.Build();
                 }

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Discord;
+using Duthie.Bot.Extensions;
 using Duthie.Bot.Utils;
 using Duthie.Services.Api;
 using Duthie.Services.Games;
@@ -87,7 +88,7 @@ public class GameBackgroundService : ScheduledBackgroundService
 
                         var messages = new List<GuildMessage>();
 
-                        if (_game != null)
+                        if (_game != null && game.VisitorScore != null && game.HomeScore != null)
                         {
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
@@ -97,10 +98,9 @@ public class GameBackgroundService : ScheduledBackgroundService
 
                             foreach (var watcher in watchers)
                             {
-                                var message = league.Tags.Intersect(new string[] { "esports", "tournament", "pickup", "club teams" }).Count() > 0
-                                    ? $"{{us}} has {{outcome}} {{them}} by the score of {{score}}"
-                                    : $"The {{us}} have {{outcome}} the {{them}} by the score of {{score}}";
-
+                                var message = league.HasPluralTeamNames()
+                                ? $"The {{us}} have {{outcome}} the {{them}} by the score of {{score}}"
+                                : $"{{us}} has {{outcome}} {{them}} by the score of {{score}}";
                                 var (us, usScore) = watcher.Any(w => w.TeamId == homeTeam.Id) ? (homeTeam, game.HomeScore) : (visitorTeam, game.VisitorScore);
                                 var (them, themScore) = watcher.Any(w => w.TeamId == homeTeam.Id) ? (visitorTeam, game.VisitorScore) : (homeTeam, game.HomeScore);
 
@@ -134,6 +134,8 @@ public class GameBackgroundService : ScheduledBackgroundService
                                 else if (game.Overtime == true)
                                     message = Regex.Replace(message, @"[!.]$", @" in overtime$0");
 
+                                var url = api.GetGameUrl(league, game);
+
                                 messages.Add(new GuildMessage
                                 {
                                     GuildId = watcher.Key.GuildId,
@@ -146,12 +148,12 @@ public class GameBackgroundService : ScheduledBackgroundService
                                             ? Color.DarkGreen
                                             : (usScore < themScore
                                                 ? Color.DarkRed
-                                                : Color.DarkerGrey),
+                                                : 0),
                                         Title = $"{league.ShortName} Game Result",
                                         Thumbnail = league.LogoUrl,
-                                        Content = message,
-                                        Timestamp = game.Timestamp,
-                                        Url = api.GetGameUrl(league, game),
+                                        Content = string.IsNullOrWhiteSpace(url) ? message : $"{message}\n\n[Box Score]({url})",
+                                        Timestamp = DateTimeOffset.UtcNow,
+                                        Url = url,
                                     }
                                 });
                             }
