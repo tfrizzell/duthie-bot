@@ -2,17 +2,16 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace Duthie.Types.Api.Data;
+namespace Duthie.Types.Modules.Data;
 
-public class Game : IApiData
+public class Game : IModuleData
 {
-    public Guid Id { get; set; }
     public Guid LeagueId { get; set; }
-    public ulong GameId { get; set; }
+    public ulong Id { get; set; }
     public DateTimeOffset Timestamp { get; set; }
-    public string VisitorExternalId { get; set; } = "";
+    public string VisitorId { get; set; } = "";
     public int? VisitorScore { get; set; }
-    public string HomeExternalId { get; set; } = "";
+    public string HomeId { get; set; } = "";
     public int? HomeScore { get; set; }
     public bool? Overtime { get; set; }
     public bool? Shootout { get; set; }
@@ -24,11 +23,11 @@ public class Game : IApiData
             var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
             {
                 LeagueId,
-                GameId,
+                Id,
                 Timestamp,
-                VisitorExternalId,
+                VisitorId,
                 VisitorScore,
-                HomeExternalId,
+                HomeId,
                 HomeScore,
                 Overtime,
                 Shootout,

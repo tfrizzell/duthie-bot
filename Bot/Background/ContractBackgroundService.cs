@@ -1,11 +1,12 @@
 using System.Diagnostics;
+using Discord;
 using Duthie.Bot.Extensions;
 using Duthie.Bot.Utils;
 using Duthie.Services.Api;
 using Duthie.Services.Guilds;
 using Duthie.Services.Leagues;
 using Duthie.Services.Watchers;
-using Duthie.Types.Api;
+using Duthie.Types.Modules.Api;
 using Duthie.Types.Guilds;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
@@ -75,14 +76,7 @@ public class ContractBackgroundService : ScheduledBackgroundService
                     {
                         try
                         {
-                            var team = FindTeam(league, contract.TeamExternalId);
-                            var messages = new List<GuildMessage>();
-
-                            var (message, embed) = api.GetMessageEmbed(
-                                league.HasPluralTeamNames()
-                                    ? $"The **{MessageUtils.Escape(team.Name)}** have signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!"
-                                    : $"**{MessageUtils.Escape(team.Name)}** has signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!",
-                                contract, league);
+                            var team = FindTeam(league, contract.TeamId);
 
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
@@ -90,18 +84,32 @@ public class ContractBackgroundService : ScheduledBackgroundService
                                 types: new WatcherType[] { WatcherType.Contracts }
                             )).GroupBy(w => new { w.GuildId, ChannelId = w.ChannelId ?? w.Guild.DefaultChannelId });
 
-                            foreach (var watcher in watchers)
+                            if (watchers.Count() > 0)
                             {
-                                messages.Add(new GuildMessage
-                                {
-                                    GuildId = watcher.Key.GuildId,
-                                    ChannelId = watcher.Key.ChannelId,
-                                    Message = message,
-                                    Embed = embed,
-                                });
-                            }
+                                var timestamp = DateTimeOffset.UtcNow;
+                                var url = api.GetContractUrl(league, contract);
 
-                            await _guildMessageService.SaveAsync(messages);
+                                var message = league.HasPluralTeamNames()
+                                    ? $"The **{MessageUtils.Escape(team.Name)}** have signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!"
+                                    : $"**{MessageUtils.Escape(team.Name)}** has signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!";
+
+                                await _guildMessageService.SaveAsync(watchers.Select(watcher =>
+                                    new GuildMessage
+                                    {
+                                        GuildId = watcher.Key.GuildId,
+                                        ChannelId = watcher.Key.ChannelId,
+                                        Message = "",
+                                        Embed = new GuildMessageEmbed
+                                        {
+                                            Color = Color.Gold,
+                                            Title = $"{league.ShortName} Contract Signing",
+                                            Thumbnail = league.LogoUrl,
+                                            Content = message,
+                                            Timestamp = timestamp,
+                                            Url = url,
+                                        }
+                                    }));
+                            }
                         }
                         catch (Exception e)
                         {

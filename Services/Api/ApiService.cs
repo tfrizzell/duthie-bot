@@ -1,5 +1,5 @@
 using System.Reflection;
-using Duthie.Types.Api;
+using Duthie.Types.Modules.Api;
 using Duthie.Types.Leagues;
 using Duthie.Types.Sites;
 
@@ -10,7 +10,7 @@ public class ApiService
     private static readonly IReadOnlyCollection<Type> ApiTypes = AppDomain.CurrentDomain.GetAssemblies()
         .Where(a => a.GetName().Name == "Duthie.Types")
         .SelectMany(a => a.GetTypes())
-        .Where(t => t.IsAbstract && t.FullName?.StartsWith("Duthie.Types.Api") == true && t.FullName?.StartsWith("Duthie.Types.Api.Data") == false)
+        .Where(t => t.IsAbstract && t.FullName?.StartsWith("Duthie.Types.Modules.Api.") == true)
         .ToList();
 
     private readonly IDictionary<Guid, Dictionary<Type, ISiteApi>> Apis = new Dictionary<Guid, Dictionary<Type, ISiteApi>>();

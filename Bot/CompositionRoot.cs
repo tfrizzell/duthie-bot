@@ -16,7 +16,7 @@ using Duthie.Services.Leagues;
 using Duthie.Services.Sites;
 using Duthie.Services.Teams;
 using Duthie.Services.Watchers;
-using Duthie.Types.Api;
+using Duthie.Types.Modules.Api;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

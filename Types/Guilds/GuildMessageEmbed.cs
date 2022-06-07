@@ -2,7 +2,7 @@ namespace Duthie.Types.Guilds;
 
 public class GuildMessageEmbed
 {
-    public bool ShowAuthor { get; set; } = true;
+    public bool ShowAuthor { get; set; } = false;
     public uint? Color { get; set; }
     public string? Title { get; set; }
     public string? Thumbnail { get; set; }

@@ -1,7 +1,7 @@
-using Duthie.Types.Api.Data;
-using Duthie.Types.Leagues;
+using Duthie.Types.Modules.Data;
+using League = Duthie.Types.Leagues.League;
 
-namespace Duthie.Types.Api;
+namespace Duthie.Types.Modules.Api;
 
 public interface IGameApi : ISiteApi
 {

@@ -8,7 +8,7 @@ using Duthie.Services.Games;
 using Duthie.Services.Guilds;
 using Duthie.Services.Leagues;
 using Duthie.Services.Watchers;
-using Duthie.Types.Api;
+using Duthie.Types.Modules.Api;
 using Duthie.Types.Guilds;
 using Duthie.Types.Leagues;
 using Duthie.Types.Teams;
@@ -77,9 +77,9 @@ public class GameBackgroundService : ScheduledBackgroundService
                 {
                     try
                     {
-                        var _game = await _gameService.GetByGameIdAsync(game.LeagueId, game.GameId);
-                        var visitorTeam = FindTeam(league, game.VisitorExternalId);
-                        var homeTeam = FindTeam(league, game.HomeExternalId);
+                        var _game = await _gameService.GetByGameIdAsync(game.LeagueId, game.Id);
+                        var visitorTeam = FindTeam(league, game.VisitorId);
+                        var homeTeam = FindTeam(league, game.HomeId);
 
                         if (_game != null && _game.Timestamp == game.Timestamp && _game.VisitorId == visitorTeam.Id && _game.VisitorScore == game.VisitorScore && _game.HomeId == homeTeam.Id && _game.HomeScore == game.HomeScore && _game.Overtime == game.Overtime && _game.Shootout == game.Shootout)
                         {
@@ -90,6 +90,9 @@ public class GameBackgroundService : ScheduledBackgroundService
 
                         if (_game != null && game.VisitorScore != null && game.HomeScore != null)
                         {
+                            var timestamp = DateTimeOffset.UtcNow;
+                            var url = api.GetGameUrl(league, game);
+
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
                                 teams: new Guid[] { visitorTeam.Id, homeTeam.Id },
@@ -134,8 +137,6 @@ public class GameBackgroundService : ScheduledBackgroundService
                                 else if (game.Overtime == true)
                                     message = Regex.Replace(message, @"[!.]$", @" in overtime$0");
 
-                                var url = api.GetGameUrl(league, game);
-
                                 messages.Add(new GuildMessage
                                 {
                                     GuildId = watcher.Key.GuildId,
@@ -143,7 +144,6 @@ public class GameBackgroundService : ScheduledBackgroundService
                                     Message = "",
                                     Embed = new GuildMessageEmbed
                                     {
-                                        ShowAuthor = false,
                                         Color = usScore > themScore
                                             ? Color.DarkGreen
                                             : (usScore < themScore
@@ -152,7 +152,7 @@ public class GameBackgroundService : ScheduledBackgroundService
                                         Title = $"{league.ShortName} Game Result",
                                         Thumbnail = league.LogoUrl,
                                         Content = string.IsNullOrWhiteSpace(url) ? message : $"{message}\n\n[Box Score]({url})",
-                                        Timestamp = DateTimeOffset.UtcNow,
+                                        Timestamp = timestamp,
                                         Url = url,
                                     }
                                 });
@@ -162,9 +162,9 @@ public class GameBackgroundService : ScheduledBackgroundService
                         await Task.WhenAll(
                             _gameService.SaveAsync(new Game
                             {
-                                Id = _game?.Id ?? game.Id,
+                                Id = _game?.Id ?? Guid.Empty,
                                 LeagueId = league.Id,
-                                GameId = game.GameId,
+                                GameId = game.Id,
                                 Timestamp = game.Timestamp,
                                 VisitorId = visitorTeam.Id,
                                 VisitorScore = game.VisitorScore,
@@ -177,7 +177,7 @@ public class GameBackgroundService : ScheduledBackgroundService
                     }
                     catch (Exception e)
                     {
-                        _logger.LogError(e, $"Failed to map teams for game {game.GameId} in league {league.Id}");
+                        _logger.LogError(e, $"Failed to map teams for game {game.Id} in league {league.Id}");
                     }
                 }
             }));

@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace Duthie.Types.Api;
+namespace Duthie.Types.Modules.Api;
 
 public class ApiException : Exception
 {

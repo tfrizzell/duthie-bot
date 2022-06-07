@@ -2,13 +2,13 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace Duthie.Types.Api.Data;
+namespace Duthie.Types.Modules.Data;
 
-public class Contract : IApiData
+public class Contract : IModuleData
 {
     public Guid LeagueId { get; set; }
-    public string TeamExternalId { get; set; } = "";
-    public string PlayerExternalId { get; set; } = "";
+    public string TeamId { get; set; } = "";
+    public string PlayerId { get; set; } = "";
     public string PlayerName { get; set; } = "";
     public int Length { get; set; } = 1;
     public ulong Amount { get; set; }
@@ -21,8 +21,8 @@ public class Contract : IApiData
             var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
             {
                 LeagueId,
-                TeamExternalId,
-                Player = string.IsNullOrWhiteSpace(PlayerExternalId) ? PlayerName : PlayerExternalId,
+                TeamId,
+                Player = string.IsNullOrWhiteSpace(PlayerId) ? PlayerName : PlayerId,
                 Amount,
                 Timestamp,
             })));

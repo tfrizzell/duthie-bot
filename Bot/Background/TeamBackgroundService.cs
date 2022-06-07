@@ -3,7 +3,9 @@ using System.Text.RegularExpressions;
 using Duthie.Services.Api;
 using Duthie.Services.Leagues;
 using Duthie.Services.Teams;
-using Duthie.Types.Api;
+using Duthie.Types.Leagues;
+using Duthie.Types.Modules.Api;
+using Duthie.Types.Teams;
 using Microsoft.Extensions.Logging;
 
 namespace Duthie.Bot.Background;
@@ -59,17 +61,21 @@ public class TeamBackgroundService : ScheduledBackgroundService
                 if (data == null)
                     return;
 
-                foreach (var lt in data)
+                league.LeagueTeams = data.Select(team =>
                 {
-                    var key = CreateKey(lt.Team.Name);
+                    var key = CreateKey(team.Name);
 
-                    if (teams.ContainsKey(key))
-                        lt.TeamId = teams[key].Id;
-                    else
-                        teams.Add(key, lt.Team);
-                }
+                    if (!teams.ContainsKey(key))
+                        teams.TryAdd(key, new Team { Name = team.Name, ShortName = team.ShortName });
 
-                league.LeagueTeams = data;
+                    return new LeagueTeam
+                    {
+                        LeagueId = league.Id,
+                        TeamId = teams[key].Id,
+                        Team = teams[key],
+                        ExternalId = team.Id,
+                    };
+                }).ToList();
             }));
 
             await _teamService.SaveAsync(teams.Values);

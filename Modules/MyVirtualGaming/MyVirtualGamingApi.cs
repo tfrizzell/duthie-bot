@@ -1,10 +1,9 @@
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
-using Duthie.Types.Api;
-using Duthie.Types.Api.Data;
-using Duthie.Types.Leagues;
-using Duthie.Types.Teams;
+using Duthie.Types.Modules.Api;
+using Duthie.Types.Modules.Data;
+using League = Duthie.Types.Leagues.League;
 
 namespace Duthie.Modules.MyVirtualGaming;
 
@@ -66,8 +65,8 @@ public class MyVirtualGamingApi
                 return new Bid
                 {
                     LeagueId = league.Id,
-                    TeamExternalId = m.Groups[1].Value.Trim(),
-                    PlayerExternalId = player.Groups[1].Value.Trim(),
+                    TeamId = m.Groups[1].Value.Trim(),
+                    PlayerId = player.Groups[1].Value.Trim(),
                     PlayerName = player.Groups[2].Value.Trim(),
                     Amount = ISiteApi.ParseDollars(Regex.Match(m.Groups[2].Value, @"\$[\d\.]+( \w)?", RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[0].Value),
                     State = BidState.Won,
@@ -123,7 +122,7 @@ public class MyVirtualGamingApi
                     return new Contract
                     {
                         LeagueId = league.Id,
-                        TeamExternalId = m.Groups[1].Value.Trim(),
+                        TeamId = m.Groups[1].Value.Trim(),
                         PlayerName = contract.Groups[1].Value.Trim(),
                         Amount = ISiteApi.ParseDollars(contract.Groups[2].Value),
                         Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
@@ -201,11 +200,11 @@ public class MyVirtualGamingApi
                     return new Game
                     {
                         LeagueId = league.Id,
-                        GameId = ulong.Parse(m.Groups[2].Value.Trim()),
+                        Id = ulong.Parse(m.Groups[2].Value.Trim()),
                         Timestamp = date.GetValueOrDefault(),
-                        VisitorExternalId = teams[m.Groups[3].Value.Trim()],
+                        VisitorId = teams[m.Groups[3].Value.Trim()],
                         VisitorScore = int.TryParse(m.Groups[4].Value, out var visitorScore) ? visitorScore : null,
-                        HomeExternalId = teams[m.Groups[5].Value.Trim()],
+                        HomeId = teams[m.Groups[5].Value.Trim()],
                         HomeScore = int.TryParse(m.Groups[6].Value, out var homeScore) ? homeScore : null,
                         Overtime = m.Groups[8].Value.ToUpper().Contains("OT"),
                         Shootout = m.Groups[8].Value.ToUpper().Contains("SO"),
@@ -221,7 +220,7 @@ public class MyVirtualGamingApi
         }
     }
 
-    public async Task<ILeague?> GetLeagueAsync(League league)
+    public async Task<Types.Modules.Data.League?> GetLeagueAsync(League league)
     {
         try
         {
@@ -294,10 +293,11 @@ public class MyVirtualGamingApi
             if (Regex.Match(html, @$"/{leagueId}/recent-transactions", RegexOptions.IgnoreCase | RegexOptions.Singleline).Success)
                 features |= MyVirtualGamingFeatures.RecentTransactions;
 
-            return new League
+            return new Types.Modules.Data.League
             {
+                Id = league.Id,
                 Name = Regex.Replace(title.InnerText.Trim(), @"\s+Home$", ""),
-                LogoUrl = logo.Success ? $"{Host}/{Regex.Replace(logo.Groups[1].Value.Trim(), @$"^{Host}/?", "")}" : league.LogoUrl,
+                LogoUrl = logo.Success ? $"{Host}/{Regex.Replace(logo.Groups[1].Value.Trim(), @$"^({Host})?/?", "")}" : league.LogoUrl,
                 Info = new MyVirtualGamingLeagueInfo
                 {
                     Features = features,
@@ -313,7 +313,7 @@ public class MyVirtualGamingApi
         }
     }
 
-    public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
+    public async Task<IEnumerable<Team>?> GetTeamsAsync(League league)
     {
         try
         {
@@ -347,16 +347,12 @@ public class MyVirtualGamingApi
                 .DistinctBy(m => m.Groups[1].Value)
                 .ToDictionary(
                     m => m.Groups[1].Value,
-                    m => new LeagueTeam
+                    m => new Team
                     {
                         LeagueId = league.Id,
-                        League = league,
-                        Team = new Team
-                        {
-                            Name = m.Groups[2].Value.Trim(),
-                            ShortName = m.Groups[2].Value.Trim(),
-                        },
-                        ExternalId = m.Groups[1].Value,
+                        Id = m.Groups[1].Value,
+                        Name = m.Groups[2].Value.Trim(),
+                        ShortName = m.Groups[2].Value.Trim(),
                     },
                     StringComparer.OrdinalIgnoreCase);
 
@@ -382,17 +378,16 @@ public class MyVirtualGamingApi
                 var id = lookup[match.Groups[1].Value];
 
                 if (!teams.ContainsKey(id))
-                    teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
+                    teams.Add(id, new Team { LeagueId = league.Id, Id = id });
 
-                teams[id].Team.ShortName = match.Groups[2].Value.Trim();
-                teams[id].ExternalId = id;
+                teams[id].ShortName = match.Groups[2].Value.Trim();
 
-                if (string.IsNullOrWhiteSpace(teams[id].Team.Name))
-                    teams[id].Team.Name = teams[id].Team.ShortName;
+                if (string.IsNullOrWhiteSpace(teams[id].Name))
+                    teams[id].Name = teams[id].ShortName;
             }
 
             return FixTeams(teams.Values
-                .Where(t => lookup.Values.Contains(t.ExternalId))
+                .Where(t => lookup.Values.Contains(t.Id))
                 .ToList());
         }
         catch (Exception e)
@@ -439,45 +434,35 @@ public class MyVirtualGamingApi
         }
     }
 
-    private IEnumerable<LeagueTeam> FixTeams(List<LeagueTeam> teams)
+    private IEnumerable<Team> FixTeams(List<Team> teams)
     {
-        var league = teams.FirstOrDefault()?.League;
+        var leagueId = teams.FirstOrDefault()?.LeagueId;
 
-        if (league?.Id == MyVirtualGamingLeagueProvider.VGNHL.Id)
+        if (leagueId == MyVirtualGamingLeagueProvider.VGNHL.Id)
         {
             teams.AddRange(
-                teams.Where(t => "Nashville Nashville" == t.Team.Name)
+                teams.Where(t => "Nashville Nashville" == t.Name)
                     .ToList()
-                    .Select(t => new LeagueTeam
+                    .Select(t => new Team
                     {
                         LeagueId = t.LeagueId,
-                        League = t.League,
-                        Team = new Team
-                        {
-                            Name = "Nashville Predators",
-                            ShortName = "Predators"
-                        },
-                        ExternalId = t.ExternalId,
-                    })
-            );
+                        Id = t.Id,
+                        Name = "Nashville Predators",
+                        ShortName = "Predators",
+                    }));
         }
-        else if (league?.Id == MyVirtualGamingLeagueProvider.VGAHL.Id)
+        else if (leagueId == MyVirtualGamingLeagueProvider.VGAHL.Id)
         {
             teams.AddRange(
-                teams.Where(t => "Bellevile Senators" == t.Team.Name)
+                teams.Where(t => "Bellevile Senators" == t.Name)
                     .ToList()
-                    .Select(t => new LeagueTeam
+                    .Select(t => new Team
                     {
                         LeagueId = t.LeagueId,
-                        League = t.League,
-                        Team = new Team
-                        {
-                            Name = "Belleville Senators",
-                            ShortName = "Senators"
-                        },
-                        ExternalId = t.ExternalId,
-                    })
-            );
+                        Id = t.Id,
+                        Name = "Belleville Senators",
+                        ShortName = "Senators",
+                    }));
         }
 
         return teams;
@@ -489,6 +474,6 @@ public class MyVirtualGamingApi
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-        return $"https://vghl.myvirtualgaming.com/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.GameId}";
+        return $"https://vghl.myvirtualgaming.com/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.Id}";
     }
 }

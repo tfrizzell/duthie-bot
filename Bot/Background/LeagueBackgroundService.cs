@@ -3,7 +3,7 @@ using System.Reflection;
 using Duthie.Services.Api;
 using Duthie.Services.Games;
 using Duthie.Services.Leagues;
-using Duthie.Types.Api;
+using Duthie.Types.Modules.Api;
 using Duthie.Types.Leagues;
 using Microsoft.Extensions.Logging;
 

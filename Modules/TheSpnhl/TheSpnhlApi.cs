@@ -1,8 +1,7 @@
 using System.Text.RegularExpressions;
-using Duthie.Types.Api;
-using Duthie.Types.Api.Data;
-using Duthie.Types.Leagues;
-using Duthie.Types.Teams;
+using Duthie.Types.Modules.Api;
+using Duthie.Types.Modules.Data;
+using League = Duthie.Types.Leagues.League;
 
 namespace Duthie.Modules.TheSpnhl;
 
@@ -39,13 +38,13 @@ public class TheSpnhlApi
             .Select(m => new Game
             {
                 LeagueId = league.Id,
-                GameId = ulong.Parse(m.Groups[4].Value.Trim()),
+                Id = ulong.Parse(m.Groups[4].Value.Trim()),
                 Timestamp = DateTimeOffset.Parse(m.Groups[3].Value.Trim()),
-                VisitorExternalId = m.Groups[1].Value.Trim(),
+                VisitorId = m.Groups[1].Value.Trim(),
                 VisitorScore = m.Groups[5].Value.ToUpper() == "O"
                     ? 0
                     : int.TryParse(m.Groups[5].Value, out var visitorScore) ? visitorScore : null,
-                HomeExternalId = m.Groups[2].Value.Trim(),
+                HomeId = m.Groups[2].Value.Trim(),
                 HomeScore = m.Groups[6].Value.ToUpper() == "O"
                     ? 0
                     : int.TryParse(m.Groups[6].Value, out var homeScore) ? homeScore : null,
@@ -57,7 +56,7 @@ public class TheSpnhlApi
         }
     }
 
-    public async Task<ILeague?> GetLeagueAsync(League league)
+    public async Task<Types.Modules.Data.League?> GetLeagueAsync(League league)
     {
         try
         {
@@ -75,10 +74,11 @@ public class TheSpnhlApi
                 @"Season\s*(\d+)",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
-            return new League
+            return new Types.Modules.Data.League
             {
+                Id = league.Id,
                 Name = league.Name,
-                LogoUrl = logo.Success ? $"{Host}/{Regex.Replace(logo.Groups[2].Value.Trim(), @$"^{Host}/?", "")}" : league.LogoUrl,
+                LogoUrl = logo.Success ? $"{Host}/{Regex.Replace(logo.Groups[2].Value.Trim(), @$"^({Host})?/?", "")}" : league.LogoUrl,
                 Info = new TheSpnhlLeagueInfo
                 {
                     LeagueType = leagueInfo.LeagueType,
@@ -92,7 +92,7 @@ public class TheSpnhlApi
         }
     }
 
-    public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
+    public async Task<IEnumerable<Team>?> GetTeamsAsync(League league)
     {
         try
         {
@@ -111,28 +111,28 @@ public class TheSpnhlApi
 
             return matches
                 .Cast<Match>()
-                .DistinctBy(m => m.Groups[1].Value)
+                .DistinctBy(m => m.Groups[1].Value.Trim())
                 .ToDictionary(
-                    m => m.Groups[1].Value,
+                    m => m.Groups[1].Value.Trim(),
                     m =>
                     {
-                        var team = DefaultTeams.GetByAbbreviation(m.Groups[1].Value.Trim(), leagueInfo.LeagueType);
+                        var team = Types.Teams.DefaultTeams.GetByAbbreviation(m.Groups[1].Value.Trim(), leagueInfo.LeagueType);
 
                         if (team == null)
                             return null;
 
-                        return new LeagueTeam
+                        return new Team
                         {
                             LeagueId = league.Id,
-                            TeamId = team.Id,
-                            Team = team,
-                            ExternalId = m.Groups[1].Value.Trim()
+                            Id = m.Groups[1].Value.Trim(),
+                            Name = team.Name,
+                            ShortName = team.ShortName,
                         };
                     },
                     StringComparer.OrdinalIgnoreCase)
                 .Values
                 .Where(t => t != null)
-                .Cast<LeagueTeam>()
+                .Cast<Team>()
                 .ToList();
         }
         catch (Exception e)
@@ -146,6 +146,6 @@ public class TheSpnhlApi
         if (!IsSupported(league))
             return null;
 
-        return $"{Host}/event/{game.GameId}/";
+        return $"{Host}/event/{game.Id}/";
     }
 }

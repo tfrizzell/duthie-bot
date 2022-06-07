@@ -1,9 +1,8 @@
 using System.Text.RegularExpressions;
 using System.Web;
-using Duthie.Types.Api;
-using Duthie.Types.Api.Data;
-using Duthie.Types.Leagues;
-using Duthie.Types.Teams;
+using Duthie.Types.Modules.Api;
+using Duthie.Types.Modules.Data;
+using League = Duthie.Types.Leagues.League;
 
 namespace Duthie.Modules.LeagueGaming;
 
@@ -62,7 +61,7 @@ public class LeagueGamingApi
                 return new Bid
                 {
                     LeagueId = league.Id,
-                    TeamExternalId = m.Groups[1].Value.Trim(),
+                    TeamId = m.Groups[1].Value.Trim(),
                     PlayerName = m.Groups[3].Value.Trim(),
                     Amount = ISiteApi.ParseDollars(m.Groups[4].Value),
                     State = BidState.Won,
@@ -116,11 +115,11 @@ public class LeagueGamingApi
                 return new Game
                 {
                     LeagueId = league.Id,
-                    GameId = ulong.Parse(m.Groups[5].Value.Trim()),
+                    Id = ulong.Parse(m.Groups[5].Value.Trim()),
                     Timestamp = date.GetValueOrDefault(),
-                    VisitorExternalId = m.Groups[4].Value.Trim(),
+                    VisitorId = m.Groups[4].Value.Trim(),
                     VisitorScore = int.TryParse(m.Groups[8].Value, out var visitorScore) ? visitorScore : null,
-                    HomeExternalId = m.Groups[11].Value.Trim(),
+                    HomeId = m.Groups[11].Value.Trim(),
                     HomeScore = int.TryParse(m.Groups[9].Value, out var homeScore) ? homeScore : null,
                 };
             })
@@ -133,7 +132,7 @@ public class LeagueGamingApi
         }
     }
 
-    public async Task<ILeague?> GetLeagueAsync(League league)
+    public async Task<Types.Modules.Data.League?> GetLeagueAsync(League league)
     {
         try
         {
@@ -159,11 +158,12 @@ public class LeagueGamingApi
                 return null;
 
             var season = Regex.Match(html,
-                @$"<a[^>]*leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid=(\d+)[^>]*>Roster</a>",
+                @$"<a[^>]*leagueid={leagueInfo.LeagueId}&seasonid=(\d+)[^>]*>Roster</a>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
-            return new League
+            return new Types.Modules.Data.League
             {
+                Id = league.Id,
                 Name = info.Groups[2].Value.Trim(),
                 LogoUrl = $"{Host}/images/league/icon/l{leagueInfo.LeagueId}_100.png",
                 Info = new LeagueGamingLeagueInfo
@@ -180,7 +180,7 @@ public class LeagueGamingApi
         }
     }
 
-    public async Task<IEnumerable<LeagueTeam>?> GetTeamsAsync(League league)
+    public async Task<IEnumerable<Team>?> GetTeamsAsync(League league)
     {
         try
         {
@@ -199,7 +199,7 @@ public class LeagueGamingApi
                 }));
 
             var nameMatches = Regex.Matches(html,
-                @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
+                @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&teamid=(\d+)&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             if (nameMatches.Count() == 0)
@@ -210,21 +210,17 @@ public class LeagueGamingApi
                 .DistinctBy(m => m.Groups[1].Value)
                 .ToDictionary(
                     m => m.Groups[1].Value,
-                    m => new LeagueTeam
+                    m => new Team
                     {
                         LeagueId = league.Id,
-                        League = league,
-                        Team = new Team
-                        {
-                            Name = m.Groups[2].Value.Trim(),
-                            ShortName = m.Groups[2].Value.Trim(),
-                        },
-                        ExternalId = m.Groups[1].Value,
+                        Id = m.Groups[1].Value,
+                        Name = m.Groups[2].Value.Trim(),
+                        ShortName = m.Groups[2].Value.Trim(),
                     },
                     StringComparer.OrdinalIgnoreCase);
 
             var shortNameMatches = Regex.Matches(html,
-                @$"<td[^>]*><img[^>]*/team\d+\.\w{3,4}[^>]*> \d+\) .*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>.*?</td>",
+                @$"<td[^>]*>\s*<img[^>]*/team\d+\.\w{{3,4}}[^>]*>\s*\d+\)\s*.*?\*?<a[^>]*page=team_page&teamid=(\d+)&leagueid=(?:{leagueInfo.LeagueId})?&seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>\s*</td>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>();
 
@@ -233,13 +229,12 @@ public class LeagueGamingApi
                 var id = match.Groups[1].Value;
 
                 if (!teams.ContainsKey(id))
-                    teams.Add(id, new LeagueTeam { LeagueId = league.Id, League = league, Team = new Team() });
+                    teams.Add(id, new Team { LeagueId = league.Id, Id = id });
 
-                teams[id].Team.ShortName = match.Groups[2].Value.Trim();
-                teams[id].ExternalId = id;
+                teams[id].ShortName = match.Groups[2].Value.Trim();
 
-                if (string.IsNullOrWhiteSpace(teams[id].Team.Name))
-                    teams[id].Team.Name = teams[id].Team.ShortName;
+                if (string.IsNullOrWhiteSpace(teams[id].Name))
+                    teams[id].Name = teams[id].ShortName;
             }
 
             return teams.Values.ToList();
@@ -255,6 +250,6 @@ public class LeagueGamingApi
         if (!IsSupported(league))
             return null;
 
-        return $"{Host}/forums/index.php?leaguegaming/league&action=league&page=game&gameid={game.GameId}";
+        return $"{Host}/forums/index.php?leaguegaming/league&action=league&page=game&gameid={game.Id}";
     }
 }

@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
-using Duthie.Types.Leagues;
+using League = Duthie.Types.Leagues.League;
 
-namespace Duthie.Types.Api;
+namespace Duthie.Types.Modules.Api;
 
 public interface ISiteApi
 {

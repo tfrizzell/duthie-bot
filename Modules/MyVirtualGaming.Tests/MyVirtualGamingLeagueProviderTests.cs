@@ -12,7 +12,7 @@ public class MyVirtualGamingLeagueProviderTests
 
     [Theory]
     [MemberData(nameof(DefaultLeagues))]
-    public void DefaultLeagues_Exist(Guid id, string name, string leagueId)
+    public void DefaultLeagues_Exist(Guid id, string name, string leagueId, bool enabled = true)
     {
         var leagueProvider = new MyVirtualGamingLeagueProvider();
         var league = leagueProvider.Leagues.FirstOrDefault(l => l.Id == id);
@@ -21,7 +21,7 @@ public class MyVirtualGamingLeagueProviderTests
         Assert.True(MyVirtualGamingSiteProvider.MyVirtualGaming.Id == league!.SiteId, $"expected SiteId to be {MyVirtualGamingSiteProvider.MyVirtualGaming.Id} but got {league.SiteId}");
         Assert.True(name == league.Name, $"expected Name to be {name} but got {league.Name}");
         Assert.True(league.Info is MyVirtualGamingLeagueInfo, $"expected Info to be of type {typeof(MyVirtualGamingLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
-        Assert.True(league.Enabled, $"expected Enabled to be {true} but got {league.Enabled}");
+        Assert.True(league.Enabled == enabled, $"expected Enabled to be {enabled} but got {league.Enabled}");
 
         var actualLeagueId = (league.Info as MyVirtualGamingLeagueInfo)!.LeagueId;
         Assert.True(leagueId == actualLeagueId, $"expected Info.LeagueId to be {leagueId} but got {actualLeagueId}");
@@ -38,5 +38,7 @@ public class MyVirtualGamingLeagueProviderTests
         yield return new object[] { new Guid("0ec6177f-7e39-437b-9cb9-1551db76bd4e"), "VGHL World Championship", "vghlwc" };
         yield return new object[] { new Guid("8cba4eb0-8722-4415-aa82-b0027ae33702"), "VGHL Club League", "vghlclub" };
         yield return new object[] { new Guid("9545ede8-6948-44e0-8ef8-61668c6ab9e1"), "VGHL 3s League", "vghl3" };
+        yield return new object[] { new Guid("90a7f19a-5913-4abe-af7e-10ddf3e84564"), "VGKHL Kontinental League", "vgkhl" };
+        yield return new object[] { new Guid("cef6775d-f621-4164-a629-80ec54e016fa"), "VGIHL International League", "vgihl", false };
     }
 }
