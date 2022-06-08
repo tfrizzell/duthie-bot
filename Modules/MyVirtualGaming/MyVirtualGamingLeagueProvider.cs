@@ -30,7 +30,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://vghl.myvirtualgaming.com/images/Images/new_vgahl_logo_menu.svg",
         Info = new MyVirtualGamingLeagueInfo
         {
-            Features = MyVirtualGamingFeatures.All,
+            Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vgahl",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
@@ -46,7 +46,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://vghl.myvirtualgaming.com/images/Images/new_vgphl_logo_menu.svg",
         Info = new MyVirtualGamingLeagueInfo
         {
-            Features = MyVirtualGamingFeatures.All,
+            Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vgphl",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
@@ -94,7 +94,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://vghl.myvirtualgaming.com/images/Images/new_vghl3_logo_menu.svg",
         Info = new MyVirtualGamingLeagueInfo
         {
-            Features = MyVirtualGamingFeatures.All,
+            Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vghl3",
         },
         Tags = new Tags { "psn", "ea nhl", "3v3" },
@@ -110,7 +110,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://vghl.myvirtualgaming.com/images/Images/new_vgkhl_logo_menu.svg",
         Info = new MyVirtualGamingLeagueInfo
         {
-            Features = MyVirtualGamingFeatures.All,
+            Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vgkhl",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
@@ -126,7 +126,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://vghl.myvirtualgaming.com/images/Images/new_vgihl_logo_menu.svg",
         Info = new MyVirtualGamingLeagueInfo
         {
-            Features = MyVirtualGamingFeatures.All,
+            Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vgihl",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },

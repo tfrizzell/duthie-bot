@@ -4,5 +4,6 @@ public enum LeagueStateType
 {
     Bid,
     Contract,
+    DraftPick,
     Trade,
 }

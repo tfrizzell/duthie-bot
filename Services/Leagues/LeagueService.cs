@@ -164,6 +164,10 @@ public class LeagueService
                         league.State.LastContract = state.Value;
                         break;
 
+                    case LeagueStateType.DraftPick:
+                        league.State.LastDraftPick = state.Value;
+                        break;
+
                     case LeagueStateType.Trade:
                         league.State.LastTrade = state.Value;
                         break;

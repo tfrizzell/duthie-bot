@@ -111,8 +111,8 @@ public class LeagueGamingApiTests
         foreach (var contract in contracts!)
         {
             Assert.True(_league.Id == contract.LeagueId, $"expected LeagueId to be {_league.Id} but got {contract.LeagueId}");
-            Assert.True(int.TryParse(contract.TeamId, out var t), $"expected numeric TeamId but got {contract.TeamId}");
-            Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected numeric PlayerName to not be empty but got {contract.PlayerName}");
+            Assert.True(int.TryParse(contract.TeamId, out var t), $"expected TeamId to be numeric but got {contract.TeamId}");
+            Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected PlayerName to be numeric to not be empty but got {contract.PlayerName}");
             Assert.True(contract.Length > 0, $"expected Length to be greater than 0 but got {contract.Length}");
             Assert.True(contract.Amount > 0, $"expected Amount to be greater than 0 but got {contract.Amount}");
         }
@@ -127,8 +127,8 @@ public class LeagueGamingApiTests
         foreach (var trade in trades!)
         {
             Assert.True(_league.Id == trade.LeagueId, $"expected LeagueId to be {_league.Id} but got {trade.LeagueId}");
-            Assert.True(int.TryParse(trade.FromId, out var f), $"expected numeric FromId but got {trade.FromId}");
-            Assert.True(int.TryParse(trade.ToId, out var t), $"expected numeric ToId but got {trade.ToId}");
+            Assert.True(int.TryParse(trade.FromId, out var f), $"expected FromId to be numeric but got {trade.FromId}");
+            Assert.True(int.TryParse(trade.ToId, out var t), $"expected ToId to be numeric but got {trade.ToId}");
         }
     }
 }

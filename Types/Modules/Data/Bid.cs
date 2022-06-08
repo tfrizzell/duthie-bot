@@ -12,7 +12,7 @@ public class Bid : IModuleData
     public string PlayerName { get; set; } = "";
     public ulong Amount { get; set; }
     public BidState State { get; set; }
-    public DateTimeOffset Timestamp { get; set; }
+    public DateTimeOffset? Timestamp { get; set; }
 
     public string GetHash()
     {

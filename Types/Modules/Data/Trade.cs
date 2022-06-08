@@ -11,7 +11,7 @@ public class Trade : IModuleData
     public string ToId { get; set; } = "";
     public string[] FromAssets { get; set; } = new string[] { };
     public string[] ToAssets { get; set; } = new string[] { };
-    public DateTimeOffset Timestamp { get; set; }
+    public DateTimeOffset? Timestamp { get; set; }
 
     public string GetHash()
     {

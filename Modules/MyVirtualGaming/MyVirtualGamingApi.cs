@@ -8,7 +8,7 @@ using League = Duthie.Types.Leagues.League;
 namespace Duthie.Modules.MyVirtualGaming;
 
 public class MyVirtualGamingApi
-    : IBidApi, IContractApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi
+    : IBidApi, IContractApi, IDraftApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi
 {
     private const string Host = "https://vghl.myvirtualgaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
@@ -134,6 +134,56 @@ public class MyVirtualGamingApi
         catch (Exception e)
         {
             throw new ApiException($"An unexpected error occurred while fetching contracts for league \"{league.Name}\" [{league.Id}]", e);
+        }
+    }
+
+    public async Task<IEnumerable<DraftPick>?> GetDraftPicksAsync(League league)
+    {
+        try
+        {
+            if (!IsSupported(league))
+                return null;
+
+            var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+
+            if (!leagueInfo.Features.HasFlag(MyVirtualGamingFeatures.DraftCentre))
+                return new List<DraftPick>();
+
+            var html = await _httpClient.GetStringAsync(GetUrl(
+                league: leagueInfo.LeagueId,
+                path: "draft-centre"));
+
+            var teams = await GetTeamLookupAsync(league);
+
+            return Regex.Matches(html,
+                @"<div[^>]*\bround(\d+)\b[^>]*>.*?<tbody[^>]*>(.*?)</tbody>\s*</table>\s*</div>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(d =>
+            {
+                var roundNumber = int.Parse(d.Groups[1].Value.Trim());
+                var roundPicks = 1;
+
+                return Regex.Matches(d.Groups[2].Value,
+                    @"<td[^>]*>(\d+)</td>\s*<td[^>]*>.*?</td>\s*<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>\s*<a[^>]*player&id=(\d+)[^>]*>(.*?)</a>\s*</td>",
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline)
+                .Cast<Match>()
+                .Select(m => new DraftPick
+                {
+                    LeagueId = league.Id,
+                    TeamId = teams[m.Groups[2].Value.Trim()],
+                    PlayerId = m.Groups[3].Value.Trim(),
+                    PlayerName = m.Groups[4].Value.Trim(),
+                    RoundNumber = roundNumber,
+                    RoundPick = roundPicks++,
+                    OverallPick = int.Parse(m.Groups[1].Value.Trim()),
+                });
+            })
+            .SelectMany(c => c);
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching draft picks for league \"{league.Name}\" [{league.Id}]", e);
         }
     }
 
@@ -288,8 +338,11 @@ public class MyVirtualGamingApi
             var leagueId = Regex.Split(id.InnerText.Trim(), @"/+")[3] ?? leagueInfo.LeagueId;
             var features = MyVirtualGamingFeatures.None;
 
-            if (Regex.Match(html, @$"/{leagueId}/recent-transactions", RegexOptions.IgnoreCase | RegexOptions.Singleline).Success)
+            if (Regex.Match(html, @$"/vghlleagues/{leagueId}/recent-transactions", RegexOptions.IgnoreCase | RegexOptions.Singleline).Success)
                 features |= MyVirtualGamingFeatures.RecentTransactions;
+
+            if (Regex.Match(html, @$"/vghlleagues/{leagueId}/draft-centre", RegexOptions.IgnoreCase | RegexOptions.Singleline).Success)
+                features |= MyVirtualGamingFeatures.DraftCentre;
 
             return new Types.Modules.Data.League
             {
@@ -537,6 +590,15 @@ public class MyVirtualGamingApi
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
         return $"{Host}/vghlleagues/{leagueInfo.LeagueId}/recent-transactions#Signings";
+    }
+
+    public string? GetDraftPickUrl(League league, DraftPick draftPick)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+        return $"{Host}/vghlleagues/{leagueInfo.LeagueId}/draft-centre";
     }
 
     public string? GetGameUrl(League league, Game game)

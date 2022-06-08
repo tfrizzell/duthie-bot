@@ -97,9 +97,9 @@ public class MyVirtualGamingApiTests
         foreach (var bid in bids!)
         {
             Assert.True(_league.Id == bid.LeagueId, $"expected LeagueId to be {_league.Id} but got {bid.LeagueId}");
-            Assert.True(int.TryParse(bid.TeamId, out var t), $"expected numeric TeamId but got {bid.TeamId}");
-            Assert.True(int.TryParse(bid.PlayerId, out var p), $"expected numeric PlayerId but got {bid.PlayerId}");
-            Assert.True(!string.IsNullOrWhiteSpace(bid.PlayerName), $"expected numeric PlayerName to not be empty but got {bid.PlayerName}");
+            Assert.True(int.TryParse(bid.TeamId, out var t), $"expected TeamId to be numeric but got {bid.TeamId}");
+            Assert.True(int.TryParse(bid.PlayerId, out var p), $"expected PlayerId to be numeric but got {bid.PlayerId}");
+            Assert.True(!string.IsNullOrWhiteSpace(bid.PlayerName), $"expected PlayerName to be numeric to not be empty but got {bid.PlayerName}");
             Assert.True(bid.Amount > 0, $"expected Amount to be greater than 0 but got {bid.Amount}");
             Assert.True(BidState.Won == bid.State, $"expected State to be {BidState.Won} but got {bid.State}");
         }
@@ -114,8 +114,8 @@ public class MyVirtualGamingApiTests
         foreach (var contract in contracts!)
         {
             Assert.True(_league.Id == contract.LeagueId, $"expected LeagueId to be {_league.Id} but got {contract.LeagueId}");
-            Assert.True(int.TryParse(contract.TeamId, out var t), $"expected numeric TeamId but got {contract.TeamId}");
-            Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected numeric PlayerName to not be empty but got {contract.PlayerName}");
+            Assert.True(int.TryParse(contract.TeamId, out var t), $"expected TeamId to be numeric but got {contract.TeamId}");
+            Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected PlayerName to be numeric to not be empty but got {contract.PlayerName}");
             Assert.True(contract.Length > 0, $"expected Length to be greater than 0 but got {contract.Length}");
             Assert.True(contract.Amount > 0, $"expected Amount to be greater than 0 but got {contract.Amount}");
         }
@@ -130,9 +130,28 @@ public class MyVirtualGamingApiTests
         foreach (var trade in trades!)
         {
             Assert.True(_league.Id == trade.LeagueId, $"expected LeagueId to be {_league.Id} but got {trade.LeagueId}");
-            Assert.True(int.TryParse(trade.FromId, out var f), $"expected numeric FromId but got {trade.FromId}");
-            Assert.True(int.TryParse(trade.ToId, out var t), $"expected numeric ToId but got {trade.ToId}");
+            Assert.True(int.TryParse(trade.FromId, out var f), $"expected FromId to be numeric but got {trade.FromId}");
+            Assert.True(int.TryParse(trade.ToId, out var t), $"expected ToId to be numeric but got {trade.ToId}");
             Assert.True(trade.FromAssets.Count() == 1, $"expected exactly 1 Asset but got {trade.FromAssets.Count()}");
+        }
+    }
+
+    [Fact]
+    public async Task GetDraftPicksAsync_ReturnsNotNull()
+    {
+        var draftPicks = await _api.GetDraftPicksAsync(_league);
+        Assert.True(draftPicks != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+
+        foreach (var draftPick in draftPicks!)
+        {
+            Assert.True(_league.Id == draftPick.LeagueId, $"expected LeagueId to be {_league.Id} but got {draftPick.LeagueId}");
+            Assert.True(int.TryParse(draftPick.TeamId, out var f), $"expected TeamId to be numeric but got {draftPick.TeamId}");
+            Assert.True(int.TryParse(draftPick.PlayerId, out var t), $"expected PlayerId to be numeric but got {draftPick.PlayerId}");
+            Assert.True(!string.IsNullOrWhiteSpace(draftPick.PlayerName), $"expected PlayerName to be numeric to not be empty but got {draftPick.PlayerName}");
+            Assert.True(draftPick.RoundNumber >= 1, $"expected RoundNumber to be greater than or equal to 1 but got {draftPick.RoundNumber}");
+            Assert.True(draftPick.RoundPick >= 1, $"expected RoundPick to be greater than or equal to 1 but got {draftPick.RoundPick}");
+            Assert.True(draftPick.OverallPick >= 1, $"expected OverallPick to be greater than or equal to 1 but got {draftPick.OverallPick}");
+            Assert.True(draftPick.Timestamp == null, $"expected Timestamp to be null byt got {draftPick.Timestamp}");
         }
     }
 }

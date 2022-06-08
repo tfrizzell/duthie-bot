@@ -4,14 +4,15 @@ using System.Text.Json;
 
 namespace Duthie.Types.Modules.Data;
 
-public class Contract : IModuleData
+public class DraftPick : IModuleData
 {
     public Guid LeagueId { get; set; }
     public string TeamId { get; set; } = "";
     public string PlayerId { get; set; } = "";
     public string PlayerName { get; set; } = "";
-    public int Length { get; set; } = 1;
-    public ulong Amount { get; set; }
+    public int RoundNumber { get; set; }
+    public int RoundPick { get; set; }
+    public int OverallPick { get; set; }
     public DateTimeOffset? Timestamp { get; set; }
 
     public string GetHash()
@@ -23,7 +24,9 @@ public class Contract : IModuleData
                 LeagueId,
                 TeamId,
                 Player = string.IsNullOrWhiteSpace(PlayerId) ? PlayerName : PlayerId,
-                Amount,
+                RoundNumber,
+                RoundPick,
+                OverallPick,
                 Timestamp,
             })));
 
