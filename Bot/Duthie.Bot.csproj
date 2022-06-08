@@ -17,6 +17,7 @@
     <ProjectReference Include="..\Modules\LeagueGaming\Duthie.Modules.LeagueGaming.csproj" />
     <ProjectReference Include="..\Modules\MyVirtualGaming\Duthie.Modules.MyVirtualGaming.csproj" />
     <ProjectReference Include="..\Modules\TheSpnhl\Duthie.Modules.TheSpnhl.csproj" />
+    <ProjectReference Include="..\Migrations\Sqlite\Duthie.Migrations.Sqlite.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,7 +38,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>

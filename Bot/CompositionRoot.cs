@@ -42,16 +42,7 @@ public static class CompositionRoot
 
         return services.AddDbContextFactory<DuthieDbContext>(options =>
             {
-                switch (databaseConfiguration.Type)
-                {
-                    case DatabaseType.MySql:
-                        options.UseMySql(databaseConfiguration.ConnectionString, MariaDbServerVersion.AutoDetect(databaseConfiguration.ConnectionString), b => b.MigrationsAssembly("Duthie.Bot"));
-                        break;
-
-                    case DatabaseType.Sqlite:
-                        options.UseSqlite(databaseConfiguration.ConnectionString, b => b.MigrationsAssembly("Duthie.Bot"));
-                        break;
-                }
+                options.UseSqlite(databaseConfiguration.ConnectionString, b => b.MigrationsAssembly("Duthie.Bot"));
             })
             .AddLogging(options =>
             {
