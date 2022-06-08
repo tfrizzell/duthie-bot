@@ -132,7 +132,7 @@ public class MyVirtualGamingApiTests
             Assert.True(_league.Id == trade.LeagueId, $"expected LeagueId to be {_league.Id} but got {trade.LeagueId}");
             Assert.True(int.TryParse(trade.FromId, out var f), $"expected numeric FromId but got {trade.FromId}");
             Assert.True(int.TryParse(trade.ToId, out var t), $"expected numeric ToId but got {trade.ToId}");
-            Assert.True(trade.Assets.Count() == 1, $"expected exactly 1 Asset but got {trade.Assets.Count()}");
+            Assert.True(trade.FromAssets.Count() == 1, $"expected exactly 1 Asset but got {trade.FromAssets.Count()}");
         }
     }
 }

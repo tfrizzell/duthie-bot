@@ -53,56 +53,70 @@ public class MessagingBackgroundService : ScheduledBackgroundService
             if (messages.Count() > 0)
                 _logger.LogTrace($"Sending {MessageUtils.Pluralize(messages.Count(), "message")} to Discord");
 
-            await Task.WhenAll(messages.Select(async message =>
-            {
-                var guild = _client.GetGuild(message.GuildId);
-
-                if (guild == null)
-                    return;
-
-                var channel = (guild.GetChannel(message.ChannelId) ?? guild.DefaultChannel) as IMessageChannel;
-
-                if (channel == null)
-                    return;
-
-                await channel.TriggerTypingAsync();
-                Embed? embed = null;
-
-                if (message.Embed != null)
+            await Task.WhenAll(messages
+                .GroupBy(m =>
                 {
-                    var builder = new EmbedBuilder()
-                        .WithColor((Color?)message.Embed.Color ?? Color.Default)
-                        .WithTitle(message.Embed.Title)
-                        .WithThumbnailUrl(message.Embed.Thumbnail)
-                        .WithDescription(message.Embed.Content)
-                        .WithFooter(message.Embed.Footer)
-                        .WithUrl(message.Embed.Url);
+                    var guild = _client.GetGuild(m.GuildId);
 
-                    if (message.Embed.ShowAuthor)
-                        builder.WithAuthor(_client.CurrentUser);
+                    return new
+                    {
+                        Guild = guild,
+                        Channel = (guild?.GetChannel(m.ChannelId) ?? guild?.DefaultChannel) as IMessageChannel
+                    };
+                })
+                .Where(g => g.Key.Guild != null && g.Key.Channel != null)
+                .Select(async messages =>
+                {
+                    var guild = messages.Key.Guild!;
+                    var channel = messages.Key.Channel!;
+                    await channel.TriggerTypingAsync();
+                    Embed? embed = null;
 
-                    if (message.Embed.Timestamp != null)
-                        builder.WithTimestamp(message.Embed.Timestamp.GetValueOrDefault());
-                    else
-                        builder.WithCurrentTimestamp();
+                    foreach (var message in messages)
+                    {
+                        try
+                        {
+                            if (message.Embed != null)
+                            {
+                                var builder = new EmbedBuilder()
+                                    .WithColor((Color?)message.Embed.Color ?? Color.Default)
+                                    .WithTitle(message.Embed.Title)
+                                    .WithThumbnailUrl(message.Embed.Thumbnail)
+                                    .WithDescription(message.Embed.Content)
+                                    .WithFooter(message.Embed.Footer)
+                                    .WithUrl(message.Embed.Url);
 
-                    embed = builder.Build();
-                }
+                                if (message.Embed.ShowAuthor)
+                                    builder.WithAuthor(_client.CurrentUser);
 
-                await channel.SendMessageAsync(message.Message, embed: embed);
+                                if (message.Embed.Timestamp != null)
+                                    builder.WithTimestamp(message.Embed.Timestamp.GetValueOrDefault());
+                                else
+                                    builder.WithCurrentTimestamp();
 
-                message.ChannelId = channel.Id;
-                message.SentAt = DateTimeOffset.UtcNow;
-                await _guildMessageService.SaveAsync(message);
-            }));
+                                embed = builder.Build();
+                            }
+
+                            await channel.SendMessageAsync(message.Message, embed: embed);
+
+                            message.ChannelId = channel.Id;
+                            message.SentAt = DateTimeOffset.UtcNow;
+                            await _guildMessageService.SaveAsync(message);
+                        }
+                        catch (Exception e)
+                        {
+                            _logger.LogError(e, $"An unexpected error has occurred while sending message {message.Id}");
+                        }
+                    }
+                }));
 
             sw.Stop();
-            _logger.LogTrace($"Message sending task completed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Message sending task completed in {sw.Elapsed.TotalSeconds}s");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Message sending task failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Message sending task failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during message sending task.");
         }
     }

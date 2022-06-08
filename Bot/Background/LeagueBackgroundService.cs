@@ -47,37 +47,45 @@ public class LeagueBackgroundService : ScheduledBackgroundService
 
             var seasonChanges = (await Task.WhenAll(leagues.Select(async league =>
             {
-                var api = _apiService.Get<ILeagueApi>(league);
-
-                if (api == null)
-                    return null;
-
-                var data = await api.GetLeagueAsync(league);
-
-                if (data == null)
-                    return null;
-
-                var seasonIdProp = league.Info?.GetType().GetProperty("SeasonId", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-
-                if (seasonIdProp != null)
+                try
                 {
-                    var prevSeasonId = seasonIdProp.GetValue(league.Info);
-                    var nextSeasonId = seasonIdProp.GetValue(data.Info);
+                    var api = _apiService.Get<ILeagueApi>(league);
 
-                    if (!Object.Equals(prevSeasonId, nextSeasonId))
+                    if (api == null)
+                        return null;
+
+                    var data = await api.GetLeagueAsync(league);
+
+                    if (data == null)
+                        return null;
+
+                    var seasonIdProp = league.Info?.GetType().GetProperty("SeasonId", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+
+                    if (seasonIdProp != null)
                     {
-                        return new SeasonChange
+                        var prevSeasonId = seasonIdProp.GetValue(league.Info);
+                        var nextSeasonId = seasonIdProp.GetValue(data.Info);
+
+                        if (!Object.Equals(prevSeasonId, nextSeasonId))
                         {
-                            League = league,
-                            PrevSeasonId = prevSeasonId,
-                            NextSeasonId = nextSeasonId
-                        };
+                            return new SeasonChange
+                            {
+                                League = league,
+                                PrevSeasonId = prevSeasonId,
+                                NextSeasonId = nextSeasonId
+                            };
+                        }
                     }
+
+                    league.Name = data.Name;
+                    league.LogoUrl = data.LogoUrl;
+                    league.Info = data.Info;
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, $"An unexpected error has occurred while updating league \"{league.Name}\" [{league.Id}]");
                 }
 
-                league.Name = data.Name;
-                league.LogoUrl = data.LogoUrl;
-                league.Info = data.Info;
                 return null;
             })))
             .Where(l => l != null)
@@ -98,12 +106,12 @@ public class LeagueBackgroundService : ScheduledBackgroundService
             }
 
             sw.Stop();
-            _logger.LogTrace($"League update task completed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"League update task completed in {sw.Elapsed.TotalSeconds}s");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"League update task failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"League update task failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during league update task.");
         }
     }

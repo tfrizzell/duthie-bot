@@ -67,12 +67,12 @@ public class GuildEventHandler : IAsyncHandler
             await UpdateGuildsAsync(client);
 
             sw.Stop();
-            _logger.LogTrace($"Guild update completed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Guild update completed in {sw.Elapsed.TotalSeconds}s");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Guild update failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Guild update failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during guild update.");
             Environment.Exit(0);
         }

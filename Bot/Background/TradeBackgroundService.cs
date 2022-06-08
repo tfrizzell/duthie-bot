@@ -63,6 +63,7 @@ public class TradeBackgroundService : ScheduledBackgroundService
                     return;
 
                 var data = (await api.GetTradesAsync(league))?
+                    .Where(t => t.FromAssets.Count() + t.ToAssets.Count() > 0)
                     .OrderBy(b => b.Timestamp)
                         .ThenBy(b => b.GetHash())
                     .ToList();
@@ -78,6 +79,9 @@ public class TradeBackgroundService : ScheduledBackgroundService
                     {
                         try
                         {
+                            if (trade.FromAssets.Count() == 0)
+                                trade.Reverse();
+
                             var from = FindTeam(league, trade.FromId);
                             var to = FindTeam(league, trade.ToId);
 
@@ -89,13 +93,45 @@ public class TradeBackgroundService : ScheduledBackgroundService
 
                             if (watchers.Count() > 0)
                             {
-                                var assets = Regex.Replace(string.Join(", ", trade.Assets), @",([^,]+)$", @", and $1");
                                 var timestamp = DateTimeOffset.UtcNow;
                                 var url = api.GetTradeUrl(league, trade);
 
+                                var fromAssets = Regex.Replace(string.Join(", ",
+                                        trade.FromAssets
+                                            .Select(a => league.Teams.Aggregate(a, (a, t) => a.Replace(t.Name, t.ShortName)))
+                                            .ToArray()), @", ([^,]+)$", @", and $1");
+
+                                var toAssets = Regex.Replace(string.Join(", ",
+                                        trade.ToAssets
+                                            .Select(a => league.Teams.Aggregate(a, (a, t) => a.Replace(t.Name, t.ShortName)))
+                                            .ToArray()), @", ([^,]+)$", @", and $1");
+
                                 var message = league.HasPluralTeamNames()
-                                    ? $"The **{MessageUtils.Escape(from.Name)}** have traded **{MessageUtils.Escape(assets)}** to the **{MessageUtils.Escape(to.Name)}**!"
-                                    : $"**{MessageUtils.Escape(from.Name)}** has traded **{MessageUtils.Escape(assets)}** to **{MessageUtils.Escape(to.Name)}**!";
+                                    ? "The {us} have {action} {usAssets} {direction} the {them} in exchange for {themAssets}!"
+                                    : "{us} has {action} {usAssets} {direction} {them} in exchange for {themAssets}!";
+
+                                if (watchers.Any(watcher => watcher.Any(w => w.TeamId == from.Id)))
+                                {
+                                    message = message
+                                        .Replace("{us}", $"**{MessageUtils.Escape(from.Name)}**")
+                                        .Replace("{action}", "traded")
+                                        .Replace("{usAssets}", fromAssets)
+                                        .Replace("{direction}", "to")
+                                        .Replace("{them}", $"**{MessageUtils.Escape(to.Name)}**")
+                                        .Replace("{themAssets}", toAssets);
+                                }
+                                else
+                                {
+                                    message = message
+                                        .Replace("{us}", $"**{MessageUtils.Escape(to.Name)}**")
+                                        .Replace("{action}", "acquired")
+                                        .Replace("{usAssets}", toAssets)
+                                        .Replace("{direction}", "from")
+                                        .Replace("{them}", $"**{MessageUtils.Escape(from.Name)}**")
+                                        .Replace("{themAssets}", fromAssets);
+                                }
+
+                                message = Regex.Replace(message, @"\s+ in exchange for\s*!$", "!");
 
                                 await _guildMessageService.SaveAsync(watchers.Select(watcher =>
                                     new GuildMessage
@@ -105,7 +141,7 @@ public class TradeBackgroundService : ScheduledBackgroundService
                                         Message = "",
                                         Embed = new GuildMessageEmbed
                                         {
-                                            Color = Color.Orange,
+                                            Color = Color.Blue,
                                             Title = $"{league.ShortName} Trade",
                                             Thumbnail = league.LogoUrl,
                                             Content = message,
@@ -115,27 +151,34 @@ public class TradeBackgroundService : ScheduledBackgroundService
                                     }));
                             }
                         }
+                        catch (KeyNotFoundException e)
+                        {
+                            _logger.LogWarning(e, $"Failed to map teams for trade {trade.GetHash()} for league \"{league.Name}\" [{league.Id}]");
+                        }
                         catch (Exception e)
                         {
-                            _logger.LogError(e, $"Failed to map teams for trade {trade.GetHash()} in league {league.Id}");
+                            _logger.LogError(e, $"An unexpected error has occurred while processing trade {trade.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
 
                         league.State.LastTrade = trade.GetHash();
                     }
+
+                    if (data.Count() > 0)
+                        _logger.LogTrace($"Successfully processed {data.Count()} new trades for league \"{league.Name}\" [{league.Id}]");
                 }
                 else
                     league.State.LastTrade = data?.LastOrDefault()?.GetHash() ?? "";
 
-                await _leagueService.SaveAsync(league);
+                await _leagueService.SaveStateAsync(league.Id, LeagueStateType.Trade, league.State.LastTrade);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Trade tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Trade tracking task completed in {sw.Elapsed.TotalSeconds}s");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Trade tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Trade tracking task failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during trade tracking task.");
         }
     }
@@ -145,7 +188,7 @@ public class TradeBackgroundService : ScheduledBackgroundService
         var team = league.LeagueTeams.FirstOrDefault(t => t.ExternalId == externalId);
 
         if (team == null)
-            throw new KeyNotFoundException($"no team with external id {externalId} was found for league {league.Id}");
+            throw new KeyNotFoundException($"no team with external id {externalId} was found for league \"{league.Name}\" [{league.Id}]");
 
         return team.Team;
     }

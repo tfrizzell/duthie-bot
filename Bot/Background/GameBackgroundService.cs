@@ -105,8 +105,9 @@ public class GameBackgroundService : ScheduledBackgroundService
                             foreach (var watcher in watchers)
                             {
                                 var message = league.HasPluralTeamNames()
-                                ? $"The {{us}} have {{outcome}} the {{them}} by the score of {{score}}"
-                                : $"{{us}} has {{outcome}} {{them}} by the score of {{score}}";
+                                    ? "The {us} have {outcome} the {them} by the score of {score}}"
+                                    : "{us} has {outcome} {them} by the score of {score}";
+
                                 var (us, usScore) = watcher.Any(w => w.TeamId == homeTeam.Id) ? (homeTeam, game.HomeScore) : (visitorTeam, game.VisitorScore);
                                 var (them, themScore) = watcher.Any(w => w.TeamId == homeTeam.Id) ? (visitorTeam, game.VisitorScore) : (homeTeam, game.HomeScore);
 
@@ -178,20 +179,24 @@ public class GameBackgroundService : ScheduledBackgroundService
                             }),
                             messages.Count() == 0 ? Task.CompletedTask : _guildMessageService.SaveAsync(messages));
                     }
+                    catch (KeyNotFoundException e)
+                    {
+                        _logger.LogWarning(e, $"Failed to map teams for game {game.Id} for league \"{league.Name}\" [{league.Id}]");
+                    }
                     catch (Exception e)
                     {
-                        _logger.LogError(e, $"Failed to map teams for game {game.Id} in league {league.Id}");
+                        _logger.LogError(e, $"An unexpected error has occurred while processing game {game.Id} for league \"{league.Name}\" [{league.Id}]");
                     }
                 }
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Game update task completed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Game update task completed in {sw.Elapsed.TotalSeconds}s");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Game update task failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Game update task failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during game update task.");
         }
     }
@@ -201,7 +206,7 @@ public class GameBackgroundService : ScheduledBackgroundService
         var team = league.LeagueTeams.FirstOrDefault(t => t.ExternalId == externalId);
 
         if (team == null)
-            throw new KeyNotFoundException($"no team with external id {externalId} was found for league {league.Id}");
+            throw new KeyNotFoundException($"no team with external id {externalId} was found for league \"{league.Name}\" [{league.Id}]");
 
         return team.Team;
     }

@@ -226,7 +226,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
         }
         else if (!league.LeagueTeams.Any(lt => lt.TeamId == team.Id))
         {
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team `{team.Name}` in the league {league.Name}.", ephemeral: true);
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team `{team.Name}` in the league `{league.Name}`.", ephemeral: true);
             return;
         }
 

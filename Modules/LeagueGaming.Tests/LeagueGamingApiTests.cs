@@ -117,4 +117,18 @@ public class LeagueGamingApiTests
             Assert.True(contract.Amount > 0, $"expected Amount to be greater than 0 but got {contract.Amount}");
         }
     }
+
+    [Fact]
+    public async Task GetTradesAsync_ReturnsNotNull()
+    {
+        var trades = await _api.GetTradesAsync(_league);
+        Assert.True(trades != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+
+        foreach (var trade in trades!)
+        {
+            Assert.True(_league.Id == trade.LeagueId, $"expected LeagueId to be {_league.Id} but got {trade.LeagueId}");
+            Assert.True(int.TryParse(trade.FromId, out var f), $"expected numeric FromId but got {trade.FromId}");
+            Assert.True(int.TryParse(trade.ToId, out var t), $"expected numeric ToId but got {trade.ToId}");
+        }
+    }
 }

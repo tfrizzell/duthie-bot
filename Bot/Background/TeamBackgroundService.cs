@@ -51,43 +51,50 @@ public class TeamBackgroundService : ScheduledBackgroundService
 
             await Task.WhenAll(leagues.Select(async league =>
             {
-                var api = _apiService.Get<ITeamApi>(league);
-
-                if (api == null)
-                    return;
-
-                var data = await api.GetTeamsAsync(league);
-
-                if (data == null)
-                    return;
-
-                league.LeagueTeams = data.Select(team =>
+                try
                 {
-                    var key = CreateKey(team.Name);
+                    var api = _apiService.Get<ITeamApi>(league);
 
-                    if (!teams.ContainsKey(key))
-                        teams.TryAdd(key, new Team { Name = team.Name, ShortName = team.ShortName });
+                    if (api == null)
+                        return;
 
-                    return new LeagueTeam
+                    var data = await api.GetTeamsAsync(league);
+
+                    if (data == null)
+                        return;
+
+                    league.LeagueTeams = data.Select(team =>
                     {
-                        LeagueId = league.Id,
-                        TeamId = teams[key].Id,
-                        Team = teams[key],
-                        ExternalId = team.Id,
-                    };
-                }).ToList();
+                        var key = CreateKey(team.Name);
+
+                        if (!teams.ContainsKey(key))
+                            teams.TryAdd(key, new Team { Name = team.Name, ShortName = team.ShortName });
+
+                        return new LeagueTeam
+                        {
+                            LeagueId = league.Id,
+                            TeamId = teams[key].Id,
+                            Team = teams[key],
+                            ExternalId = team.Id,
+                        };
+                    }).ToList();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, $"An unexpected error has occurred while processing teams for league \"{league.Name}\" [{league.Id}]");
+                }
             }));
 
             await _teamService.SaveAsync(teams.Values);
             await _leagueService.SaveAsync(leagues);
 
             sw.Stop();
-            _logger.LogTrace($"Team update task completed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Team update task completed in {sw.Elapsed.TotalSeconds}s");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Team update task failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Team update task failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during team update task.");
         }
     }

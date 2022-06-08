@@ -10,7 +10,7 @@ namespace Duthie.Modules.MyVirtualGaming;
 public class MyVirtualGamingApi
     : IBidApi, IContractApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi
 {
-    private const string Host = "vghl.myvirtualgaming.com";
+    private const string Host = "https://vghl.myvirtualgaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
     private readonly HttpClient _httpClient = new HttpClient();
@@ -491,12 +491,6 @@ public class MyVirtualGamingApi
 
             var lookup = await GetTeamLookupAsync(league);
 
-var m = Regex.Matches(trades.Groups[1].Value,
-                @"<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<i[^>]*>\s*</i>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>(.*?)</td>\s*<td[^>]*>(.*?)</td>",
-                // @"<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<i[^>]*>\s*</i>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*",
-                RegexOptions.IgnoreCase | RegexOptions.Singleline)
-            .Cast<Match>();
-
             return Regex.Matches(trades.Groups[1].Value,
                 @"<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<i[^>]*>\s*</i>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>(.*?)</td>\s*<td[^>]*>(.*?)</td>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
@@ -514,7 +508,7 @@ var m = Regex.Matches(trades.Groups[1].Value,
                     LeagueId = league.Id,
                     FromId = lookup[m.Groups[1].Value.Trim()],
                     ToId = lookup[m.Groups[2].Value.Trim()],
-                    Assets = new string[] { trade.Groups[1].Value.Trim() },
+                    FromAssets = new string[] { Regex.Replace(trade.Groups[1].Value.Trim(), @"the (.*? \d+\S+) round draft pick", @"$1 Round Pick") },
                     Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
                 };
             })

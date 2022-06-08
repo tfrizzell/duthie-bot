@@ -6,13 +6,10 @@ namespace Duthie.Bot.Utils;
 public static class ListUtils
 {
     public static IEnumerable<Embed> CreateEmbeddedTable(IEnumerable<IEnumerable<string>> data, IEnumerable<string>? headers = null, string? title = null) =>
-        CreateTable(EmbedBuilder.MaxDescriptionLength, data, headers)
+        CreateTable(data, headers, EmbedBuilder.MaxDescriptionLength)
             .Select((message, i) => new EmbedBuilder().WithTitle(i == 0 ? title : null).WithDescription(message).Build());
 
-    public static IEnumerable<string> CreateTable(IEnumerable<IEnumerable<string>> data, IEnumerable<string>? headers = null) =>
-        CreateTable(DiscordConfig.MaxMessageSize, data, headers);
-
-    private static IEnumerable<string> CreateTable(int maxSize, IEnumerable<IEnumerable<string>> data, IEnumerable<string>? headers = null)
+    public static IEnumerable<string> CreateTable(IEnumerable<IEnumerable<string>> data, IEnumerable<string>? headers = null, int maxSize = DiscordConfig.MaxMessageSize)
     {
         var messages = new List<string>();
         var numCols = new int[] { headers?.Count() ?? 0 }.Concat(data.Select(row => row.Count())).Max();
@@ -39,7 +36,7 @@ public static class ListUtils
 
         foreach (var row in data)
         {
-            var buf = string.Format(format, row.Select(MessageUtils.Escape).ToArray());
+            var buf = string.Format(format, row.ToArray());
 
             if (buffer.Length + buf.Length + 10 > maxSize)
             {

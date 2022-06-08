@@ -7,7 +7,7 @@ using League = Duthie.Types.Leagues.League;
 namespace Duthie.Modules.LeagueGaming;
 
 public class LeagueGamingApi
-    : IBidApi, IContractApi, IGameApi, ILeagueApi, ITeamApi
+    : IBidApi, IContractApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi
 {
     private const string Host = "https://www.leaguegaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
@@ -43,11 +43,10 @@ public class LeagueGamingApi
                 {
                     ["action"] = "league",
                     ["page"] = "team_news",
-                    ["teamid"] = 0,
-                    ["typeid"] = LeagueGamingNewsType.Bid,
-                    ["displaylimit"] = 200,
                     ["leagueid"] = leagueInfo.LeagueId,
                     ["seasonid"] = leagueInfo.SeasonId,
+                    ["typeid"] = (int)LeagueGamingNewsType.Bids,
+                    ["displaylimit"] = 200,
                 }));
 
             return Regex.Matches(html,
@@ -98,11 +97,10 @@ public class LeagueGamingApi
                 {
                     ["action"] = "league",
                     ["page"] = "team_news",
-                    ["teamid"] = 0,
-                    ["typeid"] = LeagueGamingNewsType.Contracts,
-                    ["displaylimit"] = 200,
                     ["leagueid"] = leagueInfo.LeagueId,
                     ["seasonid"] = leagueInfo.SeasonId,
+                    ["typeid"] = (int)LeagueGamingNewsType.Contracts,
+                    ["displaylimit"] = 200,
                 }));
 
             return Regex.Matches(html,
@@ -309,11 +307,151 @@ public class LeagueGamingApi
         }
     }
 
+    public async Task<IEnumerable<Trade>?> GetTradesAsync(League league)
+    {
+        try
+        {
+            if (!IsSupported(league))
+                return null;
+
+            var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+
+            var html = await _httpClient.GetStringAsync(GetUrl(
+                parameters: new Dictionary<string, object?>
+                {
+                    ["action"] = "league",
+                    ["page"] = "team_news",
+                    ["leagueid"] = leagueInfo.LeagueId,
+                    ["seasonid"] = leagueInfo.SeasonId,
+                    ["typeid"] = (int)LeagueGamingNewsType.Trades,
+                    ["displaylimit"] = 200,
+                }));
+
+            return Regex.Matches(html,
+                @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(m =>
+            {
+                var trade = Regex.Match(m.Groups[1].Value,
+                    @"<h3[^>]*>.*?<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have traded\s*(.*?)\s*to the\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*for\s*(.*?)\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                if (!trade.Success)
+                    return null;
+
+                var dateTime = DateTime.Parse(trade.Groups[5].Value.Trim());
+
+                return new Trade
+                {
+                    LeagueId = league.Id,
+                    FromId = trade.Groups[1].Value.Trim(),
+                    ToId = trade.Groups[3].Value.Trim(),
+                    FromAssets = Regex.Split(Regex.Replace(trade.Groups[2].Value, @"<[^>]*>", ""), @"\s*&\s*").Select(a => a.Trim()).Where(a => a.ToLower() != "nothing").ToArray(),
+                    ToAssets = Regex.Split(Regex.Replace(trade.Groups[4].Value, @"<[^>]*>", ""), @"\s*&\s*").Select(a => a.Trim()).Where(a => a.ToLower() != "nothing").ToArray(),
+                    Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+                };
+            })
+            .Where(b => b != null)
+            .Cast<Trade>();
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching bids for league \"{league.Name}\" [{league.Id}]", e);
+        }
+
+
+
+
+
+        // try
+        // {
+        //     if (!IsSupported(league))
+        //         return null;
+
+        //     var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+
+        //     if (!leagueInfo.Features.HasFlag(MyVirtualGamingFeatures.RecentTransactions))
+        //         return new List<Trade>();
+
+        //     var html = await _httpClient.GetStringAsync(GetUrl(
+        //         league: leagueInfo.LeagueId,
+        //         path: "recent-transactions"));
+
+        //     var trades = Regex.Match(html,
+        //         @"<div[^>]*\bTrades\b[^>]*>.*?<tbody[^>]*>(.*?)</tbody>\s*</table>",
+        //         RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        //     if (!trades.Success)
+        //         return new List<Trade>();
+
+        //     var lookup = await GetTeamLookupAsync(league);
+
+        //     return Regex.Matches(trades.Groups[1].Value,
+        //         @"<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<i[^>]*>\s*</i>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>(.*?)</td>\s*<td[^>]*>(.*?)</td>",
+        //         RegexOptions.IgnoreCase | RegexOptions.Singleline)
+        //     .Cast<Match>()
+        //     .Select(m =>
+        //     {
+        //         var dateTime = DateTime.Parse(m.Groups[4].Value.Trim());
+        //         var trade = Regex.Match(m.Groups[3].Value, @"The .*? have traded (.*?)\s*(\w+/\w+ .*?\$[\d,.]+)?\s*to the .*?.", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        //         if (!trade.Success || !lookup.ContainsKey(m.Groups[1].Value.Trim()) || !lookup.ContainsKey(m.Groups[2].Value.Trim()))
+        //             return null;
+
+        //         return new Trade
+        //         {
+        //             LeagueId = league.Id,
+        //             FromId = lookup[m.Groups[1].Value.Trim()],
+        //             ToId = lookup[m.Groups[2].Value.Trim()],
+        //             FromAssets = new string[] { Regex.Replace(trade.Groups[1].Value.Trim(), @"the (.*? \d+\S+ round) draft pick", @"$1 pick") },
+        //             Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+        //         };
+        //     })
+        //     .Where(t => t != null)
+        //     .Cast<Trade>();
+        // }
+        // catch (Exception e)
+        // {
+        //     throw new ApiException($"An unexpected error occurred while fetching bids for league \"{league.Name}\" [{league.Id}]", e);
+        // }
+    }
+
+    public string? GetBidUrl(League league, Bid bid)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+        return $"{Host}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={bid.TeamId}&typeid={(int)LeagueGamingNewsType.Bids}";
+    }
+
+    public string? GetContractUrl(League league, Contract contract)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+        return $"{Host}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={contract.TeamId}&typeid={(int)LeagueGamingNewsType.Contracts}";
+    }
+
     public string? GetGameUrl(League league, Game game)
     {
         if (!IsSupported(league))
             return null;
 
         return $"{Host}/forums/index.php?leaguegaming/league&action=league&page=game&gameid={game.Id}";
+    }
+
+    public string? GetTradeUrl(League league, Trade trade)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+        return $"{Host}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={trade.FromId}&typeid={(int)LeagueGamingNewsType.Trades}";
     }
 }

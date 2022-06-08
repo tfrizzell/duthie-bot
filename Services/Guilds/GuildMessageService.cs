@@ -95,6 +95,26 @@ public class GuildMessageService
         }
     }
 
+    public async Task<int> PruneAsync()
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            var pruneFrom = DateTimeOffset.UtcNow.AddDays(-30);
+
+            var toPrune = await context.Set<GuildMessage>()
+                .Where(g => g.SentAt != null && g.SentAt <= pruneFrom.DateTime)
+                .ToListAsync();
+
+            if (toPrune.Count() > 0)
+            {
+                await context.Set<GuildMessage>().RemoveRangeAsync(toPrune);
+                return await context.SaveChangesAsync();
+            }
+        }
+
+        return 0;
+    }
+
     public async Task<int> SaveAsync(IEnumerable<GuildMessage> messages) =>
         await SaveAsync(messages.ToArray());
 

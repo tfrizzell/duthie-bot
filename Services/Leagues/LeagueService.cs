@@ -138,6 +138,42 @@ public class LeagueService
         }
     }
 
+    public async Task<int> SaveStateAsync(Guid id, LeagueStateType stateType, string? value) =>
+        await SaveStateAsync(id, new Dictionary<LeagueStateType, string?> { { stateType, value } });
+
+    public async Task<int> SaveStateAsync(Guid id, IDictionary<LeagueStateType, string?> states)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            var league = await context.Set<League>()
+                .Include(l => l.State)
+                .FirstOrDefaultAsync(l => l.Id == id);
+
+            if (league == null)
+                return 0;
+
+            foreach (var state in states)
+            {
+                switch (state.Key)
+                {
+                    case LeagueStateType.Bid:
+                        league.State.LastBid = state.Value;
+                        break;
+
+                    case LeagueStateType.Contract:
+                        league.State.LastContract = state.Value;
+                        break;
+
+                    case LeagueStateType.Trade:
+                        league.State.LastTrade = state.Value;
+                        break;
+                }
+            }
+
+            return await context.SaveChangesAsync();
+        }
+    }
+
     private async Task<IEnumerable<LeagueTeam>> UpdateTeamsAsync(DuthieDbContext context, League league)
     {
         var oldTeams = await context.Set<LeagueTeam>()

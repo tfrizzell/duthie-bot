@@ -101,6 +101,9 @@ public class WatcherService
             if (teams?.Count() > 0)
                 query = query.Where(w => teams.Contains(w.TeamId));
 
+            if (types?.Count() > 0)
+                query = query.Where(w => types.Contains(w.Type));
+
             if (channels?.Count() > 0)
                 query = query.Where(w => channels.Contains(w.ChannelId));
 

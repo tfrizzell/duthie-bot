@@ -9,7 +9,8 @@ public class Trade : IModuleData
     public Guid LeagueId { get; set; }
     public string FromId { get; set; } = "";
     public string ToId { get; set; } = "";
-    public string[] Assets { get; set; } = new string[] { };
+    public string[] FromAssets { get; set; } = new string[] { };
+    public string[] ToAssets { get; set; } = new string[] { };
     public DateTimeOffset Timestamp { get; set; }
 
     public string GetHash()
@@ -20,12 +21,23 @@ public class Trade : IModuleData
             {
                 LeagueId,
                 FromId,
-                Assets,
+                FromAssets,
                 ToId,
                 Timestamp,
             })));
 
             return BitConverter.ToString(hash).Replace("-", "");
         }
+    }
+
+    public void Reverse()
+    {
+        var fromId = FromId;
+        FromId = ToId;
+        ToId = fromId;
+
+        var fromAssets = FromAssets;
+        FromAssets = ToAssets;
+        ToAssets = fromAssets;
     }
 }

@@ -52,12 +52,12 @@ public class CommandRegistrationService
                 await guild.BulkOverwriteApplicationCommandAsync(commands);
 
             sw.Stop();
-            _logger.LogTrace($"Slash command registration completed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Slash command registration completed in {sw.Elapsed.TotalSeconds}s");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Slash command registration failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Slash command registration failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during slash command registration.");
             Environment.Exit(0);
         }
@@ -73,13 +73,13 @@ public class CommandRegistrationService
             await guild.BulkOverwriteApplicationCommandAsync(await GetCommands());
             sw.Stop();
 
-            _logger.LogDebug($"Command registration completed in {sw.Elapsed.TotalMilliseconds} milliseconds");
+            _logger.LogDebug($"Command registration completed in {sw.Elapsed.TotalSeconds}s");
         }
         catch (Exception e)
         {
             sw.Stop();
 
-            _logger.LogError(e, $"Command registration failed in {sw.Elapsed.TotalMilliseconds} milliseconds");
+            _logger.LogError(e, $"Command registration failed in {sw.Elapsed.TotalSeconds}s");
             Environment.Exit(0);
         }
     }

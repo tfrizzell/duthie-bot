@@ -112,27 +112,34 @@ public class BidBackgroundService : ScheduledBackgroundService
                                     }));
                             }
                         }
+                        catch (KeyNotFoundException e)
+                        {
+                            _logger.LogWarning(e, $"Failed to map teams for bid {bid.GetHash()} for league \"{league.Name}\" [{league.Id}]");
+                        }
                         catch (Exception e)
                         {
-                            _logger.LogError(e, $"Failed to map teams for bid {bid.GetHash()} in league {league.Id}");
+                            _logger.LogError(e, $"An unexpected error has occurred while processing bid {bid.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
 
                         league.State.LastBid = bid.GetHash();
                     }
+
+                    if (data.Count() > 0)
+                        _logger.LogTrace($"Successfully processed {data.Count()} new winning bids for league \"{league.Name}\" [{league.Id}]");
                 }
                 else
                     league.State.LastBid = data?.LastOrDefault()?.GetHash() ?? "";
 
-                await _leagueService.SaveAsync(league);
+                await _leagueService.SaveStateAsync(league.Id, LeagueStateType.Bid, league.State.LastBid);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Bid tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Bid tracking task completed in {sw.Elapsed.TotalSeconds}s");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Bid tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Bid tracking task failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during bid tracking task.");
         }
     }
@@ -142,7 +149,7 @@ public class BidBackgroundService : ScheduledBackgroundService
         var team = league.LeagueTeams.FirstOrDefault(t => t.ExternalId == externalId);
 
         if (team == null)
-            throw new KeyNotFoundException($"no team with external id {externalId} was found for league {league.Id}");
+            throw new KeyNotFoundException($"no team with external id {externalId} was found for league \"{league.Name}\" [{league.Id}]");
 
         return team.Team;
     }

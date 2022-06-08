@@ -68,7 +68,7 @@ public class ContractBackgroundService : ScheduledBackgroundService
 
                 if (data?.Count() > 0 && league.State.LastContract != null)
                 {
-                    var LastContractIndex = data.FindIndex(b => b.GetHash() == league.State.LastContract);
+                    var LastContractIndex = data.FindIndex(c => c.GetHash() == league.State.LastContract);
 
                     if (LastContractIndex >= 0)
                         data.RemoveRange(0, LastContractIndex + 1);
@@ -112,27 +112,34 @@ public class ContractBackgroundService : ScheduledBackgroundService
                                     }));
                             }
                         }
+                        catch (KeyNotFoundException e)
+                        {
+                            _logger.LogWarning(e, $"Failed to map teams for contract {contract.GetHash()} for league \"{league.Name}\" [{league.Id}]");
+                        }
                         catch (Exception e)
                         {
-                            _logger.LogError(e, $"Failed to map teams for contract {contract.GetHash()} in league {league.Id}");
+                            _logger.LogError(e, $"An unexpected error has occurred while processing contract {contract.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
 
                         league.State.LastContract = contract.GetHash();
                     }
+
+                    if (data.Count() > 0)
+                        _logger.LogTrace($"Successfully processed {data.Count()} new contracts for league \"{league.Name}\" [{league.Id}]");
                 }
                 else
                     league.State.LastContract = data?.LastOrDefault()?.GetHash() ?? "";
 
-                await _leagueService.SaveAsync(league);
+                await _leagueService.SaveStateAsync(league.Id, LeagueStateType.Contract, league.State.LastContract);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Contract tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Contract tracking task completed in {sw.Elapsed.TotalSeconds}s");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Contract tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
+            _logger.LogTrace($"Contract tracking task failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during contract tracking task.");
         }
     }
@@ -142,7 +149,7 @@ public class ContractBackgroundService : ScheduledBackgroundService
         var team = league.LeagueTeams.FirstOrDefault(t => t.ExternalId == externalId);
 
         if (team == null)
-            throw new KeyNotFoundException($"no team with external id {externalId} was found for league {league.Id}");
+            throw new KeyNotFoundException($"no team with external id {externalId} was found for league \"{league.Name}\" [{league.Id}]");
 
         return team.Team;
     }
