@@ -105,7 +105,7 @@ public class ListCommand : BaseCommand
     private async Task<SlashCommandOptionBuilder> BuildWatchersAsync() =>
         (await _watchersCommand.BuildListAsync())
             .WithName("watchers")
-            .WithDescription($"List the {_appInfo.Name} watchers registered to your server.")
+            .WithDescription($"List the {_appInfo.Name} watchers registered for your server.")
             .WithType(ApplicationCommandOptionType.SubCommand);
 
     private Task<SlashCommandOptionBuilder> BuildWatcherTypesAsync() =>
@@ -162,14 +162,16 @@ public class ListCommand : BaseCommand
     {
         var guild = await GetGuildAsync(command);
         var user = await GetUserAsync(command);
+
         var (site, siteOption) = await GetSiteAsync(cmd);
-        var (tags, tagsOption) = await GetTagsAsync(cmd);
 
         if (siteOption != null && site == null)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the site `{siteOption}`.", ephemeral: true);
             return;
         }
+
+        var (tags, tagsOption) = await GetTagsAsync(cmd);
 
         var leagues = await _leagueService.FindAsync(
             sites: site == null ? null : new Guid[] { site.Id },
@@ -230,9 +232,8 @@ public class ListCommand : BaseCommand
     {
         var guild = await GetGuildAsync(command);
         var user = await GetUserAsync(command);
-        var (league, leagueOption) = await GetLeagueAsync(cmd);
+
         var (site, siteOption) = await GetSiteAsync(cmd);
-        var (tags, tagsOption) = await GetTagsAsync(cmd);
 
         if (siteOption != null && site == null)
         {
@@ -240,11 +241,15 @@ public class ListCommand : BaseCommand
             return;
         }
 
+        var (league, leagueOption) = await GetLeagueAsync(cmd);
+
         if (leagueOption != null && league == null)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league `{leagueOption}`.", ephemeral: true);
             return;
         }
+
+        var (tags, tagsOption) = await GetTagsAsync(cmd);
 
         var teams = await _teamService.FindAsync(
             sites: site == null ? null : new Guid[] { site.Id },

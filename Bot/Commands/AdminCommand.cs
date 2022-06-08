@@ -37,7 +37,8 @@ public class AdminCommand : BaseCommand
             .WithType(ApplicationCommandOptionType.SubCommandGroup)
             .AddOption(await BuildAddAsync())
             .AddOption(await BuildListAsync())
-            .AddOption(await BuildRemoveAsync());
+            .AddOption(await BuildRemoveAsync())
+            .AddOption(await BuildRemoveAllAsync());
 
     private Task<SlashCommandOptionBuilder> BuildAddAsync() =>
         Task.FromResult(new SlashCommandOptionBuilder()
@@ -59,6 +60,12 @@ public class AdminCommand : BaseCommand
             .WithType(ApplicationCommandOptionType.SubCommand)
             .AddOption("user", ApplicationCommandOptionType.User, "the user to remove administrator acess from", isRequired: true));
 
+    private Task<SlashCommandOptionBuilder> BuildRemoveAllAsync() =>
+        Task.FromResult(new SlashCommandOptionBuilder()
+            .WithName("remove-all")
+            .WithDescription($"Remove all {_appInfo.Name} administrators for your server.")
+            .WithType(ApplicationCommandOptionType.SubCommand));
+
     protected override async Task HandleCommandAsync(SocketSlashCommand command)
     {
         try
@@ -79,6 +86,10 @@ public class AdminCommand : BaseCommand
                     await RemoveAdminAsync(command, cmd);
                     break;
 
+                case "remove-all":
+                    await RemoveAllAdminsAsync(command, cmd);
+                    break;
+
                 default:
                     await SendUnrecognizedAsync(command);
                     break;
@@ -93,12 +104,11 @@ public class AdminCommand : BaseCommand
 
     private async Task AddAdminAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
     {
-        var guild = await GetGuildAsync(command);
-        var user = await GetUserAsync(command);
-
         if (!await CheckPrivileges(command))
             return;
 
+        var guild = await GetGuildAsync(command);
+        var user = await GetUserAsync(command);
         var targetUser = await GetTargetUserAsync(cmd);
 
         if ((await _guildAdminService.SaveAsync(guild.Id, targetUser.Id)) > 0)
@@ -159,14 +169,33 @@ public class AdminCommand : BaseCommand
         _logger.LogTrace($"User {user} viewed administrator list for guild \"{guild.Name}\" [{guild.Id}]");
     }
 
-    private async Task RemoveAdminAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
+    private async Task RemoveAllAdminsAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
     {
-        var guild = await GetGuildAsync(command);
-        var user = await GetUserAsync(command);
-
         if (!await CheckPrivileges(command))
             return;
 
+        var guild = await GetGuildAsync(command);
+        var user = await GetUserAsync(command);
+        var targetUser = await GetTargetUserAsync(cmd);
+
+        var count = await _guildAdminService.DeleteAsync(guild.Id, (await _guildAdminService.GetAllAsync(guild.Id)).ToArray());
+
+        if (count > 0)
+        {
+            _logger.LogDebug($"User {user} removed {MessageUtils.Pluralize(count, "administrator")} from guild \"{guild.Name}\" [{guild.Id}]");
+            await command.RespondAsync($"Okay! I've removed {MessageUtils.Pluralize(count, $"{_appInfo.Name} administrator")} for your server.", ephemeral: true);
+        }
+        else
+            await command.RespondAsync($"Okay! There were no {_appInfo.Name} administrators to remove.", ephemeral: true);
+    }
+
+    private async Task RemoveAdminAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
+    {
+        if (!await CheckPrivileges(command))
+            return;
+
+        var guild = await GetGuildAsync(command);
+        var user = await GetUserAsync(command);
         var targetUser = await GetTargetUserAsync(cmd);
 
         if ((await _guildAdminService.DeleteAsync(guild.Id, targetUser.Id)) > 0)
