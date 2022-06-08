@@ -119,17 +119,10 @@ public class LeagueService
         {
             foreach (var league in leagues)
             {
-                var existing = await context.Set<League>()
-                    .Include(l => l.State)
-                    .Include(l => l.LeagueTeams)
-                    .FirstOrDefaultAsync(l => l.Id == league.Id);
+                var existing = await context.Set<League>().FirstOrDefaultAsync(l => l.Id == league.Id);
 
                 if (existing != null)
-                {
                     context.Entry(existing).CurrentValues.SetValues(league);
-                    context.Entry(existing.State).CurrentValues.SetValues(league.State);
-                    existing.LeagueTeams = await UpdateTeamsAsync(context, league);
-                }
                 else
                     await context.Set<League>().AddAsync(league);
             }
@@ -138,45 +131,69 @@ public class LeagueService
         }
     }
 
-    public async Task<int> SaveStateAsync(Guid id, LeagueStateType stateType, string? value) =>
-        await SaveStateAsync(id, new Dictionary<LeagueStateType, string?> { { stateType, value } });
+    public async Task<int> SaveTeamsAsync(IEnumerable<League> leagues) =>
+        await SaveTeamsAsync(leagues.ToArray());
 
-    public async Task<int> SaveStateAsync(Guid id, IDictionary<LeagueStateType, string?> states)
+    public async Task<int> SaveTeamsAsync(params League[] leagues)
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            var league = await context.Set<League>()
-                .Include(l => l.State)
-                .FirstOrDefaultAsync(l => l.Id == id);
-
-            if (league == null)
-                return 0;
-
-            foreach (var state in states)
+            foreach (var league in leagues)
             {
-                switch (state.Key)
+                var existing = await context.Set<League>()
+                    .Include(l => l.LeagueTeams)
+                    .FirstOrDefaultAsync(l => l.Id == league.Id);
+
+                if (existing != null)
+                    existing.LeagueTeams = await UpdateTeamsAsync(context, league);
+            }
+
+            return await context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<int> SaveStateAsync(IEnumerable<League> leagues, params LeagueStateType[] stateTypes)
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            foreach (var league in leagues)
+            {
+                var existing = await context.Set<League>()
+                    .Include(l => l.State)
+                    .FirstOrDefaultAsync(l => l.Id == league.Id);
+
+                if (existing == null)
+                    continue;
+
+                foreach (var stateType in stateTypes)
                 {
-                    case LeagueStateType.Bid:
-                        league.State.LastBid = state.Value;
-                        break;
+                    switch (stateType)
+                    {
+                        case LeagueStateType.Bid:
+                            existing.State.LastBid = league.State.LastBid;
+                            break;
 
-                    case LeagueStateType.Contract:
-                        league.State.LastContract = state.Value;
-                        break;
+                        case LeagueStateType.Contract:
+                            existing.State.LastContract = league.State.LastContract;
+                            break;
 
-                    case LeagueStateType.DraftPick:
-                        league.State.LastDraftPick = state.Value;
-                        break;
+                        case LeagueStateType.DraftPick:
+                            existing.State.LastDraftPick = league.State.LastDraftPick;
+                            break;
 
-                    case LeagueStateType.Trade:
-                        league.State.LastTrade = state.Value;
-                        break;
+                        case LeagueStateType.Trade:
+                            existing.State.LastTrade = league.State.LastTrade;
+                            break;
+                    }
                 }
             }
 
             return await context.SaveChangesAsync();
         }
     }
+
+    public async Task<int> SaveStateAsync(League league, params LeagueStateType[] stateTypes) =>
+        await SaveStateAsync(new League[] { league }, stateTypes);
 
     private async Task<IEnumerable<LeagueTeam>> UpdateTeamsAsync(DuthieDbContext context, League league)
     {

@@ -17,7 +17,6 @@
     <ProjectReference Include="..\Modules\LeagueGaming\Duthie.Modules.LeagueGaming.csproj" />
     <ProjectReference Include="..\Modules\MyVirtualGaming\Duthie.Modules.MyVirtualGaming.csproj" />
     <ProjectReference Include="..\Modules\TheSpnhl\Duthie.Modules.TheSpnhl.csproj" />
-    <ProjectReference Include="..\Migrations\Sqlite\Duthie.Migrations.Sqlite.csproj" />
   </ItemGroup>
 
   <ItemGroup>

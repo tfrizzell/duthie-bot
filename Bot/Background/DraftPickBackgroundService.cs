@@ -129,7 +129,7 @@ public class DraftPickBackgroundService : ScheduledBackgroundService
                 else
                     league.State.LastDraftPick = data?.LastOrDefault()?.GetHash() ?? "";
 
-                await _leagueService.SaveStateAsync(league.Id, LeagueStateType.DraftPick, league.State.LastDraftPick);
+                await _leagueService.SaveStateAsync(league, LeagueStateType.DraftPick);
             }));
 
             sw.Stop();

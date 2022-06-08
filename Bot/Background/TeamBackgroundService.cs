@@ -86,7 +86,7 @@ public class TeamBackgroundService : ScheduledBackgroundService
             }));
 
             await _teamService.SaveAsync(teams.Values);
-            await _leagueService.SaveAsync(leagues);
+            await _leagueService.SaveTeamsAsync(leagues);
 
             sw.Stop();
             _logger.LogTrace($"Team update task completed in {sw.Elapsed.TotalSeconds}s");

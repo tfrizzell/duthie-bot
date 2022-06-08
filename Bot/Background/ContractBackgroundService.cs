@@ -130,7 +130,7 @@ public class ContractBackgroundService : ScheduledBackgroundService
                 else
                     league.State.LastContract = data?.LastOrDefault()?.GetHash() ?? "";
 
-                await _leagueService.SaveStateAsync(league.Id, LeagueStateType.Contract, league.State.LastContract);
+                await _leagueService.SaveStateAsync(league, LeagueStateType.Contract);
             }));
 
             sw.Stop();

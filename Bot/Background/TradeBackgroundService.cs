@@ -169,7 +169,7 @@ public class TradeBackgroundService : ScheduledBackgroundService
                 else
                     league.State.LastTrade = data?.LastOrDefault()?.GetHash() ?? "";
 
-                await _leagueService.SaveStateAsync(league.Id, LeagueStateType.Trade, league.State.LastTrade);
+                await _leagueService.SaveStateAsync(league, LeagueStateType.Trade);
             }));
 
             sw.Stop();

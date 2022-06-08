@@ -130,7 +130,7 @@ public class BidBackgroundService : ScheduledBackgroundService
                 else
                     league.State.LastBid = data?.LastOrDefault()?.GetHash() ?? "";
 
-                await _leagueService.SaveStateAsync(league.Id, LeagueStateType.Bid, league.State.LastBid);
+                await _leagueService.SaveStateAsync(league, LeagueStateType.Bid);
             }));
 
             sw.Stop();
