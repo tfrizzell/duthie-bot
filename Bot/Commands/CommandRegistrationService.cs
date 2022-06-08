@@ -39,7 +39,7 @@ public class CommandRegistrationService
 
     public async Task RegisterCommandsAsync(BaseSocketClient client)
     {
-        _logger.LogDebug("Registering slash commands");
+        _logger.LogDebug("Registering commands");
         var sw = Stopwatch.StartNew();
 
         try
@@ -52,13 +52,13 @@ public class CommandRegistrationService
                 await guild.BulkOverwriteApplicationCommandAsync(commands);
 
             sw.Stop();
-            _logger.LogTrace($"Slash command registration completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Command registration completed in {sw.Elapsed.TotalSeconds}s");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Slash command registration failed in {sw.Elapsed.TotalSeconds}s");
-            _logger.LogError(e, "An unexpected error during slash command registration.");
+            _logger.LogTrace($"Command registration failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogError(e, "An unexpected error during command registration.");
             Environment.Exit(0);
         }
     }
@@ -66,7 +66,7 @@ public class CommandRegistrationService
     public async Task RegisterCommandsAsync(SocketGuild guild)
     {
         var sw = Stopwatch.StartNew();
-        _logger.LogDebug($"Registering slash commands to guild \"{guild.Name}\" [{guild.Id}]");
+        _logger.LogDebug($"Registering commands to guild \"{guild.Name}\" [{guild.Id}]");
 
         try
         {
