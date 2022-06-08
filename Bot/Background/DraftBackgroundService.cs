@@ -15,16 +15,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Duthie.Bot.Background;
 
-public class DraftPickBackgroundService : ScheduledBackgroundService
+public class DraftBackgroundService : ScheduledBackgroundService
 {
-    private readonly ILogger<DraftPickBackgroundService> _logger;
+    private readonly ILogger<DraftBackgroundService> _logger;
     private readonly ApiService _apiService;
     private readonly LeagueService _leagueService;
     private readonly WatcherService _watcherService;
     private readonly GuildMessageService _guildMessageService;
 
-    public DraftPickBackgroundService(
-        ILogger<DraftPickBackgroundService> logger,
+    public DraftBackgroundService(
+        ILogger<DraftBackgroundService> logger,
         ApiService apiService,
         LeagueService leagueService,
         WatcherService watcherService,
@@ -90,8 +90,8 @@ public class DraftPickBackgroundService : ScheduledBackgroundService
                                 var url = api.GetDraftPickUrl(league, draftPick);
 
                                 var message = league.HasPluralTeamNames()
-                                    ? $"The **{MessageUtils.Escape(team.Name)}** have selected **{MessageUtils.Escape(draftPick.PlayerName)}** with the {draftPick.RoundPick.Ordinal()} pick in the {draftPick.RoundNumber.Ordinal()} round! _({draftPick.OverallPick.Ordinal()} Overall)_"
-                                    : $"**{MessageUtils.Escape(team.Name)}** has selected **{MessageUtils.Escape(draftPick.PlayerName)}** with the {draftPick.RoundPick.Ordinal()} pick in the {draftPick.RoundNumber.Ordinal()} round! _({draftPick.OverallPick.Ordinal()} Overall)_";
+                                    ? $"The **{MessageUtils.Escape(team.Name)}** have selected **{MessageUtils.Escape(draftPick.PlayerName)}** with the {draftPick.RoundPick.Ordinal()} pick in the {draftPick.RoundNumber.Ordinal()} round _({draftPick.OverallPick.Ordinal()} Overall)_"
+                                    : $"**{MessageUtils.Escape(team.Name)}** has selected **{MessageUtils.Escape(draftPick.PlayerName)}** with the {draftPick.RoundPick.Ordinal()} pick in the {draftPick.RoundNumber.Ordinal()} round _({draftPick.OverallPick.Ordinal()} Overall)_";
 
                                 await _guildMessageService.SaveAsync(watchers.Select(watcher =>
                                     new GuildMessage
@@ -124,7 +124,7 @@ public class DraftPickBackgroundService : ScheduledBackgroundService
                     }
 
                     if (data.Count() > 0)
-                        _logger.LogTrace($"Successfully processed {data.Count()} new draft picks for league \"{league.Name}\" [{league.Id}]");
+                        _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new draft pick")} for league \"{league.Name}\" [{league.Id}]");
                 }
                 else
                     league.State.LastDraftPick = data?.LastOrDefault()?.GetHash() ?? "";

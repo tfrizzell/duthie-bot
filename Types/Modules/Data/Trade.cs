@@ -29,15 +29,4 @@ public class Trade : IModuleData
             return BitConverter.ToString(hash).Replace("-", "");
         }
     }
-
-    public void Reverse()
-    {
-        var fromId = FromId;
-        FromId = ToId;
-        ToId = fromId;
-
-        var fromAssets = FromAssets;
-        FromAssets = ToAssets;
-        ToAssets = fromAssets;
-    }
 }

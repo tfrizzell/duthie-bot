@@ -194,5 +194,5 @@ public class AdminCommand : BaseCommand
     }
 
     private Task<SocketGuildUser> GetTargetUserAsync(SocketSlashCommandDataOption cmd) =>
-        Task.FromResult((SocketGuildUser)cmd.Options.First(o => "user" == o.Name).Value);
+        Task.FromResult((SocketGuildUser)cmd.Options.First(o => o.Name == "user").Value);
 }

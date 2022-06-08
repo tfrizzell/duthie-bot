@@ -359,62 +359,6 @@ public class LeagueGamingApi
         {
             throw new ApiException($"An unexpected error occurred while fetching bids for league \"{league.Name}\" [{league.Id}]", e);
         }
-
-
-
-
-
-        // try
-        // {
-        //     if (!IsSupported(league))
-        //         return null;
-
-        //     var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
-
-        //     if (!leagueInfo.Features.HasFlag(MyVirtualGamingFeatures.RecentTransactions))
-        //         return new List<Trade>();
-
-        //     var html = await _httpClient.GetStringAsync(GetUrl(
-        //         league: leagueInfo.LeagueId,
-        //         path: "recent-transactions"));
-
-        //     var trades = Regex.Match(html,
-        //         @"<div[^>]*\bTrades\b[^>]*>.*?<tbody[^>]*>(.*?)</tbody>\s*</table>",
-        //         RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-        //     if (!trades.Success)
-        //         return new List<Trade>();
-
-        //     var lookup = await GetTeamLookupAsync(league);
-
-        //     return Regex.Matches(trades.Groups[1].Value,
-        //         @"<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<i[^>]*>\s*</i>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>(.*?)</td>\s*<td[^>]*>(.*?)</td>",
-        //         RegexOptions.IgnoreCase | RegexOptions.Singleline)
-        //     .Cast<Match>()
-        //     .Select(m =>
-        //     {
-        //         var dateTime = DateTime.Parse(m.Groups[4].Value.Trim());
-        //         var trade = Regex.Match(m.Groups[3].Value, @"The .*? have traded (.*?)\s*(\w+/\w+ .*?\$[\d,.]+)?\s*to the .*?.", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-        //         if (!trade.Success || !lookup.ContainsKey(m.Groups[1].Value.Trim()) || !lookup.ContainsKey(m.Groups[2].Value.Trim()))
-        //             return null;
-
-        //         return new Trade
-        //         {
-        //             LeagueId = league.Id,
-        //             FromId = lookup[m.Groups[1].Value.Trim()],
-        //             ToId = lookup[m.Groups[2].Value.Trim()],
-        //             FromAssets = new string[] { Regex.Replace(trade.Groups[1].Value.Trim(), @"the (.*? \d+\S+ round) draft pick", @"$1 pick") },
-        //             Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
-        //         };
-        //     })
-        //     .Where(t => t != null)
-        //     .Cast<Trade>();
-        // }
-        // catch (Exception e)
-        // {
-        //     throw new ApiException($"An unexpected error occurred while fetching bids for league \"{league.Name}\" [{league.Id}]", e);
-        // }
     }
 
     public string? GetBidUrl(League league, Bid bid)

@@ -110,7 +110,7 @@ public class MyVirtualGamingApi
                     var dateTime = DateTime.Parse(m.Groups[3].Value.Trim());
 
                     var contract = Regex.Match(m.Groups[2].Value.Trim(),
-                        "signing" == m.Groups[1].Value.ToLower()
+                        m.Groups[1].Value.ToLower() == "signing"
                             ? @"(.*?)\s+has\s+been\s+signed\s+to\s+a\s+(\$[\d,.])\s+.*?\s+with\s+the\s+.*?\s+during\s+season\s+\d+"
                             : @"The\s+.*?\s+have\s+promoted\s+(.*?)\s+\w+/\w+\s+.*?\s+with\s+a\s+contract\s+amount\s+of\s+(\$[\d,.]+)",
                         RegexOptions.IgnoreCase | RegexOptions.Singleline);
@@ -492,7 +492,7 @@ public class MyVirtualGamingApi
         if (leagueId == MyVirtualGamingLeagueProvider.VGNHL.Id)
         {
             teams.AddRange(
-                teams.Where(t => "Nashville Nashville" == t.Name)
+                teams.Where(t => t.Name == "Nashville Nashville")
                     .ToList()
                     .Select(t => new Team
                     {
@@ -505,7 +505,7 @@ public class MyVirtualGamingApi
         else if (leagueId == MyVirtualGamingLeagueProvider.VGAHL.Id)
         {
             teams.AddRange(
-                teams.Where(t => "Bellevile Senators" == t.Name)
+                teams.Where(t => t.Name == "Bellevile Senators")
                     .ToList()
                     .Select(t => new Team
                     {

@@ -91,8 +91,8 @@ public class BidBackgroundService : ScheduledBackgroundService
                                 var url = api.GetBidUrl(league, bid);
 
                                 var message = league.HasPluralTeamNames()
-                                    ? $"The **{MessageUtils.Escape(team.Name)}** have won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!"
-                                    : $"**{MessageUtils.Escape(team.Name)}** has won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}!";
+                                    ? $"The **{MessageUtils.Escape(team.Name)}** have won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}"
+                                    : $"**{MessageUtils.Escape(team.Name)}** has won bidding on **{MessageUtils.Escape(bid.PlayerName)}** with a bid of ${bid.Amount.ToString("N0")}";
 
                                 await _guildMessageService.SaveAsync(watchers.Select(watcher =>
                                     new GuildMessage
@@ -125,7 +125,7 @@ public class BidBackgroundService : ScheduledBackgroundService
                     }
 
                     if (data.Count() > 0)
-                        _logger.LogTrace($"Successfully processed {data.Count()} new winning bids for league \"{league.Name}\" [{league.Id}]");
+                        _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new winning bid")} for league \"{league.Name}\" [{league.Id}]");
                 }
                 else
                     league.State.LastBid = data?.LastOrDefault()?.GetHash() ?? "";

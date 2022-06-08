@@ -91,8 +91,8 @@ public class ContractBackgroundService : ScheduledBackgroundService
                                 var url = api.GetContractUrl(league, contract);
 
                                 var message = league.HasPluralTeamNames()
-                                    ? $"The **{MessageUtils.Escape(team.Name)}** have signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!"
-                                    : $"**{MessageUtils.Escape(team.Name)}** has signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season!";
+                                    ? $"The **{MessageUtils.Escape(team.Name)}** have signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season"
+                                    : $"**{MessageUtils.Escape(team.Name)}** has signed **{MessageUtils.Escape(contract.PlayerName)}** to a {contract.Length}-season contract worth ${contract.Amount.ToString("N0")} per season";
 
                                 await _guildMessageService.SaveAsync(watchers.Select(watcher =>
                                     new GuildMessage
@@ -125,7 +125,7 @@ public class ContractBackgroundService : ScheduledBackgroundService
                     }
 
                     if (data.Count() > 0)
-                        _logger.LogTrace($"Successfully processed {data.Count()} new contracts for league \"{league.Name}\" [{league.Id}]");
+                        _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new contract")} for league \"{league.Name}\" [{league.Id}]");
                 }
                 else
                     league.State.LastContract = data?.LastOrDefault()?.GetHash() ?? "";

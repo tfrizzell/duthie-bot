@@ -77,7 +77,8 @@ public class TeamBackgroundService : ScheduledBackgroundService
                             Team = teams[key],
                             ExternalId = team.Id,
                         };
-                    }).ToList();
+                    })
+                    .ToList();
                 }
                 catch (Exception e)
                 {

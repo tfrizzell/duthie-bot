@@ -79,9 +79,6 @@ public class TradeBackgroundService : ScheduledBackgroundService
                     {
                         try
                         {
-                            if (trade.FromAssets.Count() == 0)
-                                trade.Reverse();
-
                             var from = FindTeam(league, trade.FromId);
                             var to = FindTeam(league, trade.ToId);
 
@@ -106,35 +103,39 @@ public class TradeBackgroundService : ScheduledBackgroundService
                                             .Select(a => league.Teams.Aggregate(a, (a, t) => a.Replace(t.Name, t.ShortName)))
                                             .ToArray()), @", ([^,]+)$", @", and $1");
 
-                                var message = league.HasPluralTeamNames()
-                                    ? "The {us} have {action} {usAssets} {direction} the {them} in exchange for {themAssets}!"
-                                    : "{us} has {action} {usAssets} {direction} {them} in exchange for {themAssets}!";
-
-                                if (watchers.Any(watcher => watcher.Any(w => w.TeamId == from.Id)))
-                                {
-                                    message = message
-                                        .Replace("{us}", $"**{MessageUtils.Escape(from.Name)}**")
-                                        .Replace("{action}", "traded")
-                                        .Replace("{usAssets}", fromAssets)
-                                        .Replace("{direction}", "to")
-                                        .Replace("{them}", $"**{MessageUtils.Escape(to.Name)}**")
-                                        .Replace("{themAssets}", toAssets);
-                                }
-                                else
-                                {
-                                    message = message
-                                        .Replace("{us}", $"**{MessageUtils.Escape(to.Name)}**")
-                                        .Replace("{action}", "acquired")
-                                        .Replace("{usAssets}", toAssets)
-                                        .Replace("{direction}", "from")
-                                        .Replace("{them}", $"**{MessageUtils.Escape(from.Name)}**")
-                                        .Replace("{themAssets}", fromAssets);
-                                }
-
-                                message = Regex.Replace(message, @"\s+ in exchange for\s*!$", "!");
-
                                 await _guildMessageService.SaveAsync(watchers.Select(watcher =>
-                                    new GuildMessage
+                                {
+                                    var message = league.HasPluralTeamNames()
+                                        ? "The {us} have {action} {usAssets} {direction} the {them} in exchange for {themAssets}"
+                                        : "{us} has {action} {usAssets} {direction} {them} in exchange for {themAssets}";
+
+                                    var (us, them) = (from, to);
+                                    var (usAssets, themAssets) = (fromAssets, toAssets);
+                                    var (action, direction) = ("traded", "to");
+
+                                    if (!watcher.Any(w => w.TeamId == from.Id))
+                                    {
+                                        (us, them) = (them, us);
+                                        (usAssets, themAssets) = (themAssets, usAssets);
+                                    }
+
+                                    if (string.IsNullOrWhiteSpace(usAssets))
+                                    {
+                                        (usAssets, themAssets) = (themAssets, usAssets);
+                                        (action, direction) = ("acquired", "from");
+                                    }
+
+                                    message = Regex.Replace(Regex.Replace(
+                                        message
+                                            .Replace("{us}", $"**{MessageUtils.Escape(us.Name)}**")
+                                            .Replace("{action}", action)
+                                            .Replace("{usAssets}", $"**{MessageUtils.Escape(usAssets)}**")
+                                            .Replace("{direction}", direction)
+                                            .Replace("{them}", $"**{MessageUtils.Escape(them.Name)}**")
+                                            .Replace("{themAssets}", $"**{MessageUtils.Escape(themAssets)}**")
+                                        , @"\s+in exchange for\s*(\*{2}\s*\*{2})?$", ""), @" {2,}", " ");
+
+                                    return new GuildMessage
                                     {
                                         GuildId = watcher.Key.GuildId,
                                         ChannelId = watcher.Key.ChannelId,
@@ -147,8 +148,9 @@ public class TradeBackgroundService : ScheduledBackgroundService
                                             Content = message,
                                             Timestamp = timestamp,
                                             Url = url,
-                                        }
-                                    }));
+                                        },
+                                    };
+                                }));
                             }
                         }
                         catch (KeyNotFoundException e)
@@ -164,7 +166,7 @@ public class TradeBackgroundService : ScheduledBackgroundService
                     }
 
                     if (data.Count() > 0)
-                        _logger.LogTrace($"Successfully processed {data.Count()} new trades for league \"{league.Name}\" [{league.Id}]");
+                        _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new trade")} for league \"{league.Name}\" [{league.Id}]");
                 }
                 else
                     league.State.LastTrade = data?.LastOrDefault()?.GetHash() ?? "";

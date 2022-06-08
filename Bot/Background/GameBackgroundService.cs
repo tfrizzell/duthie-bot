@@ -117,7 +117,7 @@ public class GameBackgroundService : ScheduledBackgroundService
                                         .Replace("{us}", $"**{MessageUtils.Escape(us.Name)}**")
                                         .Replace("{outcome}", "defeated")
                                         .Replace("{them}", $"**{MessageUtils.Escape(them.Name)}**")
-                                        .Replace("{score}", $"**{usScore} to {themScore}**!");
+                                        .Replace("{score}", $"**{usScore} to {themScore}**");
                                 }
                                 else if (usScore < themScore)
                                 {
@@ -125,7 +125,7 @@ public class GameBackgroundService : ScheduledBackgroundService
                                         .Replace("{us}", $"*{MessageUtils.Escape(us.Name)}*")
                                         .Replace("{outcome}", "been defeated by")
                                         .Replace("{them}", $"*{MessageUtils.Escape(them.Name)}*")
-                                        .Replace("{score}", $"*{themScore} to {usScore}*.");
+                                        .Replace("{score}", $"*{themScore} to {usScore}*");
                                 }
                                 else
                                 {
@@ -133,13 +133,13 @@ public class GameBackgroundService : ScheduledBackgroundService
                                         .Replace("{us}", MessageUtils.Escape(us.Name))
                                         .Replace("{outcome}", "tied")
                                         .Replace("{them}", MessageUtils.Escape(them.Name))
-                                        .Replace("{score}", $"{usScore} to {themScore}.");
+                                        .Replace("{score}", $"{usScore} to {themScore}");
                                 }
 
                                 if (game.Shootout == true)
-                                    message = Regex.Replace(message, @"[!.]$", @" in a shootout$0");
+                                    message += " in a shootout";
                                 else if (game.Overtime == true)
-                                    message = Regex.Replace(message, @"[!.]$", @" in overtime$0");
+                                    message += " in overtime";
 
                                 messages.Add(new GuildMessage
                                 {
