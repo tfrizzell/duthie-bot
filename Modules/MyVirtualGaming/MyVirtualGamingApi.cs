@@ -59,18 +59,17 @@ public class MyVirtualGamingApi
             .Cast<Match>()
             .Select(m =>
             {
-                var dateTime = DateTime.Parse(m.Groups[3].Value.Trim());
                 var player = Regex.Match(m.Groups[2].Value, @"<a[^>]*player&id=(\d+)[^>]*>(.*?)</a>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                 return new Bid
                 {
                     LeagueId = league.Id,
-                    TeamId = m.Groups[1].Value.Trim(),
-                    PlayerId = player.Groups[1].Value.Trim(),
+                    TeamId = m.Groups[1].Value,
+                    PlayerId = player.Groups[1].Value,
                     PlayerName = player.Groups[2].Value.Trim(),
                     Amount = ISiteApi.ParseDollars(Regex.Match(m.Groups[2].Value, @"\$[\d\.]+( \w)?", RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[0].Value),
                     State = BidState.Won,
-                    Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+                    Timestamp = ISiteApi.ParseDateTime(m.Groups[3].Value, Timezone),
                 };
             });
         }
@@ -106,8 +105,6 @@ public class MyVirtualGamingApi
                 .Cast<Match>()
                 .Select(m =>
                 {
-                    var dateTime = DateTime.Parse(m.Groups[3].Value.Trim());
-
                     var contract = Regex.Match(m.Groups[2].Value.Trim(),
                         m.Groups[1].Value.ToLower() == "signing"
                             ? @"(.*?)\s+has\s+been\s+signed\s+to\s+a\s+(\$[\d,.])\s+.*?\s+with\s+the\s+.*?\s+during\s+season\s+\d+"
@@ -120,10 +117,10 @@ public class MyVirtualGamingApi
                     return new Contract
                     {
                         LeagueId = league.Id,
-                        TeamId = m.Groups[1].Value.Trim(),
+                        TeamId = m.Groups[1].Value,
                         PlayerName = contract.Groups[1].Value.Trim(),
                         Amount = ISiteApi.ParseDollars(contract.Groups[2].Value),
-                        Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+                        Timestamp = ISiteApi.ParseDateTime(m.Groups[3].Value, Timezone),
                     };
                 }))
             .SelectMany(c => c)
@@ -170,14 +167,14 @@ public class MyVirtualGamingApi
                 {
                     LeagueId = league.Id,
                     TeamId = teams[m.Groups[2].Value.Trim()],
-                    PlayerId = m.Groups[3].Value.Trim(),
+                    PlayerId = m.Groups[3].Value,
                     PlayerName = m.Groups[4].Value.Trim(),
                     RoundNumber = roundNumber,
                     RoundPick = roundPicks++,
-                    OverallPick = int.Parse(m.Groups[1].Value.Trim()),
+                    OverallPick = int.Parse(m.Groups[1].Value),
                 });
             })
-            .SelectMany(c => c);
+            .SelectMany(d => d);
         }
         catch (Exception e)
         {
@@ -233,8 +230,7 @@ public class MyVirtualGamingApi
                 {
                     if (!string.IsNullOrWhiteSpace(m.Groups[1].Value))
                     {
-                        var dateTime = DateTime.Parse(Regex.Replace(m.Groups[1].Value, @"^(\d+).{2} (\S+) (\d+) @ (.*?)", @"$2 $1, $3 $4"));
-                        date = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime));
+                        date = ISiteApi.ParseDateTime(Regex.Replace(m.Groups[1].Value, @"^(\d+).{2} (\S+) (\d+) @ (.*?)", @"$2 $1, $3 $4"), Timezone);
                         return null;
                     }
 
@@ -244,7 +240,7 @@ public class MyVirtualGamingApi
                     return new Game
                     {
                         LeagueId = league.Id,
-                        Id = ulong.Parse(m.Groups[2].Value.Trim()),
+                        Id = ulong.Parse(m.Groups[2].Value),
                         Timestamp = date.GetValueOrDefault(),
                         VisitorId = teams[m.Groups[3].Value.Trim()],
                         VisitorScore = int.TryParse(m.Groups[4].Value, out var visitorScore) ? visitorScore : null,
@@ -348,7 +344,7 @@ public class MyVirtualGamingApi
                     LeagueId = leagueId,
                     SeasonId = seasonId ?? leagueInfo.SeasonId,
                     ScheduleId = scheduleId ?? leagueInfo.ScheduleId,
-                }
+                },
             };
         }
         catch (Exception e)
@@ -539,7 +535,6 @@ public class MyVirtualGamingApi
             .Cast<Match>()
             .Select(m =>
             {
-                var dateTime = DateTime.Parse(m.Groups[4].Value.Trim());
                 var trade = Regex.Match(m.Groups[3].Value, @"The .*? have traded (.*?)\s*(\w+/\w+ .*?\$[\d,.]+)?\s*to the .*?.", RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                 if (!trade.Success || !lookup.ContainsKey(m.Groups[1].Value.Trim()) || !lookup.ContainsKey(m.Groups[2].Value.Trim()))
@@ -551,7 +546,7 @@ public class MyVirtualGamingApi
                     FromId = lookup[m.Groups[1].Value.Trim()],
                     ToId = lookup[m.Groups[2].Value.Trim()],
                     FromAssets = new string[] { Regex.Replace(trade.Groups[1].Value.Trim(), @"the (.*? \d+\S+) round draft pick", @"$1 Round Pick") },
-                    Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+                    Timestamp = ISiteApi.ParseDateTime(m.Groups[4].Value, Timezone),
                 };
             })
             .Where(t => t != null)

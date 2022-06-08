@@ -38,7 +38,7 @@ public class TheSpnhlApi
             .Select(m => new Game
             {
                 LeagueId = league.Id,
-                Id = ulong.Parse(m.Groups[4].Value.Trim()),
+                Id = ulong.Parse(m.Groups[4].Value),
                 Timestamp = DateTimeOffset.Parse(m.Groups[3].Value.Trim()),
                 VisitorId = m.Groups[1].Value.Trim(),
                 VisitorScore = m.Groups[5].Value.ToUpper() == "O"
@@ -83,7 +83,7 @@ public class TheSpnhlApi
                 {
                     LeagueType = leagueInfo.LeagueType,
                     SeasonId = season.Success ? int.Parse(season.Groups[1].Value) : leagueInfo.SeasonId
-                }
+                },
             };
         }
         catch (Exception e)

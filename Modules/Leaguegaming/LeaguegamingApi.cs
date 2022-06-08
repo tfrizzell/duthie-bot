@@ -7,7 +7,7 @@ using League = Duthie.Types.Leagues.League;
 namespace Duthie.Modules.Leaguegaming;
 
 public class LeaguegamingApi
-    : IBidApi, IContractApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi
+    : IBidApi, IContractApi, IDraftApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi
 {
     private const string Domain = "www.leaguegaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
@@ -62,16 +62,14 @@ public class LeaguegamingApi
                 if (!bid.Success)
                     return null;
 
-                var dateTime = DateTime.Parse(bid.Groups[5].Value.Trim());
-
                 return new Bid
                 {
                     LeagueId = league.Id,
-                    TeamId = bid.Groups[1].Value.Trim(),
+                    TeamId = bid.Groups[1].Value,
                     PlayerName = bid.Groups[3].Value.Trim(),
                     Amount = ISiteApi.ParseDollars(bid.Groups[4].Value),
                     State = BidState.Won,
-                    Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+                    Timestamp = ISiteApi.ParseDateTime(bid.Groups[5].Value, Timezone),
                 };
             })
             .Where(b => b != null)
@@ -116,20 +114,77 @@ public class LeaguegamingApi
                 if (!contract.Success)
                     return null;
 
-                var dateTime = DateTime.Parse(contract.Groups[6].Value.Trim());
-
                 return new Contract
                 {
                     LeagueId = league.Id,
-                    TeamId = contract.Groups[2].Value.Trim(),
+                    TeamId = contract.Groups[2].Value,
                     PlayerName = contract.Groups[1].Value.Trim(),
-                    Length = int.TryParse(contract.Groups[4].Value.Trim(), out var length) ? length : 1,
+                    Length = int.TryParse(contract.Groups[4].Value, out var length) ? length : 1,
                     Amount = ISiteApi.ParseDollars(contract.Groups[5].Value),
-                    Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+                    Timestamp = ISiteApi.ParseDateTime(contract.Groups[6].Value, Timezone),
                 };
             })
             .Where(c => c != null)
             .Cast<Contract>();
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching contracts for league \"{league.Name}\" [{league.Id}]", e);
+        }
+    }
+
+    public async Task<IEnumerable<DraftPick>?> GetDraftPicksAsync(League league)
+    {
+        try
+        {
+            if (!IsSupported(league))
+                return null;
+
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+
+            if (leagueInfo.DraftId == null || leagueInfo.DraftDate == null || leagueInfo.DraftDate > DateTimeOffset.UtcNow || leagueInfo.DraftDate < DateTimeOffset.UtcNow.AddDays(-1))
+                return new List<DraftPick>();
+
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
+                path: "leaguegaming/general",
+                parameters: new Dictionary<string, object?>
+                {
+                    ["action"] = "general",
+                    ["lggenm"] = "league_draft",
+                    ["leagueid"] = leagueInfo.LeagueId,
+                    ["lgdraftid"] = leagueInfo.DraftId,
+                }));
+
+            var teamCount = Regex.Matches(html,
+                @"<img[^>]*/team(\d+)\.\w{3,4}[^>]*>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .DistinctBy(m => m.Groups[1].Value)
+            .Count();
+
+            var picks = Regex.Matches(html,
+                @"<td[^>]*>(\d+)</td>\s*<td[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>\s*<a[^>]*/member\.(\d+)[^>]*>(.*?)</a>\s*</td>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>();
+
+            var rounds = (int)Math.Floor((decimal)picks.Count() / teamCount);
+            var picksPerRound = (int)Math.Ceiling((decimal)picks.Count() / rounds);
+
+            return picks.Select(m =>
+            {
+                var overallPick = int.Parse(m.Groups[1].Value);
+                var roundPick = overallPick % picksPerRound;
+
+                return new DraftPick
+                {
+                    LeagueId = league.Id,
+                    TeamId = m.Groups[2].Value,
+                    PlayerId = m.Groups[3].Value,
+                    PlayerName = m.Groups[4].Value.Trim(),
+                    RoundNumber = (int)Math.Ceiling((decimal)overallPick / picksPerRound),
+                    RoundPick = roundPick > 0 ? roundPick : picksPerRound,
+                    OverallPick = overallPick,
+                };
+            });
         }
         catch (Exception e)
         {
@@ -167,7 +222,7 @@ public class LeaguegamingApi
             {
                 if (!string.IsNullOrWhiteSpace(m.Groups[1].Value))
                 {
-                    date = ISiteApi.ParseDateWithNoYear(Regex.Replace(m.Groups[1].Value, @"(\d+)[\D\S]{2}", @"$1"));
+                    date = ISiteApi.ParseDateWithNoYear(Regex.Replace(m.Groups[1].Value, @"(\d+)[\D\S]{2}", @"$1"), Timezone);
                     return null;
                 }
 
@@ -177,11 +232,11 @@ public class LeaguegamingApi
                 return new Game
                 {
                     LeagueId = league.Id,
-                    Id = ulong.Parse(m.Groups[5].Value.Trim()),
+                    Id = ulong.Parse(m.Groups[5].Value),
                     Timestamp = date.GetValueOrDefault(),
-                    VisitorId = m.Groups[4].Value.Trim(),
+                    VisitorId = m.Groups[4].Value,
                     VisitorScore = int.TryParse(m.Groups[8].Value, out var visitorScore) ? visitorScore : null,
-                    HomeId = m.Groups[11].Value.Trim(),
+                    HomeId = m.Groups[11].Value,
                     HomeScore = int.TryParse(m.Groups[9].Value, out var homeScore) ? homeScore : null,
                 };
             })
@@ -223,6 +278,21 @@ public class LeaguegamingApi
                 @$"<a[^>]*leagueid={leagueInfo.LeagueId}&seasonid=(\d+)[^>]*>Roster</a>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
+            html = await _httpClient.GetStringAsync(GetUrl(league,
+                parameters: new Dictionary<string, object?>
+                {
+                    ["action"] = "league",
+                    ["page"] = "drafts",
+                    ["leagueid"] = leagueInfo.LeagueId,
+                    ["seasonid"] = 1,
+                }));
+
+            var draft = Regex.Matches(html,
+                @$"<td[^>]*>\s*<a[^>]*league_draft&leagueid={leagueInfo.LeagueId}&lgdraftid=(\d+)[^>]*>.*?</a>\s*</td>\s*<td[^>]*>(.*?)</td>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+                .Cast<Match>()
+                .LastOrDefault();
+
             return new Types.Modules.Data.League
             {
                 Id = league.Id,
@@ -233,7 +303,9 @@ public class LeaguegamingApi
                     LeagueId = leagueInfo.LeagueId,
                     SeasonId = season.Success ? int.Parse(season.Groups[1].Value) : leagueInfo.SeasonId,
                     ForumId = int.Parse(info.Groups[1].Value),
-                }
+                    DraftId = draft?.Success == true ? int.Parse(draft.Groups[1].Value) : leagueInfo.DraftId,
+                    DraftDate = draft?.Success == true ? ISiteApi.ParseDateTime(draft.Groups[2].Value) : leagueInfo.DraftDate,
+                },
             };
         }
         catch (Exception e)
@@ -340,16 +412,14 @@ public class LeaguegamingApi
                 if (!trade.Success)
                     return null;
 
-                var dateTime = DateTime.Parse(trade.Groups[5].Value.Trim());
-
                 return new Trade
                 {
                     LeagueId = league.Id,
-                    FromId = trade.Groups[1].Value.Trim(),
-                    ToId = trade.Groups[3].Value.Trim(),
+                    FromId = trade.Groups[1].Value,
+                    ToId = trade.Groups[3].Value,
                     FromAssets = Regex.Split(Regex.Replace(trade.Groups[2].Value, @"<[^>]*>", ""), @"\s*&\s*").Select(a => a.Trim()).Where(a => a.ToLower() != "nothing").ToArray(),
                     ToAssets = Regex.Split(Regex.Replace(trade.Groups[4].Value, @"<[^>]*>", ""), @"\s*&\s*").Select(a => a.Trim()).Where(a => a.ToLower() != "nothing").ToArray(),
-                    Timestamp = new DateTimeOffset(dateTime, Timezone.GetUtcOffset(dateTime)),
+                    Timestamp = ISiteApi.ParseDateTime(trade.Groups[5].Value, Timezone),
                 };
             })
             .Where(b => b != null)

@@ -9,12 +9,18 @@ public interface ISiteApi
 
     public bool IsSupported(League leauge) => Supports.Contains(leauge.SiteId);
 
-    public static DateTimeOffset ParseDateWithNoYear(string value, TimeZoneInfo? timezone = null)
-    {
-        timezone ??= TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
-        var dateTime = DateTime.Parse(value);
+    protected static readonly TimeZoneInfo DefaultTimezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
-        var present = new DateTimeOffset(dateTime, timezone.GetUtcOffset(dateTime));
+    protected static DateTimeOffset ParseDateTime(string value, TimeZoneInfo? timezone = null)
+    {
+        var dateTime = DateTime.Parse(value.Trim());
+        return new DateTimeOffset(dateTime, (timezone ?? DefaultTimezone).GetUtcOffset(dateTime));
+
+    }
+
+    protected static DateTimeOffset ParseDateWithNoYear(string value, TimeZoneInfo? timezone = null)
+    {
+        var present = ParseDateTime(value, timezone);
         var dPresent = Math.Abs((DateTimeOffset.UtcNow - present).TotalMilliseconds);
 
         var past = present.AddYears(-1);
@@ -31,7 +37,7 @@ public interface ISiteApi
             return present;
     }
 
-    public static ulong ParseDollars(string value)
+    protected static ulong ParseDollars(string value)
     {
         int scalar = 1;
 

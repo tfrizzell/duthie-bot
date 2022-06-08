@@ -42,10 +42,10 @@ public class TheSpnhlApiTests
     [Fact]
     public async Task GetTeamsAsync_ReturnsExpectedTeams()
     {
-        var expectedTeams = JsonSerializer.Deserialize<IEnumerable<Team>>(File.ReadAllText(@"./Files/teams.json"))!;
         var actualTeams = await _api.GetTeamsAsync(_league);
         Assert.True(actualTeams != null, $"{_api.GetType().Name} does not support league {_league.Id}");
 
+        var expectedTeams = JsonSerializer.Deserialize<IEnumerable<Team>>(File.ReadAllText(@"./Files/teams.json"))!;
         var expectedTeamCount = expectedTeams.Count();
         var actualTeamCount = actualTeams!.Count();
         Assert.True(expectedTeamCount == actualTeamCount, $"expected {expectedTeamCount} teams but found {actualTeamCount}");
@@ -66,7 +66,6 @@ public class TheSpnhlApiTests
     {
         var league = await _api.GetLeagueAsync(_league);
 
-        var expectedGames = JsonSerializer.Deserialize<IEnumerable<Game>>(File.ReadAllText(@"./Files/games.json"))!;
         var actualGames = await _api.GetGamesAsync(_league);
         Assert.True(actualGames != null, $"{_api.GetType().Name} does not support league {_league.Id}");
 
@@ -75,6 +74,7 @@ public class TheSpnhlApiTests
         if ((league!.Info as TheSpnhlLeagueInfo)!.SeasonId != (_league.Info as TheSpnhlLeagueInfo)!.SeasonId)
             return;
 
+        var expectedGames = JsonSerializer.Deserialize<IEnumerable<Game>>(File.ReadAllText(@"./Files/games.json"))!;
         var expectedTeamCount = expectedGames.Count();
         var actualGameCount = actualGames!.Count();
         Assert.True(expectedTeamCount == actualGameCount, $"expected {expectedTeamCount} games but found {actualGameCount}");

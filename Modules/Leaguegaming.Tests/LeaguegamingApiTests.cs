@@ -14,6 +14,8 @@ public class LeaguegamingApiTests
         _api = new LeaguegamingApi();
         _league = new LeaguegamingLeagueProvider().Leagues.First(l => l.Id == LeaguegamingLeagueProvider.LGHL_PSN.Id);
         (_league.Info as LeaguegamingLeagueInfo)!.SeasonId = 19;
+        (_league.Info as LeaguegamingLeagueInfo)!.DraftId = 550;
+        (_league.Info as LeaguegamingLeagueInfo)!.DraftDate = DateTimeOffset.Parse("2022-06-03 20:00:00 -04:00");
     }
 
     [Fact]
@@ -35,16 +37,18 @@ public class LeaguegamingApiTests
         var actualInfo = (league.Info as LeaguegamingLeagueInfo)!;
         Assert.True(expectedInfo.LeagueId == actualInfo.LeagueId, $"expected Info.LeagueId to be {expectedInfo.LeagueId} but got {actualInfo.LeagueId}");
         Assert.True(expectedInfo.SeasonId <= actualInfo.SeasonId, $"expected Info.SeasonId to be greater than or equal to {expectedInfo.SeasonId} but got {actualInfo.SeasonId}");
-        Assert.True(expectedInfo.ForumId == actualInfo.ForumId, $"expected Info.ForumId to be greater than or equal to {expectedInfo.ForumId} but got {actualInfo.ForumId}");
+        Assert.True(expectedInfo.ForumId == actualInfo.ForumId, $"expected Info.ForumId to be {expectedInfo.ForumId} but got {actualInfo.ForumId}");
+        Assert.True(expectedInfo.DraftId <= actualInfo.DraftId, $"expected Info.DraftId to be greater than or equal to {expectedInfo.DraftId} but got {actualInfo.DraftId}");
+        Assert.True(expectedInfo.DraftDate <= actualInfo.DraftDate, $"expected Info.ForumId to be greater than or equal to {expectedInfo.DraftDate} but got {actualInfo.DraftDate}");
     }
 
     [Fact]
     public async Task GetTeamsAsync_ReturnsExpectedTeams()
     {
-        var expectedTeams = JsonSerializer.Deserialize<IEnumerable<Team>>(File.ReadAllText(@"./Files/teams.json"))!;
         var actualTeams = await _api.GetTeamsAsync(_league);
         Assert.True(actualTeams != null, $"{_api.GetType().Name} does not support league {_league.Id}");
 
+        var expectedTeams = JsonSerializer.Deserialize<IEnumerable<Team>>(File.ReadAllText(@"./Files/teams.json"))!;
         var expectedTeamCount = expectedTeams.Count();
         var actualTeamCount = actualTeams!.Count();
         Assert.True(expectedTeamCount == actualTeamCount, $"expected {expectedTeamCount} teams but found {actualTeamCount}");
@@ -63,10 +67,10 @@ public class LeaguegamingApiTests
     [Fact]
     public async Task GetGamesAsync_ReturnsExpectedGames()
     {
-        var expectedGames = JsonSerializer.Deserialize<IEnumerable<Game>>(File.ReadAllText(@"./Files/games.json"))!;
         var actualGames = await _api.GetGamesAsync(_league);
         Assert.True(actualGames != null, $"{_api.GetType().Name} does not support league {_league.Id}");
 
+        var expectedGames = JsonSerializer.Deserialize<IEnumerable<Game>>(File.ReadAllText(@"./Files/games.json"))!;
         var expectedTeamCount = expectedGames.Count();
         var actualGameCount = actualGames!.Count();
         Assert.True(expectedTeamCount == actualGameCount, $"expected {expectedTeamCount} games but found {actualGameCount}");
@@ -130,5 +134,52 @@ public class LeaguegamingApiTests
             Assert.True(int.TryParse(trade.FromId, out var f), $"expected FromId to be numeric but got {trade.FromId}");
             Assert.True(int.TryParse(trade.ToId, out var t), $"expected ToId to be numeric but got {trade.ToId}");
         }
+    }
+
+    [Fact]
+    public async Task GetDraftPicksAsync_InThePast_ReturnsNothing()
+    {
+        (_league.Info as LeaguegamingLeagueInfo)!.DraftDate = DateTimeOffset.UtcNow.AddDays(-7);
+        var draftPicks = await _api.GetDraftPicksAsync(_league);
+        Assert.True(draftPicks != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+        Assert.True(draftPicks!.Count() == 0, $"expected 0 draft picks but got {draftPicks!.Count()}");
+    }
+
+    [Fact]
+    public async Task GetDraftPicksAsync_InThePresent_ReturnsNotNull()
+    {
+        (_league.Info as LeaguegamingLeagueInfo)!.DraftDate = DateTimeOffset.UtcNow;
+        var actualDraftPicks = await _api.GetDraftPicksAsync(_league);
+        Assert.True(actualDraftPicks != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+
+        var expectedDraftPicks = JsonSerializer.Deserialize<IEnumerable<DraftPick>>(File.ReadAllText(@"./Files/draftPicks.json"))!;
+        var expectedTeamCount = expectedDraftPicks.Count();
+        var actualGameCount = actualDraftPicks!.Count();
+        Assert.True(expectedTeamCount == actualGameCount, $"expected {expectedTeamCount} draft picks but found {actualGameCount}");
+
+        var draftId = (_league.Info as LeaguegamingLeagueInfo)!.DraftId;
+
+        foreach (var expectedDraftPick in expectedDraftPicks)
+        {
+            var actualDraftPick = actualDraftPicks!.FirstOrDefault(d => d.OverallPick == expectedDraftPick.OverallPick);
+            Assert.True(actualDraftPick != null, $"[draft {draftId}] pick {expectedDraftPick.OverallPick} not found");
+            Assert.True(expectedDraftPick.LeagueId == actualDraftPick!.LeagueId, $"expected LeagueId to be {expectedDraftPick.LeagueId} but got {actualDraftPick.LeagueId}");
+            Assert.True(expectedDraftPick.TeamId == actualDraftPick!.TeamId, $"expected TeamId to be {expectedDraftPick.TeamId} but got {actualDraftPick.TeamId}");
+            Assert.True(expectedDraftPick.PlayerId == actualDraftPick!.PlayerId, $"expected PlayerId to be {expectedDraftPick.PlayerId} but got {actualDraftPick.PlayerId}");
+            Assert.True(!string.IsNullOrWhiteSpace(actualDraftPick.PlayerName), $"expected PlayerName to not be empty but got {actualDraftPick.PlayerName}");
+            Assert.True(expectedDraftPick.RoundNumber == actualDraftPick!.RoundNumber, $"expected RoundNumber to be {expectedDraftPick.RoundNumber} but got {actualDraftPick.RoundNumber}");
+            Assert.True(expectedDraftPick.RoundPick == actualDraftPick!.RoundPick, $"expected RoundPick to be {expectedDraftPick.RoundPick} but got {actualDraftPick.RoundPick}");
+            Assert.True(expectedDraftPick.OverallPick == actualDraftPick!.OverallPick, $"expected LeagueId to be {expectedDraftPick.OverallPick} but got {actualDraftPick.OverallPick}");
+            Assert.True(expectedDraftPick.Timestamp == actualDraftPick!.Timestamp, $"expected LeagueId to be {expectedDraftPick.Timestamp} but got {actualDraftPick.Timestamp}");
+        }
+    }
+
+    [Fact]
+    public async Task GetDraftPicksAsync_InTheFuture_ReturnsNothing()
+    {
+        (_league.Info as LeaguegamingLeagueInfo)!.DraftDate = DateTimeOffset.UtcNow.AddDays(7);
+        var draftPicks = await _api.GetDraftPicksAsync(_league);
+        Assert.True(draftPicks != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+        Assert.True(draftPicks!.Count() == 0, $"expected 0 draft picks but got {draftPicks!.Count()}");
     }
 }
