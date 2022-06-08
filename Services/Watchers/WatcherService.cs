@@ -161,7 +161,10 @@ public class WatcherService
                 if (existing != null && existing.ArchivedAt != null)
                     existing.ArchivedAt = null;
                 else if (existing == null)
+                {
+                    watcher.CreatedAt = DateTimeOffset.UtcNow;
                     await context.Set<Watcher>().AddAsync(watcher);
+                }
             }
 
             return await context.SaveChangesAsync();
