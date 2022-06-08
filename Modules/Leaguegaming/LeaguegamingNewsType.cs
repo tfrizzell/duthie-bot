@@ -1,6 +1,6 @@
-namespace Duthie.Modules.LeagueGaming;
+namespace Duthie.Modules.Leaguegaming;
 
-internal enum LeagueGamingNewsType
+internal enum LeaguegamingNewsType
 {
     All = 0,
     Bids = 1,

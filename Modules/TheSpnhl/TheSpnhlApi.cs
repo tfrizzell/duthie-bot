@@ -8,7 +8,7 @@ namespace Duthie.Modules.TheSpnhl;
 public class TheSpnhlApi
     : IGameApi, ILeagueApi, ITeamApi
 {
-    private const string Host = "https://thespnhl.com";
+    private const string Domain = "thespnhl.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
     private readonly HttpClient _httpClient = new HttpClient();
@@ -29,7 +29,7 @@ public class TheSpnhlApi
                 return null;
 
             var leagueInfo = (league.Info as TheSpnhlLeagueInfo)!;
-            var html = await _httpClient.GetStringAsync($"{Host}/calendar/fixtures-results/");
+            var html = await _httpClient.GetStringAsync($"https://{Domain}/calendar/fixtures-results/");
 
             return Regex.Matches(html,
                 @"<span[^>]*\bteam-logo\b[^>]*>\s*<meta(?=[^>]*itemprop=""name"")[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>\s*<img[^>]*>\s*</a>\s*</span>\s*<span[^>]*\bteam-logo\b[^>]*>\s*<meta(?=[^>]*itemprop=""name"")[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>\s*<img[^>]*>\s*</a>\s*</span>\s*<time(?=[^>]*\bsp-event-date\b)[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>.*?</a>\s*</time>\s*<h5[^>]*\bsp-event-results\b[^>]*>\s*<a(?=[^>]*itemprop=""url"")[^>]*/event/(\d+)[^>]*>\s*(?:<span[^>]*>([\dO]+)</span>\s*-\s*<span[^>]*>([\dO]+)</span>|<span[^>]*>.*?</span>)\s*</a>\s*</h5>",
@@ -64,7 +64,7 @@ public class TheSpnhlApi
                 return null;
 
             var leagueInfo = (league.Info as TheSpnhlLeagueInfo)!;
-            var html = await _httpClient.GetStringAsync($"{Host}/calendar/fixtures-results/");
+            var html = await _httpClient.GetStringAsync($"https://{Domain}/calendar/fixtures-results/");
 
             var logo = Regex.Match(html,
                 @"<a[^>]*\bsite-logo\b[^>]*>\s*<img[^>]*src=([""'])(.*?)\1[^>]*>\s*</a>",
@@ -78,7 +78,7 @@ public class TheSpnhlApi
             {
                 Id = league.Id,
                 Name = league.Name,
-                LogoUrl = logo.Success ? $"{Host}/{Regex.Replace(logo.Groups[2].Value.Trim(), @$"^({Host})?/?", "")}" : league.LogoUrl,
+                LogoUrl = logo.Success ? $"https://{Domain}/{Regex.Replace(logo.Groups[2].Value.Trim(), @$"^(https://{Domain})?/?", "")}" : league.LogoUrl,
                 Info = new TheSpnhlLeagueInfo
                 {
                     LeagueType = leagueInfo.LeagueType,
@@ -100,7 +100,7 @@ public class TheSpnhlApi
                 return null;
 
             var leagueInfo = (league.Info as TheSpnhlLeagueInfo)!;
-            var html = await _httpClient.GetStringAsync($"{Host}/standings/");
+            var html = await _httpClient.GetStringAsync($"https://{Domain}/standings/");
 
             var matches = Regex.Matches(html,
                 @"<a[^>]*><span[^>]*\bteam-logo\b[^>]*>\s*<img[^>]*>\s*</span>(.*?)</a>",
@@ -145,6 +145,6 @@ public class TheSpnhlApi
         if (!IsSupported(league))
             return null;
 
-        return $"{Host}/event/{game.Id}/";
+        return $"https://{Domain}/event/{game.Id}/";
     }
 }

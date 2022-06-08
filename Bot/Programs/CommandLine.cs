@@ -114,7 +114,7 @@ public class CommandLine
         if (types.Intersect(new string[] { "contracts", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<ContractBackgroundService>().ExecuteAsync();
 
-        if (types.Intersect(new string[] { "draft", "draft-picks", "all" }).Count() > 0)
+        if (types.Intersect(new string[] { "draft", "drafts", "draft-picks", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<DraftBackgroundService>().ExecuteAsync();
 
         if (types.Intersect(new string[] { "trades", "all" }).Count() > 0)

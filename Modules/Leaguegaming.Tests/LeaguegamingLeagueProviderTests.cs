@@ -1,11 +1,11 @@
-namespace Duthie.Modules.LeagueGaming.Tests;
+namespace Duthie.Modules.Leaguegaming.Tests;
 
-public class LeagueGamingLeagueProviderTests
+public class LeaguegamingLeagueProviderTests
 {
     [Fact]
     public void Provides_Only_DefaultLeagues()
     {
-        var expectedCount = new LeagueGamingLeagueProvider().Leagues.Count();
+        var expectedCount = new LeaguegamingLeagueProvider().Leagues.Count();
         var actualCount = DefaultLeagues().Count();
         Assert.True(expectedCount == actualCount, $"expected {expectedCount} leagues but found {actualCount}");
     }
@@ -14,16 +14,16 @@ public class LeagueGamingLeagueProviderTests
     [MemberData(nameof(DefaultLeagues))]
     public void DefaultLeagues_Exist(Guid id, string name, int leagueId)
     {
-        var leagueProvider = new LeagueGamingLeagueProvider();
+        var leagueProvider = new LeaguegamingLeagueProvider();
         var league = leagueProvider.Leagues.FirstOrDefault(l => l.Id == id);
 
         Assert.True(league != null, $"league {id} not found");
-        Assert.True(LeagueGamingSiteProvider.Leaguegaming.Id == league!.SiteId, $"expected SiteId to be {LeagueGamingSiteProvider.Leaguegaming.Id} but got {league.SiteId}");
+        Assert.True(LeaguegamingSiteProvider.Leaguegaming.Id == league!.SiteId, $"expected SiteId to be {LeaguegamingSiteProvider.Leaguegaming.Id} but got {league.SiteId}");
         Assert.True(name == league.Name, $"expected Name to be {name} but got {league.Name}");
-        Assert.True(league.Info is LeagueGamingLeagueInfo, $"expected Info to be of type {typeof(LeagueGamingLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
+        Assert.True(league.Info is LeaguegamingLeagueInfo, $"expected Info to be of type {typeof(LeaguegamingLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
         Assert.True(league.Enabled, $"expected Enabled to be {true} but got {league.Enabled}");
 
-        var actualLeagueId = (league.Info as LeagueGamingLeagueInfo)!.LeagueId;
+        var actualLeagueId = (league.Info as LeaguegamingLeagueInfo)!.LeagueId;
         Assert.True(leagueId == actualLeagueId, $"expected Info.LeagueId to be {leagueId} but got {actualLeagueId}");
 
         var count = leagueProvider.Leagues.Count(s => s.Name == name);

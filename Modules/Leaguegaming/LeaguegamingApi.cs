@@ -4,30 +4,30 @@ using Duthie.Types.Modules.Api;
 using Duthie.Types.Modules.Data;
 using League = Duthie.Types.Leagues.League;
 
-namespace Duthie.Modules.LeagueGaming;
+namespace Duthie.Modules.Leaguegaming;
 
-public class LeagueGamingApi
+public class LeaguegamingApi
     : IBidApi, IContractApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi
 {
-    private const string Host = "https://www.leaguegaming.com";
+    private const string Domain = "www.leaguegaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
     private readonly HttpClient _httpClient = new HttpClient();
 
     public IReadOnlySet<Guid> Supports
     {
-        get => new HashSet<Guid> { LeagueGamingSiteProvider.Leaguegaming.Id };
+        get => new HashSet<Guid> { LeaguegamingSiteProvider.Leaguegaming.Id };
     }
 
-    private string GetUrl(string file = "index.php", string path = "leaguegaming/league", IDictionary<string, object?>? parameters = null)
+    private string GetUrl(League league, string file = "index.php", string path = "leaguegaming/league", IDictionary<string, object?>? parameters = null)
     {
         var queryString = parameters == null ? string.Empty
             : string.Join("&", parameters.Where(p => p.Value != null).Select(p => string.Join("=", HttpUtility.UrlEncode(p.Key), HttpUtility.UrlEncode(p.Value!.ToString()))));
-        return Regex.Replace($"{Host}/forums/{file}?{path}&{queryString}".Replace("?&", "?"), @"[?&]+$", "");
+        return Regex.Replace($"https://{Domain}/forums/{file}?{path}&{queryString}".Replace("?&", "?"), @"[?&]+$", "");
     }
 
     private bool IsSupported(League league) =>
-        Supports.Contains(league.SiteId) || league.Info is LeagueGamingLeagueInfo;
+        Supports.Contains(league.SiteId) || league.Info is LeaguegamingLeagueInfo;
 
     public async Task<IEnumerable<Bid>?> GetBidsAsync(League league)
     {
@@ -36,16 +36,16 @@ public class LeagueGamingApi
             if (!IsSupported(league))
                 return null;
 
-            var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 parameters: new Dictionary<string, object?>
                 {
                     ["action"] = "league",
                     ["page"] = "team_news",
                     ["leagueid"] = leagueInfo.LeagueId,
                     ["seasonid"] = leagueInfo.SeasonId,
-                    ["typeid"] = (int)LeagueGamingNewsType.Bids,
+                    ["typeid"] = (int)LeaguegamingNewsType.Bids,
                     ["displaylimit"] = 200,
                 }));
 
@@ -90,16 +90,16 @@ public class LeagueGamingApi
             if (!IsSupported(league))
                 return null;
 
-            var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 parameters: new Dictionary<string, object?>
                 {
                     ["action"] = "league",
                     ["page"] = "team_news",
                     ["leagueid"] = leagueInfo.LeagueId,
                     ["seasonid"] = leagueInfo.SeasonId,
-                    ["typeid"] = (int)LeagueGamingNewsType.Contracts,
+                    ["typeid"] = (int)LeaguegamingNewsType.Contracts,
                     ["displaylimit"] = 200,
                 }));
 
@@ -144,9 +144,9 @@ public class LeagueGamingApi
             if (!IsSupported(league))
                 return null;
 
-            var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 parameters: new Dictionary<string, object?>
                 {
                     ["action"] = "league",
@@ -201,9 +201,9 @@ public class LeagueGamingApi
             if (!IsSupported(league))
                 return null;
 
-            var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 parameters: new Dictionary<string, object?>
                 {
                     ["action"] = "league",
@@ -227,8 +227,8 @@ public class LeagueGamingApi
             {
                 Id = league.Id,
                 Name = info.Groups[2].Value.Trim(),
-                LogoUrl = $"{Host}/images/league/icon/l{leagueInfo.LeagueId}_100.png",
-                Info = new LeagueGamingLeagueInfo
+                LogoUrl = $"https://{Domain}/images/league/icon/l{leagueInfo.LeagueId}_100.png",
+                Info = new LeaguegamingLeagueInfo
                 {
                     LeagueId = leagueInfo.LeagueId,
                     SeasonId = season.Success ? int.Parse(season.Groups[1].Value) : leagueInfo.SeasonId,
@@ -249,9 +249,9 @@ public class LeagueGamingApi
             if (!IsSupported(league))
                 return null;
 
-            var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 parameters: new Dictionary<string, object?>
                 {
                     ["action"] = "league",
@@ -314,16 +314,16 @@ public class LeagueGamingApi
             if (!IsSupported(league))
                 return null;
 
-            var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 parameters: new Dictionary<string, object?>
                 {
                     ["action"] = "league",
                     ["page"] = "team_news",
                     ["leagueid"] = leagueInfo.LeagueId,
                     ["seasonid"] = leagueInfo.SeasonId,
-                    ["typeid"] = (int)LeagueGamingNewsType.Trades,
+                    ["typeid"] = (int)LeaguegamingNewsType.Trades,
                     ["displaylimit"] = 200,
                 }));
 
@@ -366,8 +366,8 @@ public class LeagueGamingApi
         if (!IsSupported(league))
             return null;
 
-        var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
-        return $"{Host}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={bid.TeamId}&typeid={(int)LeagueGamingNewsType.Bids}";
+        var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+        return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={bid.TeamId}&typeid={(int)LeaguegamingNewsType.Bids}";
     }
 
     public string? GetContractUrl(League league, Contract contract)
@@ -375,8 +375,8 @@ public class LeagueGamingApi
         if (!IsSupported(league))
             return null;
 
-        var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
-        return $"{Host}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={contract.TeamId}&typeid={(int)LeagueGamingNewsType.Contracts}";
+        var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+        return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={contract.TeamId}&typeid={(int)LeaguegamingNewsType.Contracts}";
     }
 
     public string? GetGameUrl(League league, Game game)
@@ -384,7 +384,7 @@ public class LeagueGamingApi
         if (!IsSupported(league))
             return null;
 
-        return $"{Host}/forums/index.php?leaguegaming/league&action=league&page=game&gameid={game.Id}";
+        return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=game&gameid={game.Id}";
     }
 
     public string? GetTradeUrl(League league, Trade trade)
@@ -395,7 +395,7 @@ public class LeagueGamingApi
         if (!IsSupported(league))
             return null;
 
-        var leagueInfo = (league.Info as LeagueGamingLeagueInfo)!;
-        return $"{Host}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={trade.FromId}&typeid={(int)LeagueGamingNewsType.Trades}";
+        var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+        return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={trade.FromId}&typeid={(int)LeaguegamingNewsType.Trades}";
     }
 }

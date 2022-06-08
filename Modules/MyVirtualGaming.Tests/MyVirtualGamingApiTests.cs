@@ -20,7 +20,7 @@ public class MyVirtualGamingApiTests
     [Fact]
     public void Supports_MyVirtualGaming()
     {
-        Assert.True(_api.Supports.Contains(MyVirtualGamingSiteProvider.MyVirtualGaming.Id), $"{_api.GetType().Name} does not support site {MyVirtualGamingSiteProvider.MyVirtualGaming.Id}");
+        Assert.True(_api.Supports.Contains(MyVirtualGamingSiteProvider.VGHL.Id), $"{_api.GetType().Name} does not support site {MyVirtualGamingSiteProvider.VGHL.Id}");
     }
 
     [Fact]

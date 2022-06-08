@@ -6,7 +6,7 @@ using Duthie.Bot.Commands;
 using Duthie.Bot.Configuration;
 using Duthie.Bot.Events;
 using Duthie.Data;
-using Duthie.Modules.LeagueGaming;
+using Duthie.Modules.Leaguegaming;
 using Duthie.Modules.MyVirtualGaming;
 using Duthie.Modules.TheSpnhl;
 using Duthie.Services.Api;
@@ -108,13 +108,13 @@ public static class CompositionRoot
             .SelectMany(s => s.GetTypes())
             .Where(t => !t.IsAbstract
                 && typeof(ISiteApi).IsAssignableFrom(t)
-                && typeof(LeagueGamingApi) != t
+                && typeof(LeaguegamingApi) != t
                 && typeof(MyVirtualGamingApi) != t
                 && typeof(TheSpnhlApi) != t);
 
         apiService.Register(
             new List<ISiteApi>() {
-                new LeagueGamingApi(),
+                new LeaguegamingApi(),
                 new MyVirtualGamingApi(),
                 new TheSpnhlApi()
             }.Concat(apis.Select(api => (ISiteApi)Activator.CreateInstance(api)!)).ToArray());

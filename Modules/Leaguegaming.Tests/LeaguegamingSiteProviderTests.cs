@@ -1,11 +1,11 @@
-namespace Duthie.Modules.LeagueGaming.Tests;
+namespace Duthie.Modules.Leaguegaming.Tests;
 
-public class LeagueGamingSiteProviderTests
+public class LeaguegamingSiteProviderTests
 {
     [Fact]
     public void Provides_Only_DefaultSites()
     {
-        var expectedCount = new LeagueGamingSiteProvider().Sites.Count();
+        var expectedCount = new LeaguegamingSiteProvider().Sites.Count();
         var actualCount = DefaultSites().Count();
         Assert.True(expectedCount == actualCount, $"expected {expectedCount} sites but found {actualCount}");
     }
@@ -15,7 +15,7 @@ public class LeagueGamingSiteProviderTests
     public void DefaultSites_Exist(string id, string name, string url)
     {
         var siteId = new Guid(id);
-        var siteProvider = new LeagueGamingSiteProvider();
+        var siteProvider = new LeaguegamingSiteProvider();
         var site = siteProvider.Sites.FirstOrDefault(s => s.Id == siteId);
 
         Assert.True(site != null, $"no matching site found");
@@ -29,6 +29,6 @@ public class LeagueGamingSiteProviderTests
 
     internal static IEnumerable<object[]> DefaultSites()
     {
-        yield return new object[] { "e3f25028-0a34-4430-a2a5-a1a7fab73b41", "Leaguegaming", "leaguegaming.com" };
+        yield return new object[] { "e3f25028-0a34-4430-a2a5-a1a7fab73b41", "Leaguegaming", "www.leaguegaming.com" };
     }
 }

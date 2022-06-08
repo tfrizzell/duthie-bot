@@ -13,9 +13,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Types", "Types\Duthi
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{4F407175-26F4-428E-9647-A0F49CA336D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Modules.LeagueGaming", "Modules\LeagueGaming\Duthie.Modules.LeagueGaming.csproj", "{36E91667-8AD1-4E5F-BF8D-0B4B1EBE4066}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Modules.Leaguegaming", "Modules\Leaguegaming\Duthie.Modules.Leaguegaming.csproj", "{36E91667-8AD1-4E5F-BF8D-0B4B1EBE4066}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Modules.LeagueGaming.Tests", "Modules\LeagueGaming.Tests\Duthie.Modules.LeagueGaming.Tests.csproj", "{49853B80-8636-47E7-BE86-49369B7248BB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Modules.Leaguegaming.Tests", "Modules\Leaguegaming.Tests\Duthie.Modules.Leaguegaming.Tests.csproj", "{49853B80-8636-47E7-BE86-49369B7248BB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Modules.MyVirtualGaming", "Modules\MyVirtualGaming\Duthie.Modules.MyVirtualGaming.csproj", "{48AC26F0-78AB-49B7-AC6D-B680FDF5DB6E}"
 EndProject

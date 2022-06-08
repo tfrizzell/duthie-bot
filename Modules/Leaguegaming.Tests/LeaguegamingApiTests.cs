@@ -2,24 +2,24 @@ using System.Text.Json;
 using Duthie.Types.Modules.Data;
 using League = Duthie.Types.Leagues.League;
 
-namespace Duthie.Modules.LeagueGaming.Tests;
+namespace Duthie.Modules.Leaguegaming.Tests;
 
-public class LeagueGamingApiTests
+public class LeaguegamingApiTests
 {
-    private readonly LeagueGamingApi _api;
+    private readonly LeaguegamingApi _api;
     private readonly League _league;
 
-    public LeagueGamingApiTests()
+    public LeaguegamingApiTests()
     {
-        _api = new LeagueGamingApi();
-        _league = new LeagueGamingLeagueProvider().Leagues.First(l => l.Id == LeagueGamingLeagueProvider.LGHL_PSN.Id);
-        (_league.Info as LeagueGamingLeagueInfo)!.SeasonId = 19;
+        _api = new LeaguegamingApi();
+        _league = new LeaguegamingLeagueProvider().Leagues.First(l => l.Id == LeaguegamingLeagueProvider.LGHL_PSN.Id);
+        (_league.Info as LeaguegamingLeagueInfo)!.SeasonId = 19;
     }
 
     [Fact]
-    public void Supports_LeagueGaming()
+    public void Supports_Leaguegaming()
     {
-        Assert.True(_api.Supports.Contains(LeagueGamingSiteProvider.Leaguegaming.Id), $"{_api.GetType().Name} does not support site {LeagueGamingSiteProvider.Leaguegaming.Id}");
+        Assert.True(_api.Supports.Contains(LeaguegamingSiteProvider.Leaguegaming.Id), $"{_api.GetType().Name} does not support site {LeaguegamingSiteProvider.Leaguegaming.Id}");
     }
 
     [Fact]
@@ -29,10 +29,10 @@ public class LeagueGamingApiTests
         Assert.True(league != null, $"{_api.GetType().Name} does not support league {_league.Id}");
         Assert.True(_league.Name == league!.Name, $"expected Name to be {_league.Name} but got {league.Name}");
         Assert.True(_league.LogoUrl == league.LogoUrl, $"expected LogoUrl to be {_league.LogoUrl} but got {league.LogoUrl}");
-        Assert.True(league.Info is LeagueGamingLeagueInfo, $"expected Info to be of type {typeof(LeagueGamingLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
+        Assert.True(league.Info is LeaguegamingLeagueInfo, $"expected Info to be of type {typeof(LeaguegamingLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
 
-        var expectedInfo = JsonSerializer.Deserialize<LeagueGamingLeagueInfo>(File.ReadAllText(@"./Files/info.json"))!;
-        var actualInfo = (league.Info as LeagueGamingLeagueInfo)!;
+        var expectedInfo = JsonSerializer.Deserialize<LeaguegamingLeagueInfo>(File.ReadAllText(@"./Files/info.json"))!;
+        var actualInfo = (league.Info as LeaguegamingLeagueInfo)!;
         Assert.True(expectedInfo.LeagueId == actualInfo.LeagueId, $"expected Info.LeagueId to be {expectedInfo.LeagueId} but got {actualInfo.LeagueId}");
         Assert.True(expectedInfo.SeasonId <= actualInfo.SeasonId, $"expected Info.SeasonId to be greater than or equal to {expectedInfo.SeasonId} but got {actualInfo.SeasonId}");
         Assert.True(expectedInfo.ForumId == actualInfo.ForumId, $"expected Info.ForumId to be greater than or equal to {expectedInfo.ForumId} but got {actualInfo.ForumId}");

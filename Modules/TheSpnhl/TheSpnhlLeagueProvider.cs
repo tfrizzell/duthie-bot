@@ -8,6 +8,7 @@ public class TheSpnhlLeagueProvider : ILeagueProvider
     internal static readonly League SPNHL = new League
     {
         SiteId = TheSpnhlSiteProvider.SPNHL.Id,
+        Site = TheSpnhlSiteProvider.SPNHL,
         Id = new Guid("6991c990-a4fa-488b-884a-79b00e4e3577"),
         Name = "SPNHL",
         ShortName = "SPNHL",

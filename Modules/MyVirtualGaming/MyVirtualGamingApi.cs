@@ -10,21 +10,22 @@ namespace Duthie.Modules.MyVirtualGaming;
 public class MyVirtualGamingApi
     : IBidApi, IContractApi, IDraftApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi
 {
-    private const string Host = "https://vghl.myvirtualgaming.com";
+    private const string Domain = "vghl.myvirtualgaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
     private readonly HttpClient _httpClient = new HttpClient();
 
     public IReadOnlySet<Guid> Supports
     {
-        get => new HashSet<Guid> { MyVirtualGamingSiteProvider.MyVirtualGaming.Id };
+        get => new HashSet<Guid> { MyVirtualGamingSiteProvider.VGHL.Id };
     }
 
-    private string GetUrl(string league = "vghl", string path = "", IDictionary<string, object?>? parameters = null)
+    private string GetUrl(League league, string path, IDictionary<string, object?>? parameters = null)
     {
+        var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
         var queryString = parameters == null ? string.Empty
             : string.Join("&", parameters.Where(p => p.Value != null).Select(p => string.Join("=", HttpUtility.UrlEncode(p.Key), HttpUtility.UrlEncode(p.Value!.ToString()))));
-        return Regex.Replace($"{Host}/vghlleagues/{league}/{path}?{queryString}".Replace("?&", "?"), @"[?&]+$", "");
+        return Regex.Replace($"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/{path}?{queryString}".Replace("?&", "?"), @"[?&]+$", "");
     }
 
     private bool IsSupported(League league) =>
@@ -42,8 +43,7 @@ public class MyVirtualGamingApi
             if (!leagueInfo.Features.HasFlag(MyVirtualGamingFeatures.RecentTransactions))
                 return new List<Bid>();
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
-                league: leagueInfo.LeagueId,
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "recent-transactions"));
 
             var closedBids = Regex.Match(html,
@@ -92,8 +92,7 @@ public class MyVirtualGamingApi
             if (!leagueInfo.Features.HasFlag(MyVirtualGamingFeatures.RecentTransactions))
                 return new List<Contract>();
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
-                league: leagueInfo.LeagueId,
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "recent-transactions"));
 
             return Regex.Matches(html,
@@ -149,8 +148,7 @@ public class MyVirtualGamingApi
             if (!leagueInfo.Features.HasFlag(MyVirtualGamingFeatures.DraftCentre))
                 return new List<DraftPick>();
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
-                league: leagueInfo.LeagueId,
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "draft-centre"));
 
             var teams = await GetTeamLookupAsync(league);
@@ -196,8 +194,7 @@ public class MyVirtualGamingApi
 
             var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
-                league: leagueInfo.LeagueId,
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "schedule",
                 parameters: new Dictionary<string, object?>
                 {
@@ -216,8 +213,7 @@ public class MyVirtualGamingApi
 
             return (await Task.WhenAll(weeks.Select(async week =>
             {
-                var _html = await _httpClient.GetStringAsync(GetUrl(
-                    league: leagueInfo.LeagueId,
+                var _html = await _httpClient.GetStringAsync(GetUrl(league,
                     path: "schedule",
                     parameters: new Dictionary<string, object?>
                     {
@@ -277,8 +273,7 @@ public class MyVirtualGamingApi
 
             var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
 
-            var xml = await _httpClient.GetStringAsync(GetUrl(
-                league: leagueInfo.LeagueId,
+            var xml = await _httpClient.GetStringAsync(GetUrl(league,
                 path: leagueInfo.LeagueId,
                 parameters: new Dictionary<string, object?>
                 {
@@ -295,8 +290,7 @@ public class MyVirtualGamingApi
             if (title == null || id == null)
                 return null;
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
-                league: leagueInfo.LeagueId,
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "schedule"));
 
             var logo = Regex.Match(html,
@@ -317,8 +311,7 @@ public class MyVirtualGamingApi
             .Cast<int?>()
             .FirstOrDefault();
 
-            html = await _httpClient.GetStringAsync(GetUrl(
-                league: leagueInfo.LeagueId,
+            html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "standings"));
 
             var scheduleId = Regex.Matches(
@@ -348,7 +341,7 @@ public class MyVirtualGamingApi
             {
                 Id = league.Id,
                 Name = Regex.Replace(title.InnerText.Trim(), @"\s+Home$", ""),
-                LogoUrl = logo.Success ? $"{Host}/{Regex.Replace(logo.Groups[1].Value.Trim(), @$"^({Host})?/?", "")}" : league.LogoUrl,
+                LogoUrl = logo.Success ? $"https://{Domain}/{Regex.Replace(logo.Groups[1].Value.Trim(), @$"^(https://{Domain})?/?", "")}" : league.LogoUrl,
                 Info = new MyVirtualGamingLeagueInfo
                 {
                     Features = features,
@@ -373,8 +366,7 @@ public class MyVirtualGamingApi
 
             var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
-                league: leagueInfo.LeagueId,
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "player-statistics",
                 parameters: new Dictionary<string, object?>
                 {
@@ -407,8 +399,7 @@ public class MyVirtualGamingApi
                     },
                     StringComparer.OrdinalIgnoreCase);
 
-            html = await _httpClient.GetStringAsync(GetUrl(
-                league: leagueInfo.LeagueId,
+            html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "schedule",
                 parameters: new Dictionary<string, object?>
                 {
@@ -453,8 +444,7 @@ public class MyVirtualGamingApi
         {
             var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
-                league: leagueInfo.LeagueId,
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "standings",
                 parameters: new Dictionary<string, object?>
                 {
@@ -531,8 +521,7 @@ public class MyVirtualGamingApi
             if (!leagueInfo.Features.HasFlag(MyVirtualGamingFeatures.RecentTransactions))
                 return new List<Trade>();
 
-            var html = await _httpClient.GetStringAsync(GetUrl(
-                league: leagueInfo.LeagueId,
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "recent-transactions"));
 
             var trades = Regex.Match(html,
@@ -580,7 +569,7 @@ public class MyVirtualGamingApi
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-        return $"{Host}/vghlleagues/{leagueInfo.LeagueId}/recent-transactions#closed-bids";
+        return $"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/recent-transactions#closed-bids";
     }
 
     public string? GetContractUrl(League league, Contract contract)
@@ -589,7 +578,7 @@ public class MyVirtualGamingApi
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-        return $"{Host}/vghlleagues/{leagueInfo.LeagueId}/recent-transactions#Signings";
+        return $"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/recent-transactions#Signings";
     }
 
     public string? GetDraftPickUrl(League league, DraftPick draftPick)
@@ -598,7 +587,7 @@ public class MyVirtualGamingApi
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-        return $"{Host}/vghlleagues/{leagueInfo.LeagueId}/draft-centre";
+        return $"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/draft-centre";
     }
 
     public string? GetGameUrl(League league, Game game)
@@ -607,7 +596,7 @@ public class MyVirtualGamingApi
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-        return $"{Host}/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.Id}";
+        return $"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.Id}";
     }
 
     public string? GetTradeUrl(League league, Trade trade)
@@ -616,6 +605,6 @@ public class MyVirtualGamingApi
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-        return $"{Host}/vghlleagues/{leagueInfo.LeagueId}/recent-transactions#Trades";
+        return $"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/recent-transactions#Trades";
     }
 }

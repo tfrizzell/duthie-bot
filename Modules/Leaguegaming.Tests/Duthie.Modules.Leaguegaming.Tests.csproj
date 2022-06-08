@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LeagueGaming\Duthie.Modules.LeagueGaming.csproj" />
+    <ProjectReference Include="..\Leaguegaming\Duthie.Modules.Leaguegaming.csproj" />
     <ProjectReference Include="..\..\Types\Duthie.Types.csproj" />
   </ItemGroup>
 
