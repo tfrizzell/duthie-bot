@@ -18,9 +18,6 @@ namespace Duthie.Bot.Commands;
 
 public class WatcherCommand : BaseCommandWithAdminCheck
 {
-    private static readonly Guid TYPE_ALL = new Guid("31625d2a-6587-477f-a888-84968d5b5eff");
-    private static readonly Guid TYPE_ALL_NEWS = new Guid("1f20dd2c-df09-46ba-9d57-5ab67d8a910a");
-
     private readonly ILogger<WatcherCommand> _logger;
     private readonly AppInfo _appInfo;
     private readonly WatcherService _watcherService;
@@ -51,7 +48,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
     public override async Task<SlashCommandOptionBuilder> BuildAsync() =>
         new SlashCommandOptionBuilder()
             .WithName(Command)
-            .WithDescription($"Add, remove, or view {_appInfo.Name} watchers for your server.")
+            .WithDescription($"Manage {_appInfo.Name} watchers for your server.")
             .WithType(ApplicationCommandOptionType.SubCommandGroup)
             .AddOption(await BuildAddAsync())
             .AddOption(await BuildListAsync())
@@ -62,7 +59,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
     {
         var cmd = new SlashCommandOptionBuilder()
             .WithName("add")
-            .WithDescription($"Add a new {_appInfo.Name} watcher for your server.")
+            .WithDescription($"Add a {_appInfo.Name} watcher to your server.")
             .WithType(ApplicationCommandOptionType.SubCommand);
 
         await AddSiteFilter(cmd);
@@ -92,7 +89,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
     {
         var cmd = new SlashCommandOptionBuilder()
             .WithName("remove")
-            .WithDescription($"Remove a {_appInfo.Name} watcher for your server.")
+            .WithDescription($"Remove a {_appInfo.Name} watcher from your server.")
             .WithType(ApplicationCommandOptionType.SubCommand);
 
         await AddSiteFilter(cmd);
@@ -107,7 +104,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
     {
         var cmd = new SlashCommandOptionBuilder()
             .WithName("remove-all")
-            .WithDescription($"Remove all {_appInfo.Name} watchers for your server.")
+            .WithDescription($"Remove all {_appInfo.Name} watchers from your server.")
             .WithType(ApplicationCommandOptionType.SubCommand);
 
         await AddSiteFilter(cmd);
@@ -166,8 +163,8 @@ public class WatcherCommand : BaseCommandWithAdminCheck
             .WithDescription(description)
             .WithRequired(true);
 
-        typeOption.AddChoice("All", TYPE_ALL.ToString());
-        typeOption.AddChoice("All News", TYPE_ALL_NEWS.ToString());
+        typeOption.AddChoice("All", WATCHER_TYPE_ALL.ToString());
+        typeOption.AddChoice("All News", WATCHER_TYPE_ALL.ToString());
 
         foreach (var type in types)
             typeOption.AddChoice(EnumUtils.GetName(type), type.ToString());
@@ -551,9 +548,9 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var types = new List<WatcherType>();
 
-        if (TYPE_ALL.ToString() == typeOption)
+        if (WATCHER_TYPE_ALL.ToString() == typeOption)
             types.AddRange(Enum.GetValues<WatcherType>());
-        else if (TYPE_ALL_NEWS.ToString() == typeOption)
+        else if (WATCHER_TYPE_ALL_NEWS.ToString() == typeOption)
             types.AddRange(Enum.GetValues<WatcherType>().Where(type => type != WatcherType.Games));
         else if (Enum.TryParse<WatcherType>(typeOption, out var typeEnum))
             types.Add(typeEnum);

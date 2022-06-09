@@ -5,29 +5,33 @@ namespace Duthie.Types.Watchers;
 
 public enum WatcherType
 {
-    [Description("Tracks and announces winning bids")]
+    [Description("Sends winning bids to your server")]
     Bids,
 
-    [Description("Tracks and announces new contracts")]
+    [Description("Sends contract signings to your server")]
     Contracts,
 
     [Display(Name = "Daily Stars")]
-    [Description("Tracks and announces daily stars")]
+    [Description("")]
     DailyStars,
 
     [Display(Name = "Draft Picks")]
-    [Description("Tracks and announces new draft picks")]
+    [Description("Sends draft picks to your server")]
     DraftPicks,
 
-    [Description("Tracks and announces game results")]
+    [Description("Sends game results to your server")]
     Games,
 
-    [Description("Tracks and announces news items not covered by other types")]
+    [Description("")]
     News,
 
-    [Description("Tracks and announces trades")]
+    [Display(Name = "Roster Transactions")]
+    [Description("Sends roster transactions to your server")]
+    RosterTransactions,
+
+    [Description("Sends trades to your server")]
     Trades,
 
-    [Description("Tracks and announces players placed on, or claimed off, waivers")]
-    Waivers
+    [Description("")]
+    Waivers,
 }

@@ -27,7 +27,7 @@ public class PingCommand : BaseCommand
         Task.FromResult(
             new SlashCommandOptionBuilder()
                 .WithName(Command)
-                .WithDescription($"Sends a ping to {_appInfo.Name} to make sure it's working.")
+                .WithDescription($"Send a ping to {_appInfo.Name} to make sure it's working.")
                 .WithType(ApplicationCommandOptionType.SubCommand));
 
     protected override async Task HandleCommandAsync(SocketSlashCommand command)

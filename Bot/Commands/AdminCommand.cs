@@ -33,7 +33,7 @@ public class AdminCommand : BaseCommand
     public override async Task<SlashCommandOptionBuilder> BuildAsync() =>
         new SlashCommandOptionBuilder()
             .WithName(Command)
-            .WithDescription($"Add, remove, or view users as {_appInfo.Name} administrators for your server.")
+            .WithDescription($"Manage {_appInfo.Name} administrators for your server.")
             .WithType(ApplicationCommandOptionType.SubCommandGroup)
             .AddOption(await BuildAddAsync())
             .AddOption(await BuildListAsync())
@@ -43,7 +43,7 @@ public class AdminCommand : BaseCommand
     private Task<SlashCommandOptionBuilder> BuildAddAsync() =>
         Task.FromResult(new SlashCommandOptionBuilder()
             .WithName("add")
-            .WithDescription($"Add a new {_appInfo.Name} administrator for your server.")
+            .WithDescription($"Add a {_appInfo.Name} administrator for your server.")
             .WithType(ApplicationCommandOptionType.SubCommand)
             .AddOption("user", ApplicationCommandOptionType.User, "the user to give administrator access to", isRequired: true));
 

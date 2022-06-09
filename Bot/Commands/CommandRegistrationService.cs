@@ -28,7 +28,7 @@ public class CommandRegistrationService
 
         var command = new SlashCommandBuilder()
             .WithName("duthie")
-            .WithDescription($"Use `/duthie` commants to communicate with {_appInfo.Name}.");
+            .WithDescription($"Use `/duthie` commands to communicate with {_appInfo.Name}.");
 
         foreach (var cmd in _commands)
             command.AddOption(await cmd.BuildAsync());

@@ -9,6 +9,9 @@ namespace Duthie.Bot.Commands;
 
 public abstract class BaseCommand : ICommand
 {
+    protected static readonly Guid WATCHER_TYPE_ALL = new Guid("31625d2a-6587-477f-a888-84968d5b5eff");
+    protected static readonly Guid WATCHER_TYPE_ALL_NEWS = new Guid("1f20dd2c-df09-46ba-9d57-5ab67d8a910a");
+
     private readonly DiscordConfiguration _config;
 
     protected BaseCommand(DiscordConfiguration config)
@@ -58,7 +61,7 @@ public abstract class BaseCommand : ICommand
         var tagsOption = new SlashCommandOptionBuilder()
             .WithType(ApplicationCommandOptionType.String)
             .WithName("tags")
-            .WithDescription("a comma-separated list of tags to filter by");
+            .WithDescription("the tags to filter by _(comma-separated)_");
 
         cmd.AddOption(tagsOption);
         return Task.CompletedTask;
@@ -87,8 +90,8 @@ public abstract class BaseCommand : ICommand
             .WithName("type")
             .WithDescription("the watcher type to filter by");
 
-        watcherTypeOption.AddChoice("All", "ALL");
-        watcherTypeOption.AddChoice("All News", "ALL_NEWS");
+        watcherTypeOption.AddChoice("All", WATCHER_TYPE_ALL.ToString());
+        watcherTypeOption.AddChoice("All News", WATCHER_TYPE_ALL_NEWS.ToString());
 
         foreach (var watcherType in watcherTypes)
             watcherTypeOption.AddChoice(EnumUtils.GetName(watcherType), watcherType.ToString());

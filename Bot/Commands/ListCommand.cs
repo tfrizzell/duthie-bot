@@ -70,7 +70,7 @@ public class ListCommand : BaseCommand
     {
         var cmd = new SlashCommandOptionBuilder()
             .WithName("leagues")
-            .WithDescription($"List the leagues supported by {_appInfo.Name}.")
+            .WithDescription($"List the leagues available in {_appInfo.Name}.")
             .WithType(ApplicationCommandOptionType.SubCommand);
 
         await AddSiteFilter(cmd);
@@ -82,7 +82,7 @@ public class ListCommand : BaseCommand
     {
         var cmd = new SlashCommandOptionBuilder()
             .WithName("sites")
-            .WithDescription($"List the sites supported by {_appInfo.Name}.")
+            .WithDescription($"List the sites available in {_appInfo.Name}.")
             .WithType(ApplicationCommandOptionType.SubCommand);
 
         await AddTagsFilter(cmd);
@@ -93,7 +93,7 @@ public class ListCommand : BaseCommand
     {
         var cmd = new SlashCommandOptionBuilder()
             .WithName("teams")
-            .WithDescription($"List the teams supported by {_appInfo.Name}.")
+            .WithDescription($"List the teams available in {_appInfo.Name}.")
             .WithType(ApplicationCommandOptionType.SubCommand);
 
         await AddSiteFilter(cmd);
@@ -111,7 +111,7 @@ public class ListCommand : BaseCommand
     private Task<SlashCommandOptionBuilder> BuildWatcherTypesAsync() =>
         Task.FromResult(new SlashCommandOptionBuilder()
             .WithName("watcher-types")
-            .WithDescription($"List the watcher types supported by {_appInfo.Name}.")
+            .WithDescription($"List the watcher types available in {_appInfo.Name}.")
             .WithType(ApplicationCommandOptionType.SubCommand));
 
     protected override async Task HandleCommandAsync(SocketSlashCommand command)
