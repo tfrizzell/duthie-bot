@@ -289,9 +289,9 @@ public class MyVirtualGamingApi
             var html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "schedule"));
 
-            var logo = Regex.Match(html,
-                @$"<div[^>]*\bbarlogo\b[^>]*>\s*<a[^>]*vghlleagues/{leagueInfo.LeagueId}/{leagueInfo.LeagueId}[^>]*>\s*<img[^>]*src=[""'](.*?)[""'][^>]*>\s*</a>\s*</div>",
-                RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            // var logo = Regex.Match(html,
+            //     @$"<div[^>]*\bbarlogo\b[^>]*>\s*<a[^>]*vghlleagues/{leagueInfo.LeagueId}/{leagueInfo.LeagueId}[^>]*>\s*<img[^>]*src=[""'](.*?)[""'][^>]*>\s*</a>\s*</div>",
+            //     RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             var seasonId = Regex.Matches(
                 Regex.Match(html,
@@ -337,7 +337,9 @@ public class MyVirtualGamingApi
             {
                 Id = league.Id,
                 Name = Regex.Replace(title.InnerText.Trim(), @"\s+Home$", ""),
-                LogoUrl = logo.Success ? $"https://{Domain}/{Regex.Replace(logo.Groups[1].Value.Trim(), @$"^(https://{Domain})?/?", "")}" : league.LogoUrl,
+                // New static logos have been provided by league owner
+                // LogoUrl = logo.Success ? $"https://{Domain}/{Regex.Replace(logo.Groups[1].Value.Trim(), @$"^(https://{Domain})?/?", "")}" : league.LogoUrl,
+                LogoUrl = league.LogoUrl,
                 Info = new MyVirtualGamingLeagueInfo
                 {
                     Features = features,

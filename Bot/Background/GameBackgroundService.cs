@@ -103,7 +103,7 @@ public class GameBackgroundService : ScheduledBackgroundService
                             foreach (var watcher in watchers)
                             {
                                 var message = league.HasPluralTeamNames()
-                                    ? "The {us} have {outcome} the {them} by the score of {score}}"
+                                    ? "The {us} have {outcome} the {them} by the score of {score}"
                                     : "{us} has {outcome} {them} by the score of {score}";
 
                                 var (us, usScore) = watcher.Any(w => w.TeamId == homeTeam.Id) ? (homeTeam, game.HomeScore) : (visitorTeam, game.VisitorScore);
@@ -150,7 +150,7 @@ public class GameBackgroundService : ScheduledBackgroundService
                                             ? Color.DarkGreen
                                             : (usScore < themScore
                                                 ? Color.DarkRed
-                                                : 0),
+                                                : Colors.Black),
                                         Title = $"{league.ShortName} Game Result",
                                         Thumbnail = league.LogoUrl,
                                         Content = string.IsNullOrWhiteSpace(url) ? message : $"{message}\n\n[Box Score]({url})",

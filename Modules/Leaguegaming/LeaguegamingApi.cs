@@ -297,7 +297,7 @@ public class LeaguegamingApi
             {
                 Id = league.Id,
                 Name = info.Groups[2].Value.Trim(),
-                LogoUrl = $"https://{Domain}/images/league/icon/l{leagueInfo.LeagueId}_100.png",
+                LogoUrl = $"https://{Domain}/images/league/icon/l{leagueInfo.LeagueId}.png",
                 Info = new LeaguegamingLeagueInfo
                 {
                     LeagueId = leagueInfo.LeagueId,

@@ -107,23 +107,6 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         Enabled = true,
     };
 
-    internal static readonly League VGKHL = new League
-    {
-        SiteId = MyVirtualGamingSiteProvider.VGHL.Id,
-        Site = MyVirtualGamingSiteProvider.VGHL,
-        Id = new Guid("90a7f19a-5913-4abe-af7e-10ddf3e84564"),
-        Name = "VGKHL Kontinental League",
-        ShortName = "VGKHL",
-        LogoUrl = "https://vghl.myvirtualgaming.com/images/Images/new_vgkhl_logo_menu.svg",
-        Info = new MyVirtualGamingLeagueInfo
-        {
-            Features = MyVirtualGamingFeatures.RecentTransactions,
-            LeagueId = "vgkhl",
-        },
-        Tags = new Tags { "psn", "ea nhl", "6v6" },
-        Enabled = false,
-    };
-
     internal static readonly League VGIHL = new League
     {
         SiteId = MyVirtualGamingSiteProvider.VGHL.Id,
@@ -151,7 +134,6 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
             VGHLWC,
             VGHLClub,
             VGHL3s,
-            VGKHL,
             VGIHL,
         };
     }
