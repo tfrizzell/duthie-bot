@@ -184,6 +184,10 @@ public class LeagueService
                         case LeagueStateType.Trade:
                             existing.State.LastTrade = league.State.LastTrade;
                             break;
+
+                        case LeagueStateType.Waiver:
+                            existing.State.LastWaiver = league.State.LastWaiver;
+                            break;
                     }
                 }
             }

@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Discord;
 using Duthie.Bot.Extensions;
 using Duthie.Bot.Utils;
@@ -10,8 +9,6 @@ using Duthie.Services.Leagues;
 using Duthie.Services.Watchers;
 using Duthie.Types.Modules.Api;
 using Duthie.Types.Guilds;
-using Duthie.Types.Leagues;
-using Duthie.Types.Teams;
 using Duthie.Types.Watchers;
 using Microsoft.Extensions.Logging;
 using Game = Duthie.Types.Games.Game;
@@ -60,6 +57,7 @@ public class GameBackgroundService : ScheduledBackgroundService
         try
         {
             var leagues = await _leagueService.GetAllAsync();
+            var teams = new TeamLookup(leagues);
 
             await Task.WhenAll(leagues.Select(async league =>
             {
@@ -81,8 +79,8 @@ public class GameBackgroundService : ScheduledBackgroundService
                     try
                     {
                         var _game = await _gameService.GetByGameIdAsync(game.LeagueId, game.Id);
-                        var visitorTeam = FindTeam(league, game.VisitorId);
-                        var homeTeam = FindTeam(league, game.HomeId);
+                        var visitorTeam = teams.Get(league, game.VisitorId);
+                        var homeTeam = teams.Get(league, game.HomeId);
 
                         if (_game != null && _game.Timestamp == game.Timestamp && _game.VisitorId == visitorTeam.Id && _game.VisitorScore == game.VisitorScore && _game.HomeId == homeTeam.Id && _game.HomeScore == game.HomeScore && _game.Overtime == game.Overtime && _game.Shootout == game.Shootout)
                         {
@@ -199,15 +197,5 @@ public class GameBackgroundService : ScheduledBackgroundService
             _logger.LogTrace($"Game update task failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during game update task.");
         }
-    }
-
-    private static Team FindTeam(League league, string externalId)
-    {
-        var team = league.LeagueTeams.FirstOrDefault(t => t.ExternalId == externalId);
-
-        if (team == null)
-            throw new KeyNotFoundException($"no team with external id {externalId} was found for league \"{league.Name}\" [{league.Id}]");
-
-        return team.Team;
     }
 }

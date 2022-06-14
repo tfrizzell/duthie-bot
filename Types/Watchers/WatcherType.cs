@@ -15,9 +15,8 @@ public enum WatcherType
     [Description("")]
     DailyStars,
 
-    [Display(Name = "Draft Picks")]
     [Description("Sends draft picks to your server")]
-    DraftPicks,
+    Draft,
 
     [Description("Sends game results to your server")]
     Games,
@@ -25,9 +24,8 @@ public enum WatcherType
     [Description("")]
     News,
 
-    [Display(Name = "Roster Transactions")]
     [Description("Sends roster transactions to your server")]
-    RosterTransactions,
+    Roster,
 
     [Description("Sends trades to your server")]
     Trades,

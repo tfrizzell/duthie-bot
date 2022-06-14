@@ -116,7 +116,7 @@ public class LeaguegamingApiTests
         {
             Assert.True(_league.Id == contract.LeagueId, $"expected LeagueId to be {_league.Id} but got {contract.LeagueId}");
             Assert.True(int.TryParse(contract.TeamId, out var t), $"expected TeamId to be numeric but got {contract.TeamId}");
-            Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected PlayerName to be numeric to not be empty but got {contract.PlayerName}");
+            Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected PlayerName to be non-empty to not be empty but got {contract.PlayerName}");
             Assert.True(contract.Length > 0, $"expected Length to be greater than 0 but got {contract.Length}");
             Assert.True(contract.Amount > 0, $"expected Amount to be greater than 0 but got {contract.Amount}");
         }
@@ -181,5 +181,19 @@ public class LeaguegamingApiTests
         var draftPicks = await _api.GetDraftPicksAsync(_league);
         Assert.True(draftPicks != null, $"{_api.GetType().Name} does not support league {_league.Id}");
         Assert.True(draftPicks!.Count() == 0, $"expected 0 draft picks but got {draftPicks!.Count()}");
+    }
+
+    [Fact]
+    public async Task GetWaiversAsync_ReturnsNotNull()
+    {
+        var waivers = await _api.GetWaiversAsync(_league);
+        Assert.True(waivers != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+
+        foreach (var waiver in waivers!)
+        {
+            Assert.True(_league.Id == waiver.LeagueId, $"expected LeagueId to be {_league.Id} but got {waiver.LeagueId}");
+            Assert.True(int.TryParse(waiver.TeamId, out var t), $"expected TeamId to be numeric but got {waiver.TeamId}");
+            Assert.True(!string.IsNullOrWhiteSpace(waiver.PlayerName), $"expected PlayerName to be non-empty to not be empty but got {waiver.PlayerName}");
+        }
     }
 }

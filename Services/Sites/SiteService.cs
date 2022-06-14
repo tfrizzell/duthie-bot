@@ -115,7 +115,7 @@ public class SiteService
                 if (existing != null)
                     context.Entry(existing).CurrentValues.SetValues(site);
                 else
-                   await context.Set<Site>().AddAsync(site);
+                    await context.Set<Site>().AddAsync(site);
             }
 
             return await context.SaveChangesAsync();

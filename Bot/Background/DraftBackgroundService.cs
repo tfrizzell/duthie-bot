@@ -9,7 +9,6 @@ using Duthie.Services.Watchers;
 using Duthie.Types.Modules.Api;
 using Duthie.Types.Guilds;
 using Duthie.Types.Leagues;
-using Duthie.Types.Teams;
 using Duthie.Types.Watchers;
 using Microsoft.Extensions.Logging;
 
@@ -53,6 +52,7 @@ public class DraftBackgroundService : ScheduledBackgroundService
         try
         {
             var leagues = await _leagueService.GetAllAsync();
+            var teams = new TeamLookup(leagues);
 
             await Task.WhenAll(leagues.Select(async league =>
             {
@@ -76,12 +76,12 @@ public class DraftBackgroundService : ScheduledBackgroundService
                     {
                         try
                         {
-                            var team = FindTeam(league, draftPick.TeamId);
+                            var team = teams.Get(league, draftPick.TeamId);
 
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
                                 teams: new Guid[] { team.Id },
-                                types: new WatcherType[] { WatcherType.DraftPicks }
+                                types: new WatcherType[] { WatcherType.Draft }
                             )).GroupBy(w => new { w.GuildId, ChannelId = w.ChannelId ?? w.Guild.DefaultChannelId });
 
                             if (watchers.Count() > 0)
@@ -141,15 +141,5 @@ public class DraftBackgroundService : ScheduledBackgroundService
             _logger.LogTrace($"Draft pick tracking task failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during draft pick tracking task.");
         }
-    }
-
-    private static Team FindTeam(League league, string externalId)
-    {
-        var team = league.LeagueTeams.FirstOrDefault(t => t.ExternalId == externalId);
-
-        if (team == null)
-            throw new KeyNotFoundException($"no team with external id {externalId} was found for league \"{league.Name}\" [{league.Id}]");
-
-        return team.Team;
     }
 }

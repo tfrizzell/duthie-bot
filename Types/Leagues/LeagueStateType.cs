@@ -6,4 +6,5 @@ public enum LeagueStateType
     Contract,
     DraftPick,
     Trade,
+    Waiver,
 }

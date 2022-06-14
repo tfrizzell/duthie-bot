@@ -93,6 +93,7 @@ public class CommandLine
             .AddSingleton<ContractBackgroundService>()
             .AddSingleton<DraftBackgroundService>()
             .AddSingleton<TradeBackgroundService>()
+            .AddSingleton<WaiverBackgroundService>()
             .BuildServiceProvider();
 
         await UpdateDatabaseAsync(serviceProvider);
@@ -119,6 +120,9 @@ public class CommandLine
 
         if (types.Intersect(new string[] { "trades", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<TradeBackgroundService>().ExecuteAsync();
+
+        if (types.Intersect(new string[] { "waivers", "all" }).Count() > 0)
+            await serviceProvider.GetRequiredService<WaiverBackgroundService>().ExecuteAsync();
     }
 
     private static async Task UpdateDatabaseAsync(IServiceProvider serviceProvider)

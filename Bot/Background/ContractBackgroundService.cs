@@ -9,7 +9,6 @@ using Duthie.Services.Watchers;
 using Duthie.Types.Modules.Api;
 using Duthie.Types.Guilds;
 using Duthie.Types.Leagues;
-using Duthie.Types.Teams;
 using Duthie.Types.Watchers;
 using Microsoft.Extensions.Logging;
 
@@ -53,6 +52,7 @@ public class ContractBackgroundService : ScheduledBackgroundService
         try
         {
             var leagues = await _leagueService.GetAllAsync();
+            var teams = new TeamLookup(leagues);
 
             await Task.WhenAll(leagues.Select(async league =>
             {
@@ -77,7 +77,7 @@ public class ContractBackgroundService : ScheduledBackgroundService
                     {
                         try
                         {
-                            var team = FindTeam(league, contract.TeamId);
+                            var team = teams.Get(league, contract.TeamId);
 
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
@@ -142,15 +142,5 @@ public class ContractBackgroundService : ScheduledBackgroundService
             _logger.LogTrace($"Contract tracking task failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during contract tracking task.");
         }
-    }
-
-    private static Team FindTeam(League league, string externalId)
-    {
-        var team = league.LeagueTeams.FirstOrDefault(t => t.ExternalId == externalId);
-
-        if (team == null)
-            throw new KeyNotFoundException($"no team with external id {externalId} was found for league \"{league.Name}\" [{league.Id}]");
-
-        return team.Team;
     }
 }

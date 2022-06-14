@@ -7,6 +7,7 @@ public class LeagueState
     public string? LastContract { get; set; }
     public string? LastDraftPick { get; set; }
     public string? LastTrade { get; set; }
+    public string? LastWaiver { get; set; }
 
 #nullable disable
     internal virtual League League { get; set; }

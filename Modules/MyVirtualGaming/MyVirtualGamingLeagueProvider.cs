@@ -12,7 +12,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         Id = new Guid("5957b164-7bb5-4324-967a-16c3044260b2"),
         Name = "VGNHL National League",
         ShortName = "VGNHL",
-        LogoUrl = "https://vghl.myvirtualgaming.com/images/Images/new_vgnhl_logo_menu.svg",
+        LogoUrl = "https://media.discordapp.net/attachments/436541687142285312/985399246763212820/vgnhl_white.png",
         Info = new MyVirtualGamingLeagueInfo
         {
             Features = MyVirtualGamingFeatures.All,
@@ -29,7 +29,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         Id = new Guid("0fc1b6e9-9181-4545-9d32-5edbd67b276a"),
         Name = "VGAHL Affiliate League",
         ShortName = "VGAHL",
-        LogoUrl = "https://vghl.myvirtualgaming.com/images/Images/new_vgahl_logo_menu.svg",
+        LogoUrl = "https://media.discordapp.net/attachments/436541687142285312/985399247006470194/vgahl_white.png",
         Info = new MyVirtualGamingLeagueInfo
         {
             Features = MyVirtualGamingFeatures.RecentTransactions,
@@ -97,7 +97,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         Id = new Guid("9545ede8-6948-44e0-8ef8-61668c6ab9e1"),
         Name = "VGHL 3s League",
         ShortName = "VGHL 3s",
-        LogoUrl = "https://vghl.myvirtualgaming.com/images/Images/new_vghl3_logo_menu.svg",
+        LogoUrl = "https://media.discordapp.net/attachments/436541687142285312/985399501793681488/3sample1-6-1.png",
         Info = new MyVirtualGamingLeagueInfo
         {
             Features = MyVirtualGamingFeatures.RecentTransactions,
@@ -121,7 +121,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
             LeagueId = "vgkhl",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
-        Enabled = true,
+        Enabled = false,
     };
 
     internal static readonly League VGIHL = new League
@@ -131,14 +131,14 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         Id = new Guid("cef6775d-f621-4164-a629-80ec54e016fa"),
         Name = "VGIHL International League",
         ShortName = "VGIHL",
-        LogoUrl = "https://vghl.myvirtualgaming.com/images/Images/new_vgihl_logo_menu.svg",
+        LogoUrl = "https://media.discordapp.net/attachments/436541687142285312/985399247698554900/vgihl_white.png",
         Info = new MyVirtualGamingLeagueInfo
         {
             Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vgihl",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
-        Enabled = false,
+        Enabled = true,
     };
 
     public IReadOnlyCollection<League> Leagues

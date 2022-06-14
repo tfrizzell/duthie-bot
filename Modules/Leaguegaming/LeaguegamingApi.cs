@@ -7,7 +7,7 @@ using League = Duthie.Types.Leagues.League;
 namespace Duthie.Modules.Leaguegaming;
 
 public class LeaguegamingApi
-    : IBidApi, IContractApi, IDraftApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi
+    : IBidApi, IContractApi, IDraftApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi, IWaiverApi
 {
     private const string Domain = "www.leaguegaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
@@ -188,7 +188,7 @@ public class LeaguegamingApi
         }
         catch (Exception e)
         {
-            throw new ApiException($"An unexpected error occurred while fetching contracts for league \"{league.Name}\" [{league.Id}]", e);
+            throw new ApiException($"An unexpected error occurred while fetching draft picks for league \"{league.Name}\" [{league.Id}]", e);
         }
     }
 
@@ -431,6 +431,60 @@ public class LeaguegamingApi
         }
     }
 
+    public async Task<IEnumerable<Waiver>?> GetWaiversAsync(League league)
+    {
+        try
+        {
+            if (!IsSupported(league))
+                return null;
+
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
+                parameters: new Dictionary<string, object?>
+                {
+                    ["action"] = "league",
+                    ["page"] = "team_news",
+                    ["leagueid"] = leagueInfo.LeagueId,
+                    ["seasonid"] = leagueInfo.SeasonId,
+                    ["typeid"] = (int)LeaguegamingNewsType.Waivers,
+                    ["displaylimit"] = 200,
+                }));
+
+            return Regex.Matches(html,
+                @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(m =>
+            {
+                var waiver = Regex.Match(m.Groups[1].Value,
+                    @$"<h3[^>]*>.*?(?:{string.Join("|",
+                        @"<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have (placed|removed|claimed)\s*<span[^>]*>(.*?)</span>",
+                        @"<span[^>]*>(.*?)</span>\s*has cleared waivers and is reporting to.*?\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>"
+                    )}).*?</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                if (!waiver.Success)
+                    return null;
+
+                return new Waiver
+                {
+                    LeagueId = league.Id,
+                    TeamId = string.Join("", waiver.Groups[1].Value, waiver.Groups[5].Value).Trim(),
+                    PlayerName = string.Join("", waiver.Groups[3].Value, waiver.Groups[4].Value).Trim(),
+                    Action = Enum.TryParse<WaiverAction>(waiver.Groups[2].Value, true, out var action) ? action : WaiverAction.Cleared,
+                    Timestamp = ISiteApi.ParseDateTime(waiver.Groups[6].Value, Timezone),
+                };
+            })
+            .Where(c => c != null)
+            .Cast<Waiver>();
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching waivers for league \"{league.Name}\" [{league.Id}]", e);
+        }
+    }
+
     public string? GetBidUrl(League league, Bid bid)
     {
         if (!IsSupported(league))
@@ -467,5 +521,17 @@ public class LeaguegamingApi
 
         var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
         return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={trade.FromId}&typeid={(int)LeaguegamingNewsType.Trades}";
+    }
+
+    public string? GetWaiverUrl(League league, Waiver waiver)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+        return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={waiver.TeamId}&typeid={(int)LeaguegamingNewsType.Waivers}";
     }
 }

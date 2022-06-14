@@ -54,6 +54,7 @@ public class TradeBackgroundService : ScheduledBackgroundService
         try
         {
             var leagues = await _leagueService.GetAllAsync();
+            var teams = new TeamLookup(leagues);
 
             await Task.WhenAll(leagues.Select(async league =>
             {
@@ -79,12 +80,12 @@ public class TradeBackgroundService : ScheduledBackgroundService
                     {
                         try
                         {
-                            var from = FindTeam(league, trade.FromId);
-                            var to = FindTeam(league, trade.ToId);
+                            var fromTeam = teams.Get(league, trade.FromId);
+                            var toTeam = teams.Get(league, trade.ToId);
 
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
-                                teams: new Guid[] { from.Id, to.Id },
+                                teams: new Guid[] { fromTeam.Id, toTeam.Id },
                                 types: new WatcherType[] { WatcherType.Trades }
                             )).GroupBy(w => new { w.GuildId, ChannelId = w.ChannelId ?? w.Guild.DefaultChannelId });
 
@@ -109,11 +110,11 @@ public class TradeBackgroundService : ScheduledBackgroundService
                                         ? "The {us} have {action} {usAssets} {direction} the {them} in exchange for {themAssets}"
                                         : "{us} has {action} {usAssets} {direction} {them} in exchange for {themAssets}";
 
-                                    var (us, them) = (from, to);
+                                    var (us, them) = (fromTeam, toTeam);
                                     var (usAssets, themAssets) = (fromAssets, toAssets);
                                     var (action, direction) = ("traded", "to");
 
-                                    if (!watcher.Any(w => w.TeamId == from.Id))
+                                    if (!watcher.Any(w => w.TeamId == fromTeam.Id))
                                     {
                                         (us, them) = (them, us);
                                         (usAssets, themAssets) = (themAssets, usAssets);
