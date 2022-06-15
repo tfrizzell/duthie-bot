@@ -92,6 +92,7 @@ public class CommandLine
             .AddSingleton<BidBackgroundService>()
             .AddSingleton<ContractBackgroundService>()
             .AddSingleton<DraftBackgroundService>()
+            .AddSingleton<RosterTransactionBackgroundService>()
             .AddSingleton<TradeBackgroundService>()
             .AddSingleton<WaiverBackgroundService>()
             .BuildServiceProvider();
@@ -117,6 +118,9 @@ public class CommandLine
 
         if (types.Intersect(new string[] { "draft", "drafts", "draft-picks", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<DraftBackgroundService>().ExecuteAsync();
+
+        if (types.Intersect(new string[] { "rosters", "all" }).Count() > 0)
+            await serviceProvider.GetRequiredService<RosterTransactionBackgroundService>().ExecuteAsync();
 
         if (types.Intersect(new string[] { "trades", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<TradeBackgroundService>().ExecuteAsync();

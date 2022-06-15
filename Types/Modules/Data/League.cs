@@ -27,3 +27,8 @@ public class League : IModuleData
         }
     }
 }
+
+public class League<T> : League
+{
+    public new T? Info { get; set; }
+}

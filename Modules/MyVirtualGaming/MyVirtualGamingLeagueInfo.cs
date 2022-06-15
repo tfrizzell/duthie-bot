@@ -6,4 +6,5 @@ internal class MyVirtualGamingLeagueInfo
     public string LeagueId { get; set; } = "";
     public int SeasonId { get; set; }
     public int ScheduleId { get; set; }
+    public string[] AffiliatedLeagueIds { get; set; } = new string[] { };
 }

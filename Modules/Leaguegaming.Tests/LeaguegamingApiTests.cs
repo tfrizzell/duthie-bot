@@ -116,7 +116,7 @@ public class LeaguegamingApiTests
         {
             Assert.True(_league.Id == contract.LeagueId, $"expected LeagueId to be {_league.Id} but got {contract.LeagueId}");
             Assert.True(int.TryParse(contract.TeamId, out var t), $"expected TeamId to be numeric but got {contract.TeamId}");
-            Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected PlayerName to be non-empty to not be empty but got {contract.PlayerName}");
+            Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected PlayerName to be non-empty but got {contract.PlayerName}");
             Assert.True(contract.Length > 0, $"expected Length to be greater than 0 but got {contract.Length}");
             Assert.True(contract.Amount > 0, $"expected Amount to be greater than 0 but got {contract.Amount}");
         }
@@ -193,7 +193,7 @@ public class LeaguegamingApiTests
         {
             Assert.True(_league.Id == waiver.LeagueId, $"expected LeagueId to be {_league.Id} but got {waiver.LeagueId}");
             Assert.True(int.TryParse(waiver.TeamId, out var t), $"expected TeamId to be numeric but got {waiver.TeamId}");
-            Assert.True(!string.IsNullOrWhiteSpace(waiver.PlayerName), $"expected PlayerName to be non-empty to not be empty but got {waiver.PlayerName}");
+            Assert.True(!string.IsNullOrWhiteSpace(waiver.PlayerName), $"expected PlayerName to be non-empty but got {waiver.PlayerName}");
         }
     }
 }

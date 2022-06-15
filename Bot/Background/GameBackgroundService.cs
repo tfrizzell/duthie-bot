@@ -57,7 +57,7 @@ public class GameBackgroundService : ScheduledBackgroundService
         try
         {
             var leagues = await _leagueService.GetAllAsync();
-            var teams = new TeamLookup(leagues);
+            var teamLookup = new TeamLookup(leagues);
 
             await Task.WhenAll(leagues.Select(async league =>
             {
@@ -79,8 +79,8 @@ public class GameBackgroundService : ScheduledBackgroundService
                     try
                     {
                         var _game = await _gameService.GetByGameIdAsync(game.LeagueId, game.Id);
-                        var visitorTeam = teams.Get(league, game.VisitorId);
-                        var homeTeam = teams.Get(league, game.HomeId);
+                        var visitorTeam = teamLookup.Get(league, game.VisitorId);
+                        var homeTeam = teamLookup.Get(league, game.HomeId);
 
                         if (_game != null && _game.Timestamp == game.Timestamp && _game.VisitorId == visitorTeam.Id && _game.VisitorScore == game.VisitorScore && _game.HomeId == homeTeam.Id && _game.HomeScore == game.HomeScore && _game.Overtime == game.Overtime && _game.Shootout == game.Shootout)
                         {

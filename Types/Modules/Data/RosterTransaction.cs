@@ -4,13 +4,13 @@ using System.Text.Json;
 
 namespace Duthie.Types.Modules.Data;
 
-public class Waiver : IModuleData
+public class RosterTransaction : IModuleData
 {
     public Guid LeagueId { get; set; }
-    public string TeamId { get; set; } = "";
-    public string PlayerId { get; set; } = "";
-    public string PlayerName { get; set; } = "";
-    public WaiverActionType Type { get; set; }
+    public string[] TeamIds { get; set; } = new string[] { };
+    public string[] PlayerIds { get; set; } = new string[] { };
+    public string[] PlayerNames { get; set; } = new string[] { };
+    public RosterTransactionType Type { get; set; }
     public DateTimeOffset? Timestamp { get; set; }
 
     public string GetHash()
@@ -20,8 +20,8 @@ public class Waiver : IModuleData
             var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
             {
                 LeagueId,
-                TeamId,
-                Player = string.IsNullOrWhiteSpace(PlayerId) ? PlayerName : PlayerId,
+                TeamIds,
+                Players = PlayerIds.Count() > 0 ? PlayerIds : PlayerNames,
                 Type,
                 Timestamp,
             })));
@@ -31,10 +31,12 @@ public class Waiver : IModuleData
     }
 }
 
-public enum WaiverActionType
+public enum RosterTransactionType
 {
-    Placed,
-    Removed,
-    Claimed,
-    Cleared,
+    PlacedOnIr,
+    RemovedFromIr,
+    ReportedInactive,
+    CalledUp,
+    SentDown,
+    Banned,
 }

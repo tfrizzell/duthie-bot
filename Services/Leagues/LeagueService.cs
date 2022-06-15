@@ -181,6 +181,10 @@ public class LeagueService
                             existing.State.LastDraftPick = league.State.LastDraftPick;
                             break;
 
+                        case LeagueStateType.RosterTransaction:
+                            existing.State.LastRosterTransaction = league.State.LastRosterTransaction;
+                            break;
+
                         case LeagueStateType.Trade:
                             existing.State.LastTrade = league.State.LastTrade;
                             break;

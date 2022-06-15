@@ -99,7 +99,7 @@ public class MyVirtualGamingApiTests
             Assert.True(_league.Id == bid.LeagueId, $"expected LeagueId to be {_league.Id} but got {bid.LeagueId}");
             Assert.True(int.TryParse(bid.TeamId, out var t), $"expected TeamId to be numeric but got {bid.TeamId}");
             Assert.True(int.TryParse(bid.PlayerId, out var p), $"expected PlayerId to be numeric but got {bid.PlayerId}");
-            Assert.True(!string.IsNullOrWhiteSpace(bid.PlayerName), $"expected PlayerName to be non-empty to not be empty but got {bid.PlayerName}");
+            Assert.True(!string.IsNullOrWhiteSpace(bid.PlayerName), $"expected PlayerName to be non-empty but got {bid.PlayerName}");
             Assert.True(bid.Amount > 0, $"expected Amount to be greater than 0 but got {bid.Amount}");
             Assert.True(BidState.Won == bid.State, $"expected State to be {BidState.Won} but got {bid.State}");
         }
@@ -115,7 +115,7 @@ public class MyVirtualGamingApiTests
         {
             Assert.True(_league.Id == contract.LeagueId, $"expected LeagueId to be {_league.Id} but got {contract.LeagueId}");
             Assert.True(int.TryParse(contract.TeamId, out var t), $"expected TeamId to be numeric but got {contract.TeamId}");
-            Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected PlayerName to be non-empty to not be empty but got {contract.PlayerName}");
+            Assert.True(!string.IsNullOrWhiteSpace(contract.PlayerName), $"expected PlayerName to be non-empty but got {contract.PlayerName}");
             Assert.True(contract.Length > 0, $"expected Length to be greater than 0 but got {contract.Length}");
             Assert.True(contract.Amount > 0, $"expected Amount to be greater than 0 but got {contract.Amount}");
         }
@@ -147,11 +147,25 @@ public class MyVirtualGamingApiTests
             Assert.True(_league.Id == draftPick.LeagueId, $"expected LeagueId to be {_league.Id} but got {draftPick.LeagueId}");
             Assert.True(int.TryParse(draftPick.TeamId, out var f), $"expected TeamId to be numeric but got {draftPick.TeamId}");
             Assert.True(int.TryParse(draftPick.PlayerId, out var t), $"expected PlayerId to be numeric but got {draftPick.PlayerId}");
-            Assert.True(!string.IsNullOrWhiteSpace(draftPick.PlayerName), $"expected PlayerName to be non-empty to not be empty but got {draftPick.PlayerName}");
+            Assert.True(!string.IsNullOrWhiteSpace(draftPick.PlayerName), $"expected PlayerName to be non-empty but got {draftPick.PlayerName}");
             Assert.True(draftPick.RoundNumber >= 1, $"expected RoundNumber to be greater than or equal to 1 but got {draftPick.RoundNumber}");
             Assert.True(draftPick.RoundPick >= 1, $"expected RoundPick to be greater than or equal to 1 but got {draftPick.RoundPick}");
             Assert.True(draftPick.OverallPick >= 1, $"expected OverallPick to be greater than or equal to 1 but got {draftPick.OverallPick}");
             Assert.True(draftPick.Timestamp == null, $"expected Timestamp to be null byt got {draftPick.Timestamp}");
+        }
+    }
+
+    [Fact]
+    public async Task GetRosterTransactionsAsync_ReturnsNotNull()
+    {
+        var rosterTransactions = await _api.GetRosterTransactionsAsync(_league);
+        Assert.True(rosterTransactions != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+
+        foreach (var rosterTransaction in rosterTransactions!)
+        {
+            Assert.True(_league.Id == rosterTransaction.LeagueId, $"expected LeagueId to be {_league.Id} but got {rosterTransaction.LeagueId}");
+            Assert.True(rosterTransaction.TeamIds.Count() > 0, $"expected at least one TeamId got {rosterTransaction.TeamIds.Count()}");
+            Assert.True(rosterTransaction.PlayerNames.Count() > 0, $"expected at least one PlayerName got {rosterTransaction.PlayerNames.Count()}");
         }
     }
 }

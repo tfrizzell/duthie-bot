@@ -17,6 +17,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         {
             Features = MyVirtualGamingFeatures.All,
             LeagueId = "vgnhl",
+            AffiliatedLeagueIds = new string[] { "vgahl" },
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,
@@ -34,6 +35,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         {
             Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vgahl",
+            AffiliatedLeagueIds = new string[] { "vgnhl", "vgphl" },
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,
@@ -51,6 +53,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         {
             Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vgphl",
+            AffiliatedLeagueIds = new string[] { "vgahl" },
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,

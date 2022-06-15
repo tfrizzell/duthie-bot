@@ -8,7 +8,7 @@ using League = Duthie.Types.Leagues.League;
 namespace Duthie.Modules.MyVirtualGaming;
 
 public class MyVirtualGamingApi
-    : IBidApi, IContractApi, IDraftApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi
+    : IBidApi, IContractApi, IDraftApi, IGameApi, ILeagueApi, IRosterApi, ITeamApi, ITradeApi
 {
     private const string Domain = "vghl.myvirtualgaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
@@ -182,6 +182,47 @@ public class MyVirtualGamingApi
         }
     }
 
+    private async Task<IDictionary<string, string>> GetTeamLookupAsync(League league, bool includeAffiliates = false)
+    {
+        try
+        {
+            var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
+                path: "standings",
+                parameters: new Dictionary<string, object?>
+                {
+                    ["filter_schedule"] = leagueInfo.ScheduleId > 0 ? leagueInfo.ScheduleId : null,
+                }));
+
+            if (includeAffiliates && leagueInfo.AffiliatedLeagueIds.Count() > 0)
+                html += string.Join("", await Task.WhenAll(
+                    leagueInfo.AffiliatedLeagueIds.Select(leagueId => _httpClient.GetStringAsync($"https://{Domain}/vghlleagues/{leagueId}/standings"))));
+
+            var lookup = Regex.Matches(html,
+                @"<a[^>]*/rosters\?id=(\d+)[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<\/a>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .DistinctBy(m => m.Groups[2].Value.ToUpper())
+            .ToDictionary(
+                m => m.Groups[2].Value.ToUpper(),
+                m => m.Groups[1].Value,
+                StringComparer.OrdinalIgnoreCase);
+
+            if (lookup.ContainsKey("TAP") && !lookup.ContainsKey("TAPP"))
+                lookup.Add("TAPP", lookup["TAP"]);
+
+            if (!lookup.ContainsKey("TAP") && lookup.ContainsKey("TAPP"))
+                lookup.Add("TAP", lookup["TAPP"]);
+
+            return lookup;
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching team lookup for league \"{league.Name}\" [{league.Id}]", e);
+        }
+    }
+
     public async Task<IEnumerable<Game>?> GetGamesAsync(League league)
     {
         try
@@ -289,10 +330,6 @@ public class MyVirtualGamingApi
             var html = await _httpClient.GetStringAsync(GetUrl(league,
                 path: "schedule"));
 
-            // var logo = Regex.Match(html,
-            //     @$"<div[^>]*\bbarlogo\b[^>]*>\s*<a[^>]*vghlleagues/{leagueInfo.LeagueId}/{leagueInfo.LeagueId}[^>]*>\s*<img[^>]*src=[""'](.*?)[""'][^>]*>\s*</a>\s*</div>",
-            //     RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
             var seasonId = Regex.Matches(
                 Regex.Match(html,
                     @"<select[^>]*\bsingle_seasons\b[^>]*>(.*?)</select>",
@@ -337,8 +374,6 @@ public class MyVirtualGamingApi
             {
                 Id = league.Id,
                 Name = Regex.Replace(title.InnerText.Trim(), @"\s+Home$", ""),
-                // New static logos have been provided by league owner
-                // LogoUrl = logo.Success ? $"https://{Domain}/{Regex.Replace(logo.Groups[1].Value.Trim(), @$"^(https://{Domain})?/?", "")}" : league.LogoUrl,
                 LogoUrl = league.LogoUrl,
                 Info = new MyVirtualGamingLeagueInfo
                 {
@@ -346,12 +381,115 @@ public class MyVirtualGamingApi
                     LeagueId = leagueId,
                     SeasonId = seasonId ?? leagueInfo.SeasonId,
                     ScheduleId = scheduleId ?? leagueInfo.ScheduleId,
+                    AffiliatedLeagueIds = leagueInfo.AffiliatedLeagueIds,
                 },
             };
         }
         catch (Exception e)
         {
             throw new ApiException($"An unexpected error occurred while fetching info for league \"{league.Name}\" [{league.Id}]", e);
+        }
+    }
+
+    public async Task<IEnumerable<RosterTransaction>?> GetRosterTransactionsAsync(League league)
+    {
+        try
+        {
+            if (!IsSupported(league))
+                return null;
+
+            var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+
+            if (!leagueInfo.Features.HasFlag(MyVirtualGamingFeatures.RecentTransactions))
+                return new List<RosterTransaction>();
+
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
+                path: "recent-transactions"));
+
+            var lookup = await GetTeamLookupAsync(league, includeAffiliates: true);
+
+            return Regex.Matches(html,
+                @"<div[^>]*\b(irs|inactives|callup_senddown|drops)\b[^>]*>.*?<tbody[^>]*>(.*?)</tbody>\s*</table>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(m =>
+            {
+                var type = m.Groups[1].Value.Trim();
+
+                return type.ToUpper() switch
+                {
+                    "IRS" => Regex.Matches(m.Groups[2].Value,
+                            @"<td[^>]*>\s*<a[^>]*rosters\?id=(\d+)[^>]*>.*?</a>\s*</td>\s*<td[^>]*>\s*(Placed|Removed)\s*<a[^>]*player&(?:amp;)?id=(\d+)[^>]*>(.*?)</a>\s*.*? from injured reserved\s*</td>\s*<td[^>]*>(.*?)</td>",
+                            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+                        .Cast<Match>()
+                        .Select(m => new RosterTransaction
+                        {
+                            LeagueId = league.Id,
+                            TeamIds = new string[] { m.Groups[1].Value },
+                            PlayerIds = new string[] { m.Groups[3].Value },
+                            PlayerNames = new string[] { m.Groups[4].Value.Trim() },
+                            Type = m.Groups[1].Value.ToLower().Contains("placed")
+                                ? RosterTransactionType.PlacedOnIr
+                                : RosterTransactionType.RemovedFromIr,
+                            Timestamp = ISiteApi.ParseDateTime(m.Groups[5].Value, Timezone),
+                        }
+                        )
+                        .Cast<RosterTransaction>(),
+
+                    "INACTIVES" => Regex.Matches(m.Groups[2].Value,
+                            @"<td[^>]*>\s*<a[^>]*player&(?:amp;)?id=(\d+)[^>]*>(.*?)</a>\s*</td>\s*<td[^>]*>\s*Has been reported inactive.*?<a[^>]*rosters\?id=(\d+)[^>]*>.*?</a>.*?</td>\s*<td[^>]*>(.*?)</td>",
+                            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+                        .Cast<Match>()
+                        .Select(m => new RosterTransaction
+                        {
+                            LeagueId = league.Id,
+                            TeamIds = new string[] { m.Groups[3].Value },
+                            PlayerIds = new string[] { m.Groups[1].Value },
+                            PlayerNames = new string[] { m.Groups[2].Value.Trim() },
+                            Type = RosterTransactionType.ReportedInactive,
+                            Timestamp = ISiteApi.ParseDateTime(m.Groups[4].Value, Timezone),
+                        })
+                        .Cast<RosterTransaction>(),
+
+                    "CALLUP_SENDDOWN" => Regex.Matches(m.Groups[2].Value,
+                            @"<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<i[^>]*>\s*</i>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>.*?have (called up|sent down) (.*?) \S+/\S+ .*? (?:from|to) .*?</td>\s*<td[^>]*>(.*?)</td>",
+                            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+                        .Cast<Match>()
+                        .Select(m => new RosterTransaction
+                        {
+                            LeagueId = league.Id,
+                            TeamIds = new string[] { lookup[m.Groups[1].Value.Trim()], lookup[m.Groups[2].Value.Trim()] },
+                            PlayerNames = new string[] { m.Groups[4].Value.Trim() },
+                            Type = m.Groups[3].Value.ToLower().Contains("called up")
+                                ? RosterTransactionType.CalledUp
+                                : RosterTransactionType.SentDown,
+                            Timestamp = ISiteApi.ParseDateTime(m.Groups[5].Value, Timezone),
+                        })
+                        .Cast<RosterTransaction>(),
+
+                    "DROPS" => Regex.Matches(m.Groups[2].Value,
+                            @"<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>.*?dropped (.*?) \S+/\S+ .*?</td>\s*<td[^>]*>(.*?)</td>",
+                            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+                        .Cast<Match>()
+                        .Select(m => new RosterTransaction
+                        {
+                            LeagueId = league.Id,
+                            TeamIds = new string[] { lookup[m.Groups[1].Value.Trim()] },
+                            PlayerNames = new string[] { m.Groups[2].Value.Trim() },
+                            Type = RosterTransactionType.Banned,
+                            Timestamp = ISiteApi.ParseDateTime(m.Groups[3].Value, Timezone),
+                        })
+                        .Cast<RosterTransaction>(),
+
+                    _ => new List<RosterTransaction>()
+                };
+            })
+            .SelectMany(r => r)
+            .Where(r => r != null);
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching roster transactions for league \"{league.Name}\" [{league.Id}]", e);
         }
     }
 
@@ -433,43 +571,6 @@ public class MyVirtualGamingApi
         catch (Exception e)
         {
             throw new ApiException($"An unexpected error occurred while fetching teams for league \"{league.Name}\" [{league.Id}]", e);
-        }
-    }
-
-    private async Task<IDictionary<string, string>> GetTeamLookupAsync(League league)
-    {
-        try
-        {
-            var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-
-            var html = await _httpClient.GetStringAsync(GetUrl(league,
-                path: "standings",
-                parameters: new Dictionary<string, object?>
-                {
-                    ["filter_schedule"] = leagueInfo.ScheduleId > 0 ? leagueInfo.ScheduleId : null,
-                }));
-
-            var lookup = Regex.Matches(html,
-                @"<a[^>]*/rosters\?id=(\d+)[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<\/a>",
-                RegexOptions.IgnoreCase | RegexOptions.Singleline)
-            .Cast<Match>()
-            .DistinctBy(m => m.Groups[2].Value.ToUpper())
-            .ToDictionary(
-                m => m.Groups[2].Value.ToUpper(),
-                m => m.Groups[1].Value,
-                StringComparer.OrdinalIgnoreCase);
-
-            if (lookup.ContainsKey("TAP") && !lookup.ContainsKey("TAPP"))
-                lookup.Add("TAPP", lookup["TAP"]);
-
-            if (!lookup.ContainsKey("TAP") && lookup.ContainsKey("TAPP"))
-                lookup.Add("TAP", lookup["TAPP"]);
-
-            return lookup;
-        }
-        catch (Exception e)
-        {
-            throw new ApiException($"An unexpected error occurred while fetching team lookup for league \"{league.Name}\" [{league.Id}]", e);
         }
     }
 
@@ -594,6 +695,24 @@ public class MyVirtualGamingApi
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
         return $"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.Id}";
+    }
+
+    public string? GetRosterTransactionUrl(League league, RosterTransaction rosterTransaction)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        var slug = rosterTransaction.Type switch
+        {
+            RosterTransactionType.PlacedOnIr or RosterTransactionType.RemovedFromIr => "irs",
+            RosterTransactionType.ReportedInactive => "inactives",
+            RosterTransactionType.CalledUp or RosterTransactionType.SentDown => "callup_senddown",
+            RosterTransactionType.Banned => "drops",
+            _ => "",
+        };
+
+        var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+        return $"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/recent-transactions#{slug}";
     }
 
     public string? GetTradeUrl(League league, Trade trade)

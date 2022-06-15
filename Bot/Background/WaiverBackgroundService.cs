@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Discord;
 using Duthie.Bot.Utils;
 using Duthie.Services.Api;
 using Duthie.Services.Guilds;
@@ -53,7 +52,7 @@ public class WaiverBackgroundService : ScheduledBackgroundService
         try
         {
             var leagues = await _leagueService.GetAllAsync();
-            var teams = new TeamLookup(leagues);
+            var teamLookup = new TeamLookup(leagues);
 
             await Task.WhenAll(leagues.Select(async league =>
             {
@@ -78,7 +77,7 @@ public class WaiverBackgroundService : ScheduledBackgroundService
                     {
                         try
                         {
-                            var team = teams.Get(league, waiver.TeamId);
+                            var team = teamLookup.Get(league, waiver.TeamId);
 
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
@@ -91,18 +90,18 @@ public class WaiverBackgroundService : ScheduledBackgroundService
                                 var timestamp = DateTimeOffset.UtcNow;
                                 var url = api.GetWaiverUrl(league, waiver);
 
-                                var message = waiver.Action switch
+                                var message = waiver.Type switch
                                 {
-                                    WaiverAction.Placed => league.HasPluralTeamNames()
+                                    WaiverActionType.Placed => league.HasPluralTeamNames()
                                         ? $"The **{MessageUtils.Escape(team.Name)}** have placed **{MessageUtils.Escape(waiver.PlayerName)}** on waivers"
                                         : $"**{MessageUtils.Escape(team.Name)}** has placed **{MessageUtils.Escape(waiver.PlayerName)}** on waivers",
-                                    WaiverAction.Removed => league.HasPluralTeamNames()
+                                    WaiverActionType.Removed => league.HasPluralTeamNames()
                                         ? $"The **{MessageUtils.Escape(team.Name)}** have removed **{MessageUtils.Escape(waiver.PlayerName)}** off of waivers"
                                         : $"**{MessageUtils.Escape(team.Name)}** has removed **{MessageUtils.Escape(waiver.PlayerName)}** off of waivers",
-                                    WaiverAction.Claimed => league.HasPluralTeamNames()
+                                    WaiverActionType.Claimed => league.HasPluralTeamNames()
                                         ? $"The **{MessageUtils.Escape(team.Name)}** have claimed **{MessageUtils.Escape(waiver.PlayerName)}** off of waivers"
                                         : $"**{MessageUtils.Escape(team.Name)}** has claimed **{MessageUtils.Escape(waiver.PlayerName)}** off of waivers",
-                                    WaiverAction.Cleared => league.HasPluralTeamNames()
+                                    WaiverActionType.Cleared => league.HasPluralTeamNames()
                                         ? $"**{MessageUtils.Escape(waiver.PlayerName)}** has cleared waivers and is reporting to the **{MessageUtils.Escape(team.Name)}**"
                                         : $"**{MessageUtils.Escape(waiver.PlayerName)}** has cleared waivers and is reporting to **{MessageUtils.Escape(team.Name)}**",
                                     _ => "",
@@ -131,7 +130,7 @@ public class WaiverBackgroundService : ScheduledBackgroundService
                         }
                         catch (KeyNotFoundException e)
                         {
-                            if (!teams.Has(league.Site, waiver.TeamId))
+                            if (!teamLookup.Has(league.Site, waiver.TeamId))
                                 _logger.LogWarning(e, $"Failed to map teams for waiver {waiver.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
                         catch (Exception e)

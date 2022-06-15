@@ -472,7 +472,7 @@ public class LeaguegamingApi
                     LeagueId = league.Id,
                     TeamId = string.Join("", waiver.Groups[1].Value, waiver.Groups[5].Value).Trim(),
                     PlayerName = string.Join("", waiver.Groups[3].Value, waiver.Groups[4].Value).Trim(),
-                    Action = Enum.TryParse<WaiverAction>(waiver.Groups[2].Value, true, out var action) ? action : WaiverAction.Cleared,
+                    Type = Enum.TryParse<WaiverActionType>(waiver.Groups[2].Value, true, out var action) ? action : WaiverActionType.Cleared,
                     Timestamp = ISiteApi.ParseDateTime(waiver.Groups[6].Value, Timezone),
                 };
             })

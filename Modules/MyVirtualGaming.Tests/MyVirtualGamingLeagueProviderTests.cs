@@ -38,7 +38,6 @@ public class MyVirtualGamingLeagueProviderTests
         yield return new object[] { new Guid("0ec6177f-7e39-437b-9cb9-1551db76bd4e"), "VGHL World Championship", "vghlwc" };
         yield return new object[] { new Guid("8cba4eb0-8722-4415-aa82-b0027ae33702"), "VGHL Club League", "vghlclub" };
         yield return new object[] { new Guid("9545ede8-6948-44e0-8ef8-61668c6ab9e1"), "VGHL 3s League", "vghl3" };
-        yield return new object[] { new Guid("90a7f19a-5913-4abe-af7e-10ddf3e84564"), "VGKHL Kontinental League", "vgkhl" };
-        yield return new object[] { new Guid("cef6775d-f621-4164-a629-80ec54e016fa"), "VGIHL International League", "vgihl", false };
+        yield return new object[] { new Guid("cef6775d-f621-4164-a629-80ec54e016fa"), "VGIHL International League", "vgihl" };
     }
 }

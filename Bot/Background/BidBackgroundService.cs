@@ -52,7 +52,7 @@ public class BidBackgroundService : ScheduledBackgroundService
         try
         {
             var leagues = await _leagueService.GetAllAsync();
-            var teams = new TeamLookup(leagues);
+            var teamLookup = new TeamLookup(leagues);
 
             await Task.WhenAll(leagues.Select(async league =>
             {
@@ -77,7 +77,7 @@ public class BidBackgroundService : ScheduledBackgroundService
                     {
                         try
                         {
-                            var team = teams.Get(league, bid.TeamId);
+                            var team = teamLookup.Get(league, bid.TeamId);
 
                             var watchers = (await _watcherService.FindAsync(
                                 leagues: new Guid[] { league.Id },
