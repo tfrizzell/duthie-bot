@@ -7,7 +7,7 @@ using League = Duthie.Types.Leagues.League;
 namespace Duthie.Modules.Leaguegaming;
 
 public class LeaguegamingApi
-    : IBidApi, IContractApi, IDraftApi, IGameApi, ILeagueApi, ITeamApi, ITradeApi, IWaiverApi
+    : IBidApi, IContractApi, IDraftApi, IGameApi, ILeagueApi, IRosterApi, ITeamApi, ITradeApi, IWaiverApi
 {
     private const string Domain = "www.leaguegaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
@@ -314,6 +314,182 @@ public class LeaguegamingApi
         }
     }
 
+    public async Task<IEnumerable<RosterTransaction>?> GetRosterTransactionsAsync(League league)
+    {
+        try
+        {
+            if (!IsSupported(league))
+                return null;
+
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+            var teamIds = await GetTeamIdsAsync(league);
+
+            return (await Task.WhenAll(new LeaguegamingNewsType[] {
+                LeaguegamingNewsType.Bans,
+                LeaguegamingNewsType.CallUpDown,
+                LeaguegamingNewsType.InjuredReserve,
+                LeaguegamingNewsType.Suspensions,
+            }
+            .Distinct()
+            .Select(async type =>
+            {
+                var html = await _httpClient.GetStringAsync(GetUrl(league,
+                    parameters: new Dictionary<string, object?>
+                    {
+                        ["action"] = "league",
+                        ["page"] = "team_news",
+                        ["leagueid"] = leagueInfo.LeagueId,
+                        ["seasonid"] = leagueInfo.SeasonId,
+                        ["typeid"] = (int)type,
+                        ["displaylimit"] = 200,
+                    }));
+
+                return Regex.Matches(html,
+                    @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline)
+                .Cast<Match>()
+                .Select(m =>
+                {
+                    var ban = Regex.Match(m.Groups[1].Value,
+                        @"<a[^>]*>\s*<img[^>]*/(?:team(\d+)|l\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(.*?)</span>\s*has been issued a\s*<span[^>]*>.*? Ban</span>\s*in Season \d+ of the\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                        RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                    if (ban.Success == true)
+                    {
+                        return new RosterTransaction
+                        {
+                            LeagueId = league.Id,
+                            TeamIds = new string[] { ban.Groups[1].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { ban.Groups[2].Value.Trim() },
+                            Type = RosterTransactionType.Banned,
+                            Timestamp = ISiteApi.ParseDateTime(ban.Groups[3].Value, Timezone),
+                        };
+                    }
+
+                    var callUp = Regex.Match(m.Groups[1].Value,
+                        @"<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/arrow1\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*The\s*<img[^>]*/team\2\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have sent\s*<span[^>]*>(.*?)</span>\s*to the\s*<img[^>]*/team\1\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                        RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                    if (callUp.Success == true && teamIds?.Contains(callUp.Groups[1].Value) == true)
+                    {
+                        return new RosterTransaction
+                        {
+                            LeagueId = league.Id,
+                            TeamIds = new string[] { callUp.Groups[1].Value, callUp.Groups[2].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { callUp.Groups[3].Value.Trim() },
+                            Type = RosterTransactionType.CalledUp,
+                            Timestamp = ISiteApi.ParseDateTime(callUp.Groups[4].Value, Timezone),
+                        };
+                    }
+
+                    var placedOnIr = Regex.Match(m.Groups[1].Value,
+                        @"<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(.*?)</span>\s*has been moved to the\s*<span[^>]*>Injured Reserve</span>\s*list\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                        RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                    if (placedOnIr.Success == true)
+                    {
+                        return new RosterTransaction
+                        {
+                            LeagueId = league.Id,
+                            TeamIds = new string[] { placedOnIr.Groups[1].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { placedOnIr.Groups[2].Value.Trim() },
+                            Type = RosterTransactionType.PlacedOnIr,
+                            Timestamp = ISiteApi.ParseDateTime(placedOnIr.Groups[3].Value, Timezone),
+                        };
+                    }
+
+                    var removedFromIr = Regex.Match(m.Groups[1].Value,
+                        @"<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(.*?)</span>\s*has been taken off the\s*<span[^>]*>Injured Reserve</span>\s*list\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                        RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                    if (removedFromIr.Success == true)
+                    {
+                        return new RosterTransaction
+                        {
+                            LeagueId = league.Id,
+                            TeamIds = new string[] { removedFromIr.Groups[1].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { removedFromIr.Groups[2].Value.Trim() },
+                            Type = RosterTransactionType.RemovedFromIr,
+                            Timestamp = ISiteApi.ParseDateTime(removedFromIr.Groups[3].Value, Timezone),
+                        };
+                    }
+
+                    var sendDown = Regex.Match(m.Groups[1].Value,
+                        @"<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/arrow2\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*The\s*<img[^>]*/team\1\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have sent\s*<span[^>]*>(.*?)</span>\s*to the\s*<img[^>]*/team\2\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                        RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                    if (sendDown.Success == true && teamIds?.Contains(sendDown.Groups[1].Value) == true)
+                    {
+                        return new RosterTransaction
+                        {
+                            LeagueId = league.Id,
+                            TeamIds = new string[] { sendDown.Groups[1].Value, sendDown.Groups[2].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { sendDown.Groups[3].Value.Trim() },
+                            Type = RosterTransactionType.SentDown,
+                            Timestamp = ISiteApi.ParseDateTime(sendDown.Groups[4].Value, Timezone),
+                        };
+                    }
+
+                    var suspension = Regex.Match(m.Groups[1].Value,
+                        @"<a[^>]*>\s*<img[^>]*/(?:team(\d+)|l\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(.*?)</span>\s*has been issued a\s*<span[^>]*>.*? Suspension</span>\s*in Season \d+ of the\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                        RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                    if (suspension.Success == true)
+                    {
+                        return new RosterTransaction
+                        {
+                            LeagueId = league.Id,
+                            TeamIds = new string[] { suspension.Groups[1].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { suspension.Groups[2].Value.Trim() },
+                            Type = RosterTransactionType.Suspended,
+                            Timestamp = ISiteApi.ParseDateTime(suspension.Groups[3].Value, Timezone),
+                        };
+                    }
+
+                    return null;
+                })
+                .Where(c => c != null)
+                .Cast<RosterTransaction>();
+            })))
+            .SelectMany(r => r)
+            .Where(r => r != null);
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching contracts for league \"{league.Name}\" [{league.Id}]", e);
+        }
+    }
+
+    private async Task<IEnumerable<string>?> GetTeamIdsAsync(League league)
+    {
+        try
+        {
+            if (!IsSupported(league))
+                return null;
+
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
+                parameters: new Dictionary<string, object?>
+                {
+                    ["action"] = "league",
+                    ["page"] = "standing",
+                    ["leagueid"] = leagueInfo.LeagueId,
+                    ["seasonid"] = leagueInfo.SeasonId,
+                }));
+
+            return Regex.Matches(html,
+                @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&teamid=(\d+)&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(m => m.Groups[1].Value);
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching team ids for league \"{league.Name}\" [{league.Id}]", e);
+        }
+    }
+
     public async Task<IEnumerable<Team>?> GetTeamsAsync(League league)
     {
         try
@@ -509,6 +685,24 @@ public class LeaguegamingApi
             return null;
 
         return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=game&gameid={game.Id}";
+    }
+
+    public string? GetRosterTransactionUrl(League league, RosterTransaction rosterTransaction)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        var type = rosterTransaction.Type switch
+        {
+            RosterTransactionType.PlacedOnIr or RosterTransactionType.RemovedFromIr => LeaguegamingNewsType.InjuredReserve,
+            RosterTransactionType.CalledUp or RosterTransactionType.SentDown => LeaguegamingNewsType.CallUpDown,
+            RosterTransactionType.Banned => LeaguegamingNewsType.Bans,
+            RosterTransactionType.Suspended => LeaguegamingNewsType.Suspensions,
+            _ => LeaguegamingNewsType.All,
+        };
+
+        var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+        return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={rosterTransaction.TeamIds.FirstOrDefault() ?? ""}&typeid={(int)type}";
     }
 
     public string? GetTradeUrl(League league, Trade trade)

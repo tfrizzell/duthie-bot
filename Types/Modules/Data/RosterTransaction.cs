@@ -39,4 +39,5 @@ public enum RosterTransactionType
     CalledUp,
     SentDown,
     Banned,
+    Suspended,
 }

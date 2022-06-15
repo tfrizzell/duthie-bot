@@ -196,4 +196,17 @@ public class LeaguegamingApiTests
             Assert.True(!string.IsNullOrWhiteSpace(waiver.PlayerName), $"expected PlayerName to be non-empty but got {waiver.PlayerName}");
         }
     }
+
+    [Fact]
+    public async Task GetRosterTransactionsAsync_ReturnsNotNull()
+    {
+        var rosterTransactions = await _api.GetRosterTransactionsAsync(_league);
+        Assert.True(rosterTransactions != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+
+        foreach (var rosterTransaction in rosterTransactions!)
+        {
+            Assert.True(_league.Id == rosterTransaction.LeagueId, $"expected LeagueId to be {_league.Id} but got {rosterTransaction.LeagueId}");
+            Assert.True(rosterTransaction.PlayerNames.Count() > 0, $"expected at least one PlayerName got {rosterTransaction.PlayerNames.Count()}");
+        }
+    }
 }

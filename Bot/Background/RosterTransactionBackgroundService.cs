@@ -14,6 +14,7 @@ using Duthie.Bot.Extensions;
 using Discord;
 using Duthie.Modules.MyVirtualGaming;
 using League = Duthie.Types.Leagues.League;
+using System.Text.RegularExpressions;
 
 namespace Duthie.Bot.Background;
 
@@ -81,16 +82,15 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                         try
                         {
                             var teams = rosterTransaction.TeamIds.Select(teamId => teamLookup.Get(league.Site, teamId));
-                            var teamIds = teams.Select(t => t.Id);
 
-                            var affiliateLeagueIds = league.GetAffiliateIds();
-                            var _leagues = new League[] { league }.Concat(leagues.Where(l => affiliateLeagueIds?.Contains(l.GetLeagueId()) == true));
-
-                            foreach (var _league in _leagues)
+                            if (teams.Count() > 0)
                             {
+                                var multipleLeagues = rosterTransaction.TeamIds.Any(teamId => !teamLookup.Has(league, teamId));
+
                                 var watchers = (await _watcherService.FindAsync(
-                                    leagues: new Guid[] { _league.Id },
-                                    teams: teamIds,
+                                    sites: multipleLeagues ? new Guid[] { league.SiteId } : null,
+                                    leagues: multipleLeagues ? null : new Guid[] { league.Id },
+                                    teams: teams.Select(t => t.Id),
                                     types: new WatcherType[] { WatcherType.Roster }
                                 )).GroupBy(w => new { w.GuildId, ChannelId = w.ChannelId ?? w.Guild.DefaultChannelId });
 
@@ -99,7 +99,7 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                                     var timestamp = DateTimeOffset.UtcNow;
                                     var url = api.GetRosterTransactionUrl(league, rosterTransaction);
 
-                                    var message = rosterTransaction.Type switch
+                                    var message = Regex.Replace(rosterTransaction.Type switch
                                     {
                                         RosterTransactionType.PlacedOnIr => league.HasPluralTeamNames()
                                             ? $"The **{MessageUtils.Escape(teams.First().Name)}** have placed **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** on injured reserved"
@@ -112,15 +112,18 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                                             : $"**{MessageUtils.Escape(teams.First().Name)}** has reported **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** as inactive and removed them from their roster",
                                         RosterTransactionType.CalledUp => league.HasPluralTeamNames()
                                             ? $"The **{MessageUtils.Escape(teams.First().Name)}** have called **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** up from the **{MessageUtils.Escape(teams.Last().Name)}**"
-                                            : $"**{MessageUtils.Escape(teams.First().Name)}** has placed **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** up from **{MessageUtils.Escape(teams.Last().Name)}**",
+                                            : $"**{MessageUtils.Escape(teams.First().Name)}** has called **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** up from **{MessageUtils.Escape(teams.Last().Name)}**",
                                         RosterTransactionType.SentDown => league.HasPluralTeamNames()
                                             ? $"The **{MessageUtils.Escape(teams.First().Name)}** have sent **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** down to the **{MessageUtils.Escape(teams.Last().Name)}**"
                                             : $"**{MessageUtils.Escape(teams.First().Name)}** has sent **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** down to **{MessageUtils.Escape(teams.Last().Name)}**",
                                         RosterTransactionType.Banned => league.HasPluralTeamNames()
-                                            ? $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been banned by the **{MessageUtils.Escape(teams.First().Name)}**"
-                                            : $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been banned by **{MessageUtils.Escape(teams.First().Name)}**",
+                                            ? $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been banned by the **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**"
+                                            : $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been banned by **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**",
+                                        RosterTransactionType.Suspended => league.HasPluralTeamNames()
+                                            ? $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been suspended by the **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**"
+                                            : $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been suspended by **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**",
                                         _ => "",
-                                    };
+                                    }, @" by\s*(the)?\s*\*\*\*\*", "").Trim();
 
                                     if (!string.IsNullOrWhiteSpace(message))
                                     {
@@ -133,8 +136,8 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                                                 Embed = new GuildMessageEmbed
                                                 {
                                                     Color = Color.Purple,
-                                                    Title = $"{_league.ShortName} Roster Transaction",
-                                                    Thumbnail = _league.LogoUrl,
+                                                    Title = $"{league.ShortName} Roster Transaction",
+                                                    Thumbnail = league.LogoUrl,
                                                     Content = message,
                                                     Timestamp = timestamp,
                                                     Url = url,
@@ -146,11 +149,11 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                         }
                         catch (KeyNotFoundException e)
                         {
-                            _logger.LogWarning(e, $"Failed to map teams for rosterTransaction {rosterTransaction.GetHash()} for league \"{league.Name}\" [{league.Id}]");
+                            _logger.LogWarning(e, $"Failed to map teams for processing roster transaction {rosterTransaction.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
                         catch (Exception e)
                         {
-                            _logger.LogError(e, $"An unexpected error has occurred while processing rosterTransaction {rosterTransaction.GetHash()} for league \"{league.Name}\" [{league.Id}]");
+                            _logger.LogError(e, $"An unexpected error has occurred while processing roster transaction {rosterTransaction.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
 
                         league.State.LastRosterTransaction = rosterTransaction.GetHash();
