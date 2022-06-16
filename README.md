@@ -56,17 +56,17 @@ Supported Sites
 ===============
 **Duthie Bot** currently supports the sites listed in the feature matrix below:
 
-&nbsp;                  | **leaguegaming.com** | **myvirtualgaming.com** | **thespnhl.com**
-------------------------|:--------------------:|:-----------------------:|:----------------:
-**Contract Signings**   | ✔️                   | ✔️                     | ❌              
-**Daily Stars**         | ✔️                   | ❌                     | ❌              
-**Draft Picks**         | ✔️                   | ✔️                     | ❌              
-**Game Results**        | ✔️                   | ✔️                     | ✔️              
-**General News**        | ✔️                   | ❌                     | ❌              
-**Roster Transactions** | ✔️                   | ✔️                     | ❌              
-**Trades**              | ✔️                   | ✔️                     | ❌              
-**Waiver Wire**         | ✔️                   | ❌                     | ❌              
-**Winning Bids**        | ✔️                   | ✔️                     | ❌              
+&nbsp;                  | **[leaguegaming.com](https://www.leaguegaming.com)** | **[myvirtualgaming.com](https://vghl.myvirtualgaming.com)** | **[thespnhl.com](https://thespnhl.com)**
+------------------------|:----------------------------------------------------:|:-----------------------------------------------------------:|:----------------------------------------:
+**Contract Signings**   | ✔️                                                   | ✔️                                                         | ❌                                      
+**Daily Stars**         | ✔️                                                   | ❌                                                         | ❌                                      
+**Draft Picks**         | ✔️                                                   | ✔️                                                         | ❌                                      
+**Game Results**        | ✔️                                                   | ✔️                                                         | ✔️                                      
+**General News**        | ✔️                                                   | ❌                                                         | ❌                                      
+**Roster Transactions** | ✔️                                                   | ✔️                                                         | ❌                                      
+**Trades**              | ✔️                                                   | ✔️                                                         | ❌                                      
+**Waiver Wire**         | ✔️                                                   | ❌                                                         | ❌                                      
+**Winning Bids**        | ✔️                                                   | ✔️                                                         | ❌                                      
 
 To view a list of supported leagues, use the `/duthie list leagues` command in your server.
 
