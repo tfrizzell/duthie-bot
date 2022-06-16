@@ -46,9 +46,9 @@ Sends a ping to **Duthie Bot** to make sure it's responding to commands.
 Manage **Duthie Bot** watchers for your server.
 ```vb
 # SYNTAX
-  /duthie watcher add [league] [team] [type] ([channel]) ([site])
+  /duthie watcher add [league] [team] [type] (#channel) (site)
   /duthie watcher list
-  /duthie watcher remove [league] [team] [type] ([channel]) ([site])
+  /duthie watcher remove [league] [team] [type] (#channel) (site)
   /duthie watcher remove-all
 ```
 
