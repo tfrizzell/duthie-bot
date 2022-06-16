@@ -54,7 +54,7 @@ Manages **Duthie Bot** watchers for your server.
 
 Supported Sites
 ===============
-**Duthie Bot* currently supports the sites listed in the feature matrix below:
+**Duthie Bot** currently supports the sites listed in the feature matrix below:
 
 &nbsp;                  | **leaguegaming.com** | **myvirtualgaming.com** | **thespnhl.com**
 ------------------------|:--------------------:|:-----------------------:|:----------------:
@@ -68,7 +68,7 @@ Supported Sites
 **Waiver Wire**         | ✔️                   | ❌                     | ❌              
 **Winning Bids**        | ✔️                   | ✔️                     | ❌              
 
-To view a list of actively supported leagues, use the `/duthie list leagues` command in your server.
+To view a list of supported leagues, use the `/duthie list leagues` command in your server.
 
 License
 =======
