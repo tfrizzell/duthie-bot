@@ -10,12 +10,12 @@ To get started using **Duthie Bot**, you'll first need to authorize it to use yo
 
 Configuration
 =============
-As of *version 3*, **Duthie Bot** now runs using Discord's slash command feature. Simply type `/duthie` in your server, and follow the prompts.
+As of *version 3*, **Duthie Bot** now runs using Discord's slash command feature. Simply type `/duthie` in your server, and follow the command palette.
 
 Commands
 ========
 #### Admin
-Manages **Duthie Bot** administrators for your server.
+Manage **Duthie Bot** administrators for your server.
 ```vb
 # SYNTAX
   /duthie admin add @user
@@ -24,7 +24,7 @@ Manages **Duthie Bot** administrators for your server.
 ```
 
 #### List
-Lists the set of data available to your server.
+List the available data in **Duthie Bot**.
 ```vb
 # SYNTAX
   /duthie list admins
@@ -36,14 +36,14 @@ Lists the set of data available to your server.
 ```
 
 #### Ping
-Sends a ping to **Duthie Bot** to make sure it's parsing and responding to messages
+Sends a ping to **Duthie Bot** to make sure it's responding to commands.
 ```vb
 # SYNTAX
   /duthie ping
 ```
 
 #### Watcher
-Manages **Duthie Bot** watchers for your server.
+Manage **Duthie Bot** watchers for your server.
 ```vb
 # SYNTAX
   /duthie watcher add [league] [team] [type] ([channel]) ([site])
