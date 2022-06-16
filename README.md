@@ -1,0 +1,75 @@
+Duthie Bot
+===============
+**Duthie Bot** is the perfect way to keep your Discord server up to date with game results, trades, roster transactions, and many more pieces of information from our supported leagues.
+
+How to Use
+==========
+To get started using **Duthie Bot**, you'll first need to authorize it to use your server. To accomplish this, go to https://discordapp.com/oauth2/authorize?&client_id=356076231185268746&scope=bot&permissions=2048, select the server you're adding it to, and click "Authorize".
+
+<p align="center"><img alt="duthie-bot-discord-authorize.png" src="https://i.imgur.com/Tk4Tk8z.png" /></p>
+
+Configuration
+=============
+As of *version 3*, **Duthie Bot** now runs using Discord's slash command feature. Simply type `/duthie` in your server, and follow the prompts.
+
+Commands
+========
+#### Admin
+Manages **Duthie Bot** administrators for your server.
+```vb
+# SYNTAX
+  /duthie admin add @user
+  /duthie admin list
+  /duthie admin remove @user
+```
+
+#### List
+Lists the set of data available to your server.
+```vb
+# SYNTAX
+  /duthie list admins
+  /duthie list leagues [...filters]
+  /duthie list sites [...filters]
+  /duthie list teams [...filters]
+  /duthie list watchers [...filters]
+  /duthie list watcher-types
+```
+
+#### Ping
+Sends a ping to **Duthie Bot** to make sure it's parsing and responding to messages
+```vb
+# SYNTAX
+  /duthie ping
+```
+
+#### Watcher
+Manages **Duthie Bot** watchers for your server.
+```vb
+# SYNTAX
+  /duthie watcher add [league] [team] [type] ([channel]) ([site])
+  /duthie watcher list
+  /duthie watcher remove [league] [team] [type] ([channel]) ([site])
+  /duthie watcher remove-all
+```
+
+Supported Sites
+===============
+**Duthie Bot* currently supports the sites listed in the feature matrix below:
+
+&nbsp;                  | **leaguegaming.com** | **myvirtualgaming.com** | **thespnhl.com**
+------------------------|:--------------------:|:-----------------------:|:----------------:
+**Contract Signings**   | ✔️                   | ✔️                     | ❌              
+**Daily Stars**         | ✔️                   | ❌                     | ❌              
+**Draft Picks**         | ✔️                   | ✔️                     | ❌              
+**Game Results**        | ✔️                   | ✔️                     | ✔️              
+**General News**        | ✔️                   | ❌                     | ❌              
+**Roster Transactions** | ✔️                   | ✔️                     | ❌              
+**Trades**              | ✔️                   | ✔️                     | ❌              
+**Waiver Wire**         | ✔️                   | ❌                     | ❌              
+**Winning Bids**        | ✔️                   | ✔️                     | ❌              
+
+To view a list of actively supported leagues, use the `/duthie list leagues` command in your server.
+
+License
+=======
+MIT
