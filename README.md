@@ -54,7 +54,7 @@ Manage **Duthie Bot** watchers for your server.
 
 Supported Sites
 ===============
-**Duthie Bot** currently supports the sites listed in the feature matrix below:
+**Duthie Bot** currently supports the sites listed in the feature table below:
 
 &nbsp;                  | **[leaguegaming.com](https://www.leaguegaming.com)** | **[myvirtualgaming.com](https://vghl.myvirtualgaming.com)** | **[thespnhl.com](https://thespnhl.com)**
 ------------------------|:----------------------------------------------------:|:-----------------------------------------------------------:|:----------------------------------------:
