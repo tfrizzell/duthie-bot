@@ -62,13 +62,13 @@ public class WaiverBackgroundService : ScheduledBackgroundService
                     return;
 
                 var data = (await api.GetWaiversAsync(league))?
-                    .OrderBy(c => c.Timestamp)
-                        .ThenBy(c => c.GetHash())
+                    .OrderBy(w => w.Timestamp)
+                        .ThenBy(w => w.GetHash())
                     .ToList();
 
                 if (data?.Count() > 0 && league.State.LastWaiver != null)
                 {
-                    var LastWaiverIndex = data.FindIndex(c => c.GetHash() == league.State.LastWaiver);
+                    var LastWaiverIndex = data.FindIndex(w => w.GetHash() == league.State.LastWaiver);
 
                     if (LastWaiverIndex >= 0)
                         data.RemoveRange(0, LastWaiverIndex + 1);
@@ -114,16 +114,12 @@ public class WaiverBackgroundService : ScheduledBackgroundService
                                         {
                                             GuildId = watcher.Key.GuildId,
                                             ChannelId = watcher.Key.ChannelId,
-                                            Message = "",
-                                            Embed = new GuildMessageEmbed
-                                            {
-                                                Color = Colors.Chocolate,
-                                                Title = $"{league.ShortName} Waiver Wire",
-                                                Thumbnail = league.LogoUrl,
-                                                Content = message,
-                                                Timestamp = timestamp,
-                                                Url = url,
-                                            }
+                                            Color = Colors.Chocolate,
+                                            Title = $"{league.ShortName} Waiver Wire",
+                                            Thumbnail = league.LogoUrl,
+                                            Content = message,
+                                            Url = url,
+                                            Timestamp = timestamp,
                                         }));
                                 }
                             }

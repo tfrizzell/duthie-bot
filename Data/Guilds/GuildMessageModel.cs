@@ -16,8 +16,5 @@ public class GuildMessageModel : DataModel<GuildMessage>
 
         model.Property(m => m.Id)
             .ValueGeneratedOnAdd();
-
-        model.Property(m => m.Embed)
-            .HasConversion(new GuildMessageEmbedToStringConverter(), new GuildMessageEmbedValueComparer());
     }
 }

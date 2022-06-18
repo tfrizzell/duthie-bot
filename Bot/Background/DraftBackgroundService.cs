@@ -98,16 +98,12 @@ public class DraftBackgroundService : ScheduledBackgroundService
                                     {
                                         GuildId = watcher.Key.GuildId,
                                         ChannelId = watcher.Key.ChannelId,
-                                        Message = "",
-                                        Embed = new GuildMessageEmbed
-                                        {
-                                            Color = Color.Teal,
-                                            Title = $"{league.ShortName} Draft Pick",
-                                            Thumbnail = league.LogoUrl,
-                                            Content = message,
-                                            Timestamp = timestamp,
-                                            Url = url,
-                                        }
+                                        Color = Color.Teal,
+                                        Title = $"{league.ShortName} Draft Pick",
+                                        Thumbnail = league.LogoUrl,
+                                        Content = message,
+                                        Url = url,
+                                        Timestamp = timestamp,
                                     }));
                             }
                         }

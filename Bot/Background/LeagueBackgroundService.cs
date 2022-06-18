@@ -59,6 +59,10 @@ public class LeagueBackgroundService : ScheduledBackgroundService
                     if (data == null)
                         return null;
 
+                    league.Name = data.Name;
+                    league.LogoUrl = data.LogoUrl;
+                    league.Info = data.Info;
+
                     var seasonIdProp = league.Info?.GetType().GetProperty("SeasonId", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
 
                     if (seasonIdProp != null)
@@ -76,10 +80,8 @@ public class LeagueBackgroundService : ScheduledBackgroundService
                             };
                         }
                     }
-
-                    league.Name = data.Name;
-                    league.LogoUrl = data.LogoUrl;
-                    league.Info = data.Info;
+                    else
+                        return null;
                 }
                 catch (Exception e)
                 {

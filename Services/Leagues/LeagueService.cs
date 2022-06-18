@@ -177,6 +177,10 @@ public class LeagueService
                             existing.State.LastContract = league.State.LastContract;
                             break;
 
+                        case LeagueStateType.DailyStar:
+                            existing.State.LastDailyStar = league.State.LastDailyStar;
+                            break;
+
                         case LeagueStateType.DraftPick:
                             existing.State.LastDraftPick = league.State.LastDraftPick;
                             break;

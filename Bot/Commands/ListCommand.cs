@@ -173,30 +173,33 @@ public class ListCommand : BaseCommand
 
         var (tags, tagsOption) = await GetTagsAsync(cmd);
 
-        var leagues = await _leagueService.FindAsync(
-            sites: site == null ? null : new Guid[] { site.Id },
-            tags: tags);
-
-        if (leagues.Count() > 0)
+        await SendResponseAsync(command, async () =>
         {
-            await command.RespondAsync(ListUtils.CreateTable(
-                headers: new string[] {
-                    "Name",
-                    "Short Name",
-                    "Site",
-                    "Tags"
-                },
-                data: leagues.Select(l => new string[] {
-                    l.Name,
-                    l.ShortName,
-                    l.Site.Name,
-                    string.Join(", ", l.Tags)
-                })), ephemeral: true);
+            var leagues = await _leagueService.FindAsync(
+                sites: site == null ? null : new Guid[] { site.Id },
+                tags: tags);
 
-            _logger.LogTrace($"User {user} viewed league list in guild \"{guild.Name}\" [{guild.Id}]");
-        }
-        else
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any leagues that matched your request.", ephemeral: true);
+            if (leagues.Count() > 0)
+            {
+                await command.RespondAsync(ListUtils.CreateTable(
+                    headers: new string[] {
+                        "Name",
+                        "Short Name",
+                        "Site",
+                        "Tags"
+                    },
+                    data: leagues.Select(l => new string[] {
+                        l.Name,
+                        l.ShortName,
+                        l.Site.Name,
+                        string.Join(", ", l.Tags)
+                    })), ephemeral: true);
+
+                _logger.LogTrace($"User {user} viewed league list in guild \"{guild.Name}\" [{guild.Id}]");
+            }
+            else
+                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any leagues that matched your request.", ephemeral: true);
+        }, "I'll have the league list for you shortly.");
     }
 
     private async Task ListSitesAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -205,27 +208,30 @@ public class ListCommand : BaseCommand
         var user = await GetUserAsync(command);
         var (tags, tagsOption) = await GetTagsAsync(cmd);
 
-        var sites = await _siteService.FindAsync(
-            tags: tags);
-
-        if (sites.Count() > 0)
+        await SendResponseAsync(command, async () =>
         {
-            await command.RespondAsync(ListUtils.CreateTable(
-                headers: new string[] {
-                    "Name",
-                    "URL",
-                    "Tags"
-                },
-                data: sites.Select(s => new string[] {
-                    s.Name,
-                    s.Url,
-                    string.Join(", ", s.Tags)
-                })), ephemeral: true);
+            var sites = await _siteService.FindAsync(
+                tags: tags);
 
-            _logger.LogTrace($"User {user} viewed site list in guild \"{guild.Name}\" [{guild.Id}]");
-        }
-        else
-            await command.RespondAsync("I'm sorry {command.User.Mention}, but I didn't find any sites that matched your request.", ephemeral: true);
+            if (sites.Count() > 0)
+            {
+                await command.RespondAsync(ListUtils.CreateTable(
+                    headers: new string[] {
+                        "Name",
+                        "URL",
+                        "Tags"
+                    },
+                    data: sites.Select(s => new string[] {
+                        s.Name,
+                        s.Url,
+                        string.Join(", ", s.Tags)
+                    })), ephemeral: true);
+
+                _logger.LogTrace($"User {user} viewed site list in guild \"{guild.Name}\" [{guild.Id}]");
+            }
+            else
+                await command.RespondAsync("I'm sorry {command.User.Mention}, but I didn't find any sites that matched your request.", ephemeral: true);
+        }, "I'll have the site list for you shortly.");
     }
 
     private async Task ListTeamsAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -251,31 +257,34 @@ public class ListCommand : BaseCommand
 
         var (tags, tagsOption) = await GetTagsAsync(cmd);
 
-        var teams = await _teamService.FindAsync(
-            sites: site == null ? null : new Guid[] { site.Id },
-            leagues: league == null ? null : new Guid[] { league.Id },
-            tags: tags);
-
-        if (teams.Count() > 0)
+        await SendResponseAsync(command, async () =>
         {
-            await command.RespondAsync(ListUtils.CreateTable(
-                headers: new string[] {
-                    "Name",
-                    "Short Name",
-                    "Leagues",
-                    "Tags"
-                },
-                data: teams.Select(t => new string[] {
-                    t.Name,
-                    t.ShortName,
-                    Regex.Replace(string.Join(", ", t.Leagues.Select(l => l.Name).OrderBy(n => n)), @"^(.{27}).{4,}", @"$1..."),
-                    string.Join(", ", t.Tags)
-                })), ephemeral: true);
+            var teams = await _teamService.FindAsync(
+                sites: site == null ? null : new Guid[] { site.Id },
+                leagues: league == null ? null : new Guid[] { league.Id },
+                tags: tags);
 
-            _logger.LogTrace($"User {user} viewed team list in guild \"{guild.Name}\" [{guild.Id}]");
-        }
-        else
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any teams that matched your request.", ephemeral: true);
+            if (teams.Count() > 0)
+            {
+                await command.RespondAsync(ListUtils.CreateTable(
+                    headers: new string[] {
+                        "Name",
+                        "Short Name",
+                        "Leagues",
+                        "Tags"
+                    },
+                    data: teams.Select(t => new string[] {
+                        t.Name,
+                        t.ShortName,
+                        Regex.Replace(string.Join(", ", t.Leagues.Select(l => l.Name).OrderBy(n => n)), @"^(.{27}).{4,}", @"$1..."),
+                        string.Join(", ", t.Tags)
+                    })), ephemeral: true);
+
+                _logger.LogTrace($"User {user} viewed team list in guild \"{guild.Name}\" [{guild.Id}]");
+            }
+            else
+                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any teams that matched your request.", ephemeral: true);
+        }, "I'll have the team list for you shortly.");
     }
 
     private async Task ListWatcherTypes(SocketSlashCommand command)
@@ -283,24 +292,27 @@ public class ListCommand : BaseCommand
         var guild = await GetGuildAsync(command);
         var user = await GetUserAsync(command);
 
-        var watcherTypes = Enum.GetValues<WatcherType>();
-
-        if (watcherTypes.Count() > 0)
+        await SendResponseAsync(command, async () =>
         {
-            await command.RespondAsync(ListUtils.CreateTable(
-                headers: new string[] {
-                    "Name",
-                    "Description"
-                },
-                data: watcherTypes.Select(t => new string[] {
-                    EnumUtils.GetName(t),
-                    EnumUtils.GetDescription(t)
-                })), ephemeral: true);
+            var watcherTypes = Enum.GetValues<WatcherType>();
 
-            _logger.LogTrace($"User {user} viewed watcher type list in guild \"{guild.Name}\" [{guild.Id}]");
-        }
-        else
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any watcher types that matched your request.", ephemeral: true);
+            if (watcherTypes.Count() > 0)
+            {
+                await command.RespondAsync(ListUtils.CreateTable(
+                    headers: new string[] {
+                        "Name",
+                        "Description"
+                    },
+                    data: watcherTypes.Select(t => new string[] {
+                        EnumUtils.GetName(t),
+                        EnumUtils.GetDescription(t)
+                    })), ephemeral: true);
+
+                _logger.LogTrace($"User {user} viewed watcher type list in guild \"{guild.Name}\" [{guild.Id}]");
+            }
+            else
+                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any watcher types that matched your request.", ephemeral: true);
+        }, "I'll have the watcher type list for you shortly.");
     }
 
     private async Task<(League?, string?)> GetLeagueAsync(SocketSlashCommandDataOption cmd)

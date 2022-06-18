@@ -48,6 +48,7 @@ public class CommandLine
         await UpdateDatabaseAsync(serviceProvider);
 
         var message = string.Join(" ", args);
+        var appInfo = serviceProvider.GetRequiredService<AppInfo>();
         var logger = serviceProvider.GetRequiredService<ILogger<CommandLine>>();
         var guildService = serviceProvider.GetRequiredService<GuildService>();
         var guildMessageService = serviceProvider.GetRequiredService<GuildMessageService>();
@@ -58,7 +59,9 @@ public class CommandLine
             {
                 GuildId = guild.Id,
                 ChannelId = 0,
-                Message = message
+                Color = Colors.Yellow,
+                Title = $"{appInfo.Name} Notification",
+                Content = message
             });
 
             logger.LogTrace($"Sent message to guild \"{guild.Name}\" [{guild.Id}]");
@@ -91,6 +94,7 @@ public class CommandLine
             .AddSingleton<GameBackgroundService>()
             .AddSingleton<BidBackgroundService>()
             .AddSingleton<ContractBackgroundService>()
+            .AddSingleton<DailyStarBackgroundService>()
             .AddSingleton<DraftBackgroundService>()
             .AddSingleton<RosterTransactionBackgroundService>()
             .AddSingleton<TradeBackgroundService>()
@@ -115,6 +119,9 @@ public class CommandLine
 
         if (types.Intersect(new string[] { "contracts", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<ContractBackgroundService>().ExecuteAsync();
+
+        if (types.Intersect(new string[] { "daily-stars", "stars", "all" }).Count() > 0)
+            await serviceProvider.GetRequiredService<DailyStarBackgroundService>().ExecuteAsync();
 
         if (types.Intersect(new string[] { "draft", "drafts", "draft-picks", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<DraftBackgroundService>().ExecuteAsync();

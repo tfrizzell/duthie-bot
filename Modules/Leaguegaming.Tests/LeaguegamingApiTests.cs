@@ -14,6 +14,7 @@ public class LeaguegamingApiTests
         _api = new LeaguegamingApi();
         _league = new LeaguegamingLeagueProvider().Leagues.First(l => l.Id == LeaguegamingLeagueProvider.LGHL_PSN.Id);
         (_league.Info as LeaguegamingLeagueInfo)!.SeasonId = 19;
+        (_league.Info as LeaguegamingLeagueInfo)!.ForumId = 586;
         (_league.Info as LeaguegamingLeagueInfo)!.DraftId = 550;
         (_league.Info as LeaguegamingLeagueInfo)!.DraftDate = DateTimeOffset.Parse("2022-06-03 20:00:00 -04:00");
     }
@@ -207,6 +208,21 @@ public class LeaguegamingApiTests
         {
             Assert.True(_league.Id == rosterTransaction.LeagueId, $"expected LeagueId to be {_league.Id} but got {rosterTransaction.LeagueId}");
             Assert.True(rosterTransaction.PlayerNames.Count() > 0, $"expected at least one PlayerName got {rosterTransaction.PlayerNames.Count()}");
+        }
+    }
+
+    [Fact]
+    public async Task GetDailyStarsAsync_ReturnsNotNull()
+    {
+        var dailyStars = await _api.GetDailyStarsAsync(_league);
+        Assert.True(dailyStars != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+
+        foreach (var dailyStar in dailyStars!)
+        {
+            Assert.True(_league.Id == dailyStar.LeagueId, $"expected LeagueId to be {_league.Id} but got {dailyStar.LeagueId}");
+            Assert.True(int.TryParse(dailyStar.TeamId, out var t), $"expected TeamId to be numeric but got {dailyStar.TeamId}");
+            Assert.True(!string.IsNullOrWhiteSpace(dailyStar.PlayerName), $"expected PlayerName to be non-empty but got {dailyStar.PlayerName}");
+            Assert.True(dailyStar.Rank > 0, $"expected Rank to be greater than 0 but got {dailyStar.Rank}");
         }
     }
 }

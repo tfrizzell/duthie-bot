@@ -99,16 +99,12 @@ public class BidBackgroundService : ScheduledBackgroundService
                                     {
                                         GuildId = watcher.Key.GuildId,
                                         ChannelId = watcher.Key.ChannelId,
-                                        Message = "",
-                                        Embed = new GuildMessageEmbed
-                                        {
-                                            Color = Color.Orange,
-                                            Title = $"{league.ShortName} Winning Bid",
-                                            Thumbnail = league.LogoUrl,
-                                            Content = message,
-                                            Timestamp = timestamp,
-                                            Url = url,
-                                        }
+                                        Color = Color.Orange,
+                                        Title = $"{league.ShortName} Winning Bid",
+                                        Thumbnail = league.LogoUrl,
+                                        Content = message,
+                                        Url = url,
+                                        Timestamp = timestamp,
                                     }));
                             }
                         }

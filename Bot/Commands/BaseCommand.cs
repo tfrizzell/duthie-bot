@@ -116,6 +116,18 @@ public abstract class BaseCommand : ICommand
     protected async Task SendErrorAsync(SocketSlashCommand command) =>
         await command.RespondAsync($"Uh oh! It looks like something's gone wrong. Please report this issue to the developers.", ephemeral: true);
 
+    protected async Task SendResponseAsync(SocketSlashCommand command, Func<Task> sendResponse, string loadingMessage = "I'll have an update for you shortly.")
+    {
+        var timer = new Timer(async state =>
+        {
+            if (!command.HasResponded)
+                await command.RespondAsync($"I'm sorry, this seems to be taking longer than expected. {loadingMessage}".Trim(), ephemeral: true);
+        }, null, Math.Max(0, 2000 - (int)(DateTimeOffset.UtcNow - command.CreatedAt).TotalMilliseconds), System.Threading.Timeout.Infinite);
+
+        await sendResponse();
+        await timer.DisposeAsync();
+    }
+
     protected async Task SendUnrecognizedAsync(SocketSlashCommand command) =>
         await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't recognize that command.", ephemeral: true);
 

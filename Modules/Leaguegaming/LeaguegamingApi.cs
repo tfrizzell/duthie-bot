@@ -1,18 +1,21 @@
 using System.Text.RegularExpressions;
 using System.Web;
+using System.Xml;
 using Duthie.Types.Modules.Api;
 using Duthie.Types.Modules.Data;
+using Microsoft.Extensions.Caching.Memory;
 using League = Duthie.Types.Leagues.League;
 
 namespace Duthie.Modules.Leaguegaming;
 
 public class LeaguegamingApi
-    : IBidApi, IContractApi, IDraftApi, IGameApi, ILeagueApi, IRosterApi, ITeamApi, ITradeApi, IWaiverApi
+    : IBidApi, IContractApi, IDailyStarApi, IDraftApi, IGameApi, ILeagueApi, IRosterApi, ITeamApi, ITradeApi, IWaiverApi
 {
     private const string Domain = "www.leaguegaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
     private readonly HttpClient _httpClient = new HttpClient();
+    private readonly IMemoryCache _memoryCache = new MemoryCache(new MemoryCacheOptions());
 
     public IReadOnlySet<Guid> Supports
     {
@@ -133,6 +136,166 @@ public class LeaguegamingApi
         }
     }
 
+    public async Task<IEnumerable<DailyStar>?> GetDailyStarsAsync(League league)
+    {
+        try
+        {
+            if (!IsSupported(league))
+                return null;
+
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+            var date = DateTimeOffset.UtcNow.AddDays(-1).ToOffset(Timezone.BaseUtcOffset).Date;
+            var url = await GetDailyStarsUrl(league, date);
+
+            if (string.IsNullOrWhiteSpace(url))
+                return new List<DailyStar>();
+
+            var html = await _httpClient.GetStringAsync(url);
+            string type = "";
+
+            return Regex.Matches(html,
+                @$"(?:{string.Join("|",
+                    @"<div[^>]*\bd3_title\b[^>]*>(.*?)</div>",
+                    @"<tr[^>]*>\s*<td[^>]*>\s*((?:<img[^>]*/star\.\w{3,4}[^>]*>)+|\d+\.)\s*</td>\s*(?:<td[^>]*t_threestars[^>]*>\s*<div[^>]*>\s*<img [^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<img[^>]*>\s*</div>\s*</td>\s*<td[^>]*>(.*?)\s*<br[^>]*>\s*<span[^>]*>\((.*?)\)</span>\s*</td>|<td[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*(.*?)\s*\((.*?)\)</td>)\s*<td[^>]*>\s*<a[^>]*>.*?</a>\s*</td>\s*((?:<td[^>]*>.*?</td>)+)\s*</tr>"
+                )})",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(m =>
+            {
+                if (!string.IsNullOrWhiteSpace(m.Groups[1].Value))
+                {
+                    type = m.Groups[1].Value.Trim();
+                    return null;
+                }
+
+                if (string.IsNullOrWhiteSpace(type))
+                    return null;
+
+                var data = Regex.Matches(m.Groups[9].Value,
+                    @"<td[^>]*>(.*?)</td>");
+
+                return type.Trim().ToUpper() switch
+                {
+                    "FORWARDS" => new DailyStarForward
+                    {
+                        LeagueId = league.Id,
+                        TeamId = (string.IsNullOrWhiteSpace(m.Groups[3].Value) ? m.Groups[6].Value : m.Groups[3].Value).Trim(),
+                        PlayerName = Regex.Replace((string.IsNullOrWhiteSpace(m.Groups[4].Value) ? m.Groups[7].Value : m.Groups[4].Value), @"<(\S+)[^>]*>.*?</\1>", "").Trim(),
+                        Rank = int.TryParse(m.Groups[2].Value.TrimEnd('.'), out var rank) ? rank : Regex.Matches(m.Groups[2].Value, @"star\.\w{3,4}").Count(),
+                        Timestamp = date,
+                        Goals = int.Parse(data[1].Groups[1].Value.Trim()),
+                        Assists = int.Parse(data[2].Groups[1].Value.Trim()),
+                        PlusMinus = int.Parse(data[3].Groups[1].Value.Trim()),
+                    },
+
+                    "DEFENDERS" => new DailyStarDefense
+                    {
+                        LeagueId = league.Id,
+                        TeamId = (string.IsNullOrWhiteSpace(m.Groups[3].Value) ? m.Groups[6].Value : m.Groups[3].Value).Trim(),
+                        PlayerName = Regex.Replace((string.IsNullOrWhiteSpace(m.Groups[4].Value) ? m.Groups[7].Value : m.Groups[4].Value), @"<[^>]+>", "").Trim(),
+                        Rank = int.TryParse(m.Groups[2].Value.TrimEnd('.'), out var rank) ? rank : Regex.Matches(m.Groups[2].Value, @"star\.\w{3,4}").Count(),
+                        Timestamp = date,
+                        Goals = int.Parse(data[1].Groups[1].Value.Trim()),
+                        Assists = int.Parse(data[2].Groups[1].Value.Trim()),
+                        PlusMinus = int.Parse(data[3].Groups[1].Value.Trim()),
+                    },
+
+                    "GOALIES" => new DailyStarGoalie
+                    {
+                        LeagueId = league.Id,
+                        TeamId = (string.IsNullOrWhiteSpace(m.Groups[3].Value) ? m.Groups[6].Value : m.Groups[3].Value).Trim(),
+                        PlayerName = Regex.Replace((string.IsNullOrWhiteSpace(m.Groups[4].Value) ? m.Groups[7].Value : m.Groups[4].Value), @"<[^>]+>", "").Trim(),
+                        Rank = int.TryParse(m.Groups[2].Value.TrimEnd('.'), out var rank) ? rank : Regex.Matches(m.Groups[2].Value, @"star\.\w{3,4}").Count(),
+                        Timestamp = date,
+                        GoalsAgainstAvg = decimal.Parse(data[1].Groups[1].Value.Trim()),
+                        Saves = int.Parse(data[2].Groups[1].Value.Trim()),
+                        ShotsAgainst = int.Parse(data[3].Groups[1].Value.Trim()),
+                    },
+
+                    _ => (DailyStar?)null,
+                };
+            })
+            .Where(s => s != null)
+            .Cast<DailyStar>();
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching daily stars for league \"{league.Name}\" [{league.Id}]", e);
+        }
+    }
+
+    private async Task<string?> GetDailyStarsUrl(League league, DateTimeOffset? timestamp = null)
+    {
+        var date = DateOnly.FromDateTime((timestamp ?? DateTimeOffset.UtcNow.AddDays(-1).ToOffset(Timezone.BaseUtcOffset)).Date);
+
+        return await _memoryCache.GetOrCreateAsync<string?>(new { type = GetType(), method = "GetAllAsync", league, date }, async entry =>
+        {
+            var titleText = $"Daily 3 Stars For {string.Format(date.ToString("dddd MMMM d{0}, yyyy"), GetSuffix(date.Day))}";
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+
+            var xml = await _httpClient.GetStringAsync(GetUrl(league,
+                path: $"forums/forum.{leagueInfo.ForumId}/index.rss")).ConfigureAwait(false);
+
+            var doc = new XmlDocument();
+            doc.LoadXml(xml);
+
+            string? url = null;
+
+            foreach (XmlNode item in doc.GetElementsByTagName("item"))
+            {
+                url = null;
+
+                foreach (XmlNode node in item.ChildNodes)
+                {
+                    if (node.Name == "title" && node.InnerText.EndsWith(titleText, StringComparison.OrdinalIgnoreCase))
+                    {
+                        url = string.Empty;
+                        break;
+                    }
+                }
+
+                if (url == null)
+                    continue;
+
+                foreach (XmlNode node in item.ChildNodes)
+                {
+                    if (node.Name == "link")
+                    {
+                        url = node.InnerText;
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(url))
+                    break;
+            }
+
+            entry.SetOptions(new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = url == null ? TimeSpan.FromSeconds(15) : TimeSpan.FromMinutes(15)
+            });
+
+            return url;
+        }).ConfigureAwait(false);
+    }
+
+    private static string GetSuffix(int day)
+    {
+        var num = day.ToString();
+        day %= 100;
+
+        if ((day >= 11) && (day <= 13))
+            return "th";
+
+        switch (day % 10)
+        {
+            case 1: return "st";
+            case 2: return "nd";
+            case 3: return "rd";
+            default: return "th";
+        }
+    }
+
     public async Task<IEnumerable<DraftPick>?> GetDraftPicksAsync(League league)
     {
         try
@@ -215,7 +378,7 @@ public class LeaguegamingApi
             return Regex.Matches(html,
                 @$"(?:{string.Join("|",
                     @"<h4[^>]*sh4[^>]*>(.*?)</h4>",
-                    @"<span[^>]*sweekid[^>]*>Week\s*(\d+)</span>\s*(?:<span[^>]*sgamenumber[^>]*>Game\s*#\s*(\d+)</span>)?\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<a[^>]*&gameid=(\d+)[^>]*>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*<span[^>]*sscore[^>]*>(vs|(\d+)\D+(\d+))</span>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*</a>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>")})",
+                    @"<span[^>]*sweekid[^>]*>Week\s*(\d+)</span>\s*(?:<span[^>]*sgamenumber[^>]*>Game\s*#\s*(\d+)</span>)?\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<a[^>]*&(?:amp;)?gameid=(\d+)[^>]*>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*<span[^>]*sscore[^>]*>(vs|(\d+)\D+(\d+))</span>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*</a>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>")})",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(m =>
@@ -275,7 +438,7 @@ public class LeaguegamingApi
                 return null;
 
             var season = Regex.Match(html,
-                @$"<a[^>]*leagueid={leagueInfo.LeagueId}&seasonid=(\d+)[^>]*>Roster</a>",
+                @$"<a[^>]*leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid=(\d+)[^>]*>Roster</a>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             html = await _httpClient.GetStringAsync(GetUrl(league,
@@ -288,7 +451,7 @@ public class LeaguegamingApi
                 }));
 
             var draft = Regex.Matches(html,
-                @$"<td[^>]*>\s*<a[^>]*league_draft&leagueid={leagueInfo.LeagueId}&lgdraftid=(\d+)[^>]*>.*?</a>\s*</td>\s*<td[^>]*>(.*?)</td>",
+                @$"<td[^>]*>\s*<a[^>]*league_draft&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?lgdraftid=(\d+)[^>]*>.*?</a>\s*</td>\s*<td[^>]*>(.*?)</td>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
                 .Cast<Match>()
                 .LastOrDefault();
@@ -370,7 +533,7 @@ public class LeaguegamingApi
                         @"<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/arrow1\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*The\s*<img[^>]*/team\2\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have sent\s*<span[^>]*>(.*?)</span>\s*to the\s*<img[^>]*/team\1\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
                         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
-                    if (callUp.Success == true && teamIds?.Contains(callUp.Groups[1].Value) == true)
+                    if (callUp.Success == true && teamIds.Contains(callUp.Groups[1].Value) == true)
                     {
                         return new RosterTransaction
                         {
@@ -460,34 +623,24 @@ public class LeaguegamingApi
         }
     }
 
-    private async Task<IEnumerable<string>?> GetTeamIdsAsync(League league)
+    private async Task<IEnumerable<string>> GetTeamIdsAsync(League league)
     {
-        try
-        {
-            if (!IsSupported(league))
-                return null;
+        var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
 
-            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+        var html = await _httpClient.GetStringAsync(GetUrl(league,
+            parameters: new Dictionary<string, object?>
+            {
+                ["action"] = "league",
+                ["page"] = "standing",
+                ["leagueid"] = leagueInfo.LeagueId,
+                ["seasonid"] = leagueInfo.SeasonId,
+            }));
 
-            var html = await _httpClient.GetStringAsync(GetUrl(league,
-                parameters: new Dictionary<string, object?>
-                {
-                    ["action"] = "league",
-                    ["page"] = "standing",
-                    ["leagueid"] = leagueInfo.LeagueId,
-                    ["seasonid"] = leagueInfo.SeasonId,
-                }));
-
-            return Regex.Matches(html,
-                @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&teamid=(\d+)&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
-                RegexOptions.IgnoreCase | RegexOptions.Singleline)
-            .Cast<Match>()
-            .Select(m => m.Groups[1].Value);
-        }
-        catch (Exception e)
-        {
-            throw new ApiException($"An unexpected error occurred while fetching team ids for league \"{league.Name}\" [{league.Id}]", e);
-        }
+        return Regex.Matches(html,
+            @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+        .Cast<Match>()
+        .Select(m => m.Groups[1].Value);
     }
 
     public async Task<IEnumerable<Team>?> GetTeamsAsync(League league)
@@ -509,7 +662,7 @@ public class LeaguegamingApi
                 }));
 
             var nameMatches = Regex.Matches(html,
-                @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&teamid=(\d+)&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
+                @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             if (nameMatches.Count() == 0)
@@ -530,7 +683,7 @@ public class LeaguegamingApi
                     StringComparer.OrdinalIgnoreCase);
 
             var shortNameMatches = Regex.Matches(html,
-                @$"<td[^>]*>\s*<img[^>]*/team\d+\.\w{{3,4}}[^>]*>\s*\d+\)\s*.*?\*?<a[^>]*page=team_page&teamid=(\d+)&leagueid=(?:{leagueInfo.LeagueId})?&seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>\s*</td>",
+                @$"<td[^>]*>\s*<img[^>]*/team\d+\.\w{{3,4}}[^>]*>\s*\d+\)\s*.*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>\s*</td>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>();
 
@@ -677,6 +830,15 @@ public class LeaguegamingApi
 
         var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
         return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={contract.TeamId}&typeid={(int)LeaguegamingNewsType.Contracts}";
+    }
+
+    public string? GetDailyStarsUrl(League league, DailyStar dailyStar)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+        return GetDailyStarsUrl(league, dailyStar.Timestamp).Result ?? $"https://{Domain}/forums/index.php?forums/forum.{leagueInfo.ForumId}/";
     }
 
     public string? GetGameUrl(League league, Game game)

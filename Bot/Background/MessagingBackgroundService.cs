@@ -47,7 +47,7 @@ public class MessagingBackgroundService : ScheduledBackgroundService
         try
         {
             var messages = (await _guildMessageService.GetUnsentAsync())
-                .OrderBy(m => m.Embed?.Timestamp ?? m.CreatedAt)
+                .OrderBy(m => m.Timestamp ?? m.CreatedAt)
                     .ThenBy(m => m.GuildId);
 
             if (messages.Count() > 0)
@@ -76,28 +76,21 @@ public class MessagingBackgroundService : ScheduledBackgroundService
                     {
                         try
                         {
-                            if (message.Embed != null)
-                            {
-                                var builder = new EmbedBuilder()
-                                    .WithColor((Color?)message.Embed.Color ?? Color.Default)
-                                    .WithTitle(message.Embed.Title)
-                                    .WithThumbnailUrl(message.Embed.Thumbnail)
-                                    .WithDescription(message.Embed.Content)
-                                    .WithFooter(message.Embed.Footer)
-                                    .WithUrl(message.Embed.Url);
+                            var builder = new EmbedBuilder()
+                                .WithColor((Color?)message.Color ?? Color.Default)
+                                .WithTitle(message.Title)
+                                .WithThumbnailUrl(message.Thumbnail)
+                                .WithDescription(message.Content)
+                                .WithFooter(message.Footer)
+                                .WithUrl(message.Url);
 
-                                if (message.Embed.ShowAuthor)
-                                    builder.WithAuthor(_client.CurrentUser);
+                            if (message.Timestamp != null)
+                                builder.WithTimestamp(message.Timestamp.GetValueOrDefault());
+                            else
+                                builder.WithCurrentTimestamp();
 
-                                if (message.Embed.Timestamp != null)
-                                    builder.WithTimestamp(message.Embed.Timestamp.GetValueOrDefault());
-                                else
-                                    builder.WithCurrentTimestamp();
-
-                                embed = builder.Build();
-                            }
-
-                            await channel.SendMessageAsync(message.Message, embed: embed);
+                            embed = builder.Build();
+                            await channel.SendMessageAsync("", embed: embed);
 
                             message.ChannelId = channel.Id;
                             message.SentAt = DateTimeOffset.UtcNow;

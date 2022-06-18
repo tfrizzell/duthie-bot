@@ -59,7 +59,7 @@ public class MyVirtualGamingApi
             .Cast<Match>()
             .Select(m =>
             {
-                var player = Regex.Match(m.Groups[2].Value, @"<a[^>]*player&id=(\d+)[^>]*>(.*?)</a>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+                var player = Regex.Match(m.Groups[2].Value, @"<a[^>]*player&(?:amp;)?id=(\d+)[^>]*>(.*?)</a>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                 return new Bid
                 {
@@ -160,7 +160,7 @@ public class MyVirtualGamingApi
                 var roundPicks = 1;
 
                 return Regex.Matches(d.Groups[2].Value,
-                    @"<td[^>]*>(\d+)</td>\s*<td[^>]*>.*?</td>\s*<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>\s*<a[^>]*player&id=(\d+)[^>]*>(.*?)</a>\s*</td>",
+                    @"<td[^>]*>(\d+)</td>\s*<td[^>]*>.*?</td>\s*<td[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>\s*<a[^>]*player&(?:amp;)?id=(\d+)[^>]*>(.*?)</a>\s*</td>",
                     RegexOptions.IgnoreCase | RegexOptions.Singleline)
                 .Cast<Match>()
                 .Select(m => new DraftPick
@@ -184,43 +184,36 @@ public class MyVirtualGamingApi
 
     private async Task<IDictionary<string, string>> GetTeamLookupAsync(League league, bool includeAffiliates = false)
     {
-        try
-        {
-            var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+        var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
 
-            var html = await _httpClient.GetStringAsync(GetUrl(league,
-                path: "standings",
-                parameters: new Dictionary<string, object?>
-                {
-                    ["filter_schedule"] = leagueInfo.ScheduleId > 0 ? leagueInfo.ScheduleId : null,
-                }));
+        var html = await _httpClient.GetStringAsync(GetUrl(league,
+            path: "standings",
+            parameters: new Dictionary<string, object?>
+            {
+                ["filter_schedule"] = leagueInfo.ScheduleId > 0 ? leagueInfo.ScheduleId : null,
+            }));
 
-            if (includeAffiliates && leagueInfo.AffiliatedLeagueIds.Count() > 0)
-                html += string.Join("", await Task.WhenAll(
-                    leagueInfo.AffiliatedLeagueIds.Select(leagueId => _httpClient.GetStringAsync($"https://{Domain}/vghlleagues/{leagueId}/standings"))));
+        if (includeAffiliates && leagueInfo.AffiliatedLeagueIds.Count() > 0)
+            html += string.Join("", await Task.WhenAll(
+                leagueInfo.AffiliatedLeagueIds.Select(leagueId => _httpClient.GetStringAsync($"https://{Domain}/vghlleagues/{leagueId}/standings"))));
 
-            var lookup = Regex.Matches(html,
-                @"<a[^>]*/rosters\?id=(\d+)[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<\/a>",
-                RegexOptions.IgnoreCase | RegexOptions.Singleline)
-            .Cast<Match>()
-            .DistinctBy(m => m.Groups[2].Value.ToUpper())
-            .ToDictionary(
-                m => m.Groups[2].Value.ToUpper(),
-                m => m.Groups[1].Value,
-                StringComparer.OrdinalIgnoreCase);
+        var lookup = Regex.Matches(html,
+            @"<a[^>]*/rosters\?id=(\d+)[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<\/a>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+        .Cast<Match>()
+        .DistinctBy(m => m.Groups[2].Value.ToUpper())
+        .ToDictionary(
+            m => m.Groups[2].Value.ToUpper(),
+            m => m.Groups[1].Value,
+            StringComparer.OrdinalIgnoreCase);
 
-            if (lookup.ContainsKey("TAP") && !lookup.ContainsKey("TAPP"))
-                lookup.Add("TAPP", lookup["TAP"]);
+        if (lookup.ContainsKey("TAP") && !lookup.ContainsKey("TAPP"))
+            lookup.Add("TAPP", lookup["TAP"]);
 
-            if (!lookup.ContainsKey("TAP") && lookup.ContainsKey("TAPP"))
-                lookup.Add("TAP", lookup["TAPP"]);
+        if (!lookup.ContainsKey("TAP") && lookup.ContainsKey("TAPP"))
+            lookup.Add("TAP", lookup["TAPP"]);
 
-            return lookup;
-        }
-        catch (Exception e)
-        {
-            throw new ApiException($"An unexpected error occurred while fetching team lookup for league \"{league.Name}\" [{league.Id}]", e);
-        }
+        return lookup;
     }
 
     public async Task<IEnumerable<Game>?> GetGamesAsync(League league)
@@ -694,7 +687,7 @@ public class MyVirtualGamingApi
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-        return $"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.Id}";
+        return $"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&(?:amp;)?layout=game&(?:amp;)?id={game.Id}";
     }
 
     public string? GetRosterTransactionUrl(League league, RosterTransaction rosterTransaction)

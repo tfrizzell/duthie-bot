@@ -68,7 +68,7 @@ public class GameBackgroundService : ScheduledBackgroundService
 
                 var data = (await api.GetGamesAsync(league))?
                     .OrderBy(g => g.Timestamp)
-                        .ThenBy(c => c.Id)
+                        .ThenBy(g => g.Id)
                         .ThenBy(g => g.GetHash());
 
                 if (data == null)
@@ -143,20 +143,16 @@ public class GameBackgroundService : ScheduledBackgroundService
                                 {
                                     GuildId = watcher.Key.GuildId,
                                     ChannelId = watcher.Key.ChannelId,
-                                    Message = "",
-                                    Embed = new GuildMessageEmbed
-                                    {
-                                        Color = usScore > themScore
-                                            ? Color.DarkGreen
-                                            : (usScore < themScore
-                                                ? Color.DarkRed
-                                                : Colors.Black),
-                                        Title = $"{league.ShortName} Game Result",
-                                        Thumbnail = league.LogoUrl,
-                                        Content = string.IsNullOrWhiteSpace(url) ? message : $"{message}\n\n[Box Score]({url})",
-                                        Timestamp = timestamp,
-                                        Url = url,
-                                    }
+                                    Color = usScore > themScore
+                                        ? Color.DarkGreen
+                                        : (usScore < themScore
+                                            ? Color.DarkRed
+                                            : Colors.Black),
+                                    Title = $"{league.ShortName} Game Result",
+                                    Thumbnail = league.LogoUrl,
+                                    Content = string.IsNullOrWhiteSpace(url) ? message : $"{message}\n\n[Box Score]({url})",
+                                    Url = url,
+                                    Timestamp = timestamp,
                                 });
                             }
                         }

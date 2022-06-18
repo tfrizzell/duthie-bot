@@ -1,5 +1,8 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
+using Discord;
 using Duthie.Bot.Utils;
+using Duthie.Bot.Extensions;
 using Duthie.Services.Api;
 using Duthie.Services.Guilds;
 using Duthie.Services.Leagues;
@@ -10,11 +13,6 @@ using Duthie.Types.Guilds;
 using Duthie.Types.Leagues;
 using Duthie.Types.Watchers;
 using Microsoft.Extensions.Logging;
-using Duthie.Bot.Extensions;
-using Discord;
-using Duthie.Modules.MyVirtualGaming;
-using League = Duthie.Types.Leagues.League;
-using System.Text.RegularExpressions;
 
 namespace Duthie.Bot.Background;
 
@@ -66,13 +64,13 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                     return;
 
                 var data = (await api.GetRosterTransactionsAsync(league))?
-                    .OrderBy(c => c.Timestamp)
-                        .ThenBy(c => c.GetHash())
+                    .OrderBy(t => t.Timestamp)
+                        .ThenBy(t => t.GetHash())
                     .ToList();
 
                 if (data?.Count() > 0 && league.State.LastRosterTransaction != null)
                 {
-                    var LastRosterTransactionIndex = data.FindIndex(c => c.GetHash() == league.State.LastRosterTransaction);
+                    var LastRosterTransactionIndex = data.FindIndex(t => t.GetHash() == league.State.LastRosterTransaction);
 
                     if (LastRosterTransactionIndex >= 0)
                         data.RemoveRange(0, LastRosterTransactionIndex + 1);
@@ -132,16 +130,12 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                                             {
                                                 GuildId = watcher.Key.GuildId,
                                                 ChannelId = watcher.Key.ChannelId,
-                                                Message = "",
-                                                Embed = new GuildMessageEmbed
-                                                {
-                                                    Color = Color.Purple,
-                                                    Title = $"{league.ShortName} Roster Transaction",
-                                                    Thumbnail = league.LogoUrl,
-                                                    Content = message,
-                                                    Timestamp = timestamp,
-                                                    Url = url,
-                                                }
+                                                Color = Color.Purple,
+                                                Title = $"{league.ShortName} Roster Transaction",
+                                                Thumbnail = league.LogoUrl,
+                                                Content = message,
+                                                Url = url,
+                                                Timestamp = timestamp,
                                             }));
                                     }
                                 }

@@ -140,16 +140,12 @@ public class TradeBackgroundService : ScheduledBackgroundService
                                     {
                                         GuildId = watcher.Key.GuildId,
                                         ChannelId = watcher.Key.ChannelId,
-                                        Message = "",
-                                        Embed = new GuildMessageEmbed
-                                        {
-                                            Color = Color.Blue,
-                                            Title = $"{league.ShortName} Trade",
-                                            Thumbnail = league.LogoUrl,
-                                            Content = message,
-                                            Timestamp = timestamp,
-                                            Url = url,
-                                        },
+                                        Color = Color.Blue,
+                                        Title = $"{league.ShortName} Trade",
+                                        Thumbnail = league.LogoUrl,
+                                        Content = message,
+                                        Url = url,
+                                        Timestamp = timestamp,
                                     };
                                 }));
                             }

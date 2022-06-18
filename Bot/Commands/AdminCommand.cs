@@ -111,13 +111,16 @@ public class AdminCommand : BaseCommand
         var user = await GetUserAsync(command);
         var targetUser = await GetTargetUserAsync(cmd);
 
-        if ((await _guildAdminService.SaveAsync(guild.Id, targetUser.Id)) > 0)
+        await SendResponseAsync(command, async () =>
         {
-            _logger.LogDebug($"User {user} added administrator {targetUser} to guild \"{guild.Name}\" [{guild.Id}]");
-            await command.RespondAsync($"Okay! I've added {targetUser} as a {_appInfo.Name} administrator for your server.", ephemeral: true);
-        }
-        else
-            await command.RespondAsync($"{targetUser} is already a {_appInfo.Name} administrator for your server.", ephemeral: true);
+            if ((await _guildAdminService.SaveAsync(guild.Id, targetUser.Id)) > 0)
+            {
+                _logger.LogDebug($"User {user} added administrator {targetUser} to guild \"{guild.Name}\" [{guild.Id}]");
+                await command.RespondAsync($"Okay! I've added {targetUser} as a {_appInfo.Name} administrator for your server.", ephemeral: true);
+            }
+            else
+                await command.RespondAsync($"{targetUser} is already a {_appInfo.Name} administrator for your server.", ephemeral: true);
+        });
     }
 
     public async Task ListAdminsAsync(SocketSlashCommand command)
@@ -125,48 +128,51 @@ public class AdminCommand : BaseCommand
         var guild = await GetGuildAsync(command);
         var user = await GetUserAsync(command);
 
-        var admins = new Dictionary<ulong, string[]>()
+        await SendResponseAsync(command, async () =>
         {
-            [guild.Owner.Id] = new string[] {
-                $"{guild.Owner.Username}@{guild.Owner.Discriminator}",
-                ROLE_OWNER
-            },
-        };
-
-        foreach (var member in guild.Users.Where(m => m.GuildPermissions.Administrator && m.Id != guild.OwnerId).OrderBy(m => m.Mention))
-        {
-            if (!admins.ContainsKey(member.Id))
-                admins.Add(member.Id, new string[] {
-                    $"{member.Username}@{member.Discriminator}",
-                    ROLE_ADMINISTRATOR
-                });
-        }
-
-        foreach (var memberId in await _guildAdminService.GetAllAsync(guild.Id))
-        {
-            if (!admins.ContainsKey(memberId))
+            var admins = new Dictionary<ulong, string[]>()
             {
-                var member = guild.Users.FirstOrDefault(m => m.Id == memberId);
+                [guild.Owner.Id] = new string[] {
+                    $"{guild.Owner.Username}@{guild.Owner.Discriminator}",
+                    ROLE_OWNER
+                },
+            };
 
-                if (member != null)
+            foreach (var member in guild.Users.Where(m => m.GuildPermissions.Administrator && m.Id != guild.OwnerId).OrderBy(m => m.Mention))
+            {
+                if (!admins.ContainsKey(member.Id))
                     admins.Add(member.Id, new string[] {
                         $"{member.Username}@{member.Discriminator}",
-                        $"{_appInfo.Name} Administrator"
+                        ROLE_ADMINISTRATOR
                     });
             }
-        }
 
-        await command.RespondAsync(ListUtils.CreateTable(
-            headers: new string[] {
-                "User",
-                "Access Level"
-            },
-            data: admins.Values
-                .OrderBy(a => ROLE_OWNER == a[1])
-                    .ThenBy(a => ROLE_ADMINISTRATOR == a[1])
-                    .ThenBy(a => a[0])), ephemeral: true);
+            foreach (var memberId in await _guildAdminService.GetAllAsync(guild.Id))
+            {
+                if (!admins.ContainsKey(memberId))
+                {
+                    var member = guild.Users.FirstOrDefault(m => m.Id == memberId);
 
-        _logger.LogTrace($"User {user} viewed administrator list for guild \"{guild.Name}\" [{guild.Id}]");
+                    if (member != null)
+                        admins.Add(member.Id, new string[] {
+                            $"{member.Username}@{member.Discriminator}",
+                            $"{_appInfo.Name} Administrator"
+                        });
+                }
+            }
+
+            await command.RespondAsync(ListUtils.CreateTable(
+                headers: new string[] {
+                    "User",
+                    "Access Level"
+                },
+                data: admins.Values
+                    .OrderBy(a => ROLE_OWNER == a[1])
+                        .ThenBy(a => ROLE_ADMINISTRATOR == a[1])
+                        .ThenBy(a => a[0])), ephemeral: true);
+
+            _logger.LogTrace($"User {user} viewed administrator list for guild \"{guild.Name}\" [{guild.Id}]");
+        }, "I'll have the admin list for you shortly.");
     }
 
     private async Task RemoveAllAdminsAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -178,15 +184,18 @@ public class AdminCommand : BaseCommand
         var user = await GetUserAsync(command);
         var targetUser = await GetTargetUserAsync(cmd);
 
-        var count = await _guildAdminService.DeleteAsync(guild.Id, (await _guildAdminService.GetAllAsync(guild.Id)).ToArray());
-
-        if (count > 0)
+        await SendResponseAsync(command, async () =>
         {
-            _logger.LogDebug($"User {user} removed {MessageUtils.Pluralize(count, "administrator")} from guild \"{guild.Name}\" [{guild.Id}]");
-            await command.RespondAsync($"Okay! I've removed {MessageUtils.Pluralize(count, $"{_appInfo.Name} administrator")} for your server.", ephemeral: true);
-        }
-        else
-            await command.RespondAsync($"Okay! There were no {_appInfo.Name} administrators to remove.", ephemeral: true);
+            var count = await _guildAdminService.DeleteAsync(guild.Id, (await _guildAdminService.GetAllAsync(guild.Id)).ToArray());
+
+            if (count > 0)
+            {
+                _logger.LogDebug($"User {user} removed {MessageUtils.Pluralize(count, "administrator")} from guild \"{guild.Name}\" [{guild.Id}]");
+                await command.RespondAsync($"Okay! I've removed {MessageUtils.Pluralize(count, $"{_appInfo.Name} administrator")} for your server.", ephemeral: true);
+            }
+            else
+                await command.RespondAsync($"Okay! There were no {_appInfo.Name} administrators to remove.", ephemeral: true);
+        });
     }
 
     private async Task RemoveAdminAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -198,13 +207,16 @@ public class AdminCommand : BaseCommand
         var user = await GetUserAsync(command);
         var targetUser = await GetTargetUserAsync(cmd);
 
-        if ((await _guildAdminService.DeleteAsync(guild.Id, targetUser.Id)) > 0)
+        await SendResponseAsync(command, async () =>
         {
-            _logger.LogDebug($"User {user} removed administrator {targetUser} from guild \"{guild.Name}\" [{guild.Id}]");
-            await command.RespondAsync($"Okay! I've removed {targetUser} as a {_appInfo.Name} administrator for your server.", ephemeral: true);
-        }
-        else
-            await command.RespondAsync($"{targetUser} is not a {_appInfo.Name} administrator for your server.", ephemeral: true);
+            if ((await _guildAdminService.DeleteAsync(guild.Id, targetUser.Id)) > 0)
+            {
+                _logger.LogDebug($"User {user} removed administrator {targetUser} from guild \"{guild.Name}\" [{guild.Id}]");
+                await command.RespondAsync($"Okay! I've removed {targetUser} as a {_appInfo.Name} administrator for your server.", ephemeral: true);
+            }
+            else
+                await command.RespondAsync($"{targetUser} is not a {_appInfo.Name} administrator for your server.", ephemeral: true);
+        });
     }
 
     private async Task<bool> CheckPrivileges(SocketSlashCommand command)

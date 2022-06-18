@@ -260,31 +260,34 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var channel = await GetChannelAsync(cmd);
 
-        var watchers = leagues.Where(l => site == null || l.SiteId == site.Id)
-            .Select(league =>
-                teams.Where(t => league.LeagueTeams.Any(lt => lt.TeamId == t.Id))
-                    .Select(team =>
-                        types.Select(type =>
-                            new Watcher
-                            {
-                                GuildId = guild.Id,
-                                LeagueId = league.Id,
-                                TeamId = team.Id,
-                                Type = type,
-                                ChannelId = channel?.Id,
-                            }))
-                    .SelectMany(w => w))
-            .SelectMany(w => w);
-
-        var count = await _watcherService.SaveAsync(watchers.ToArray());
-
-        if (count > 0)
+        await SendResponseAsync(command, async () =>
         {
-            _logger.LogDebug($"User {user} added {MessageUtils.Pluralize(count, "watcher")} to guild \"{guild.Name}\" [{guild.Id}]");
-            await command.RespondAsync($"Okay! I've added {MessageUtils.Pluralize(count, "watcher")} to your server.", ephemeral: true);
-        }
-        else
-            await command.RespondAsync($"Okay! There were no new watchers to add.", ephemeral: true);
+            var watchers = leagues.Where(l => site == null || l.SiteId == site.Id)
+                .Select(league =>
+                    teams.Where(t => league.LeagueTeams.Any(lt => lt.TeamId == t.Id))
+                        .Select(team =>
+                            types.Select(type =>
+                                new Watcher
+                                {
+                                    GuildId = guild.Id,
+                                    LeagueId = league.Id,
+                                    TeamId = team.Id,
+                                    Type = type,
+                                    ChannelId = channel?.Id,
+                                }))
+                        .SelectMany(w => w))
+                .SelectMany(w => w);
+
+            var count = await _watcherService.SaveAsync(watchers.ToArray());
+
+            if (count > 0)
+            {
+                _logger.LogDebug($"User {user} added {MessageUtils.Pluralize(count, "watcher")} to guild \"{guild.Name}\" [{guild.Id}]");
+                await command.RespondAsync($"Okay! I've added {MessageUtils.Pluralize(count, "watcher")} to your server.", ephemeral: true);
+            }
+            else
+                await command.RespondAsync($"Okay! There were no new watchers to add.", ephemeral: true);
+        });
     }
 
     public async Task ListWatchersAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -326,35 +329,38 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var channel = await GetChannelAsync(cmd);
 
-        var watchers = await _watcherService.FindAsync(guild.Id,
-            sites: site == null ? null : new Guid[] { site.Id },
-            leagues: leagues == null ? null : leagues.Select(l => l.Id),
-            teams: teams == null ? null : teams.Select(t => t.Id),
-            types: types,
-            channels: channel == null ? null : new ulong?[] { channel.Id });
-
-        if (watchers.Count() > 0)
+        await SendResponseAsync(command, async () =>
         {
-            await command.RespondAsync(ListUtils.CreateTable(
-                headers: new string[] {
-                    "League",
-                    "Team",
-                    "Type",
-                    "Channel",
-                    "Site"
-                },
-                data: watchers.Select(w => new string[] {
-                    w.League.Name,
-                    w.Team.Name,
-                    EnumUtils.GetName(w.Type),
-                    (guild.Channels.FirstOrDefault(c => c.Id == w.ChannelId) ?? guild.DefaultChannel).Name,
-                    w.League.Site.Name
-                })), ephemeral: true);
+            var watchers = await _watcherService.FindAsync(guild.Id,
+                sites: site == null ? null : new Guid[] { site.Id },
+                leagues: leagues == null ? null : leagues.Select(l => l.Id),
+                teams: teams == null ? null : teams.Select(t => t.Id),
+                types: types,
+                channels: channel == null ? null : new ulong?[] { channel.Id });
 
-            _logger.LogTrace($"User {user} viewed watcher list for guild \"{guild.Name}\" [{guild.Id}]");
-        }
-        else
-            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any watchers that matched your request.", ephemeral: true);
+            if (watchers.Count() > 0)
+            {
+                await command.RespondAsync(ListUtils.CreateTable(
+                    headers: new string[] {
+                        "League",
+                        "Team",
+                        "Type",
+                        "Channel",
+                        "Site"
+                    },
+                    data: watchers.Select(w => new string[] {
+                        w.League.Name,
+                        w.Team.Name,
+                        EnumUtils.GetName(w.Type),
+                        (guild.Channels.FirstOrDefault(c => c.Id == w.ChannelId) ?? guild.DefaultChannel).Name,
+                        w.League.Site.Name
+                    })), ephemeral: true);
+
+                _logger.LogTrace($"User {user} viewed watcher list for guild \"{guild.Name}\" [{guild.Id}]");
+            }
+            else
+                await command.RespondAsync($"I'm sorry {command.User.Mention}, but I didn't find any watchers that matched your request.", ephemeral: true);
+        }, "I'll have the watcher list for you shortly.");
     }
 
     private async Task RemoveAllWatchersAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -461,15 +467,19 @@ public class WatcherCommand : BaseCommandWithAdminCheck
     {
         var guild = await GetGuildAsync(command);
         var user = await GetUserAsync(command);
-        var count = await _watcherService.DeleteAsync(watchers.Select(w => w.Id));
 
-        if (count > 0)
+        await SendResponseAsync(command, async () =>
         {
-            _logger.LogDebug($"User {user} deleted {MessageUtils.Pluralize(count, "watcher")} from guild \"{guild.Name}\" [{guild.Id}]");
-            await command.RespondAsync($"Okay! I've deleted {MessageUtils.Pluralize(count, "watcher")} from your server.", ephemeral: true);
-        }
-        else
-            await command.RespondAsync($"Okay! There were no watchers to remove.", ephemeral: true);
+            var count = await _watcherService.DeleteAsync(watchers.Select(w => w.Id));
+
+            if (count > 0)
+            {
+                _logger.LogDebug($"User {user} deleted {MessageUtils.Pluralize(count, "watcher")} from guild \"{guild.Name}\" [{guild.Id}]");
+                await command.RespondAsync($"Okay! I've deleted {MessageUtils.Pluralize(count, "watcher")} from your server.", ephemeral: true);
+            }
+            else
+                await command.RespondAsync($"Okay! There were no watchers to remove.", ephemeral: true);
+        });
     }
 
     private async Task<bool> CheckPrivileges(SocketSlashCommand command)
