@@ -9,7 +9,7 @@ using League = Duthie.Types.Leagues.League;
 namespace Duthie.Modules.Leaguegaming;
 
 public class LeaguegamingApi
-    : IBidApi, IContractApi, IDailyStarApi, IDraftApi, IGameApi, ILeagueApi, IRosterApi, ITeamApi, ITradeApi, IWaiverApi
+    : IBidApi, IContractApi, IDailyStarApi, IDraftApi, IGameApi, ILeagueApi, INewsApi, IRosterApi, ITeamApi, ITradeApi, IWaiverApi
 {
     private const string Domain = "www.leaguegaming.com";
     private static readonly TimeZoneInfo Timezone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
@@ -477,6 +477,56 @@ public class LeaguegamingApi
         }
     }
 
+    public async Task<IEnumerable<News>?> GetNewsAsync(League league)
+    {
+        try
+        {
+            if (!IsSupported(league))
+                return null;
+
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+
+            var html = await _httpClient.GetStringAsync(GetUrl(league,
+                parameters: new Dictionary<string, object?>
+                {
+                    ["action"] = "league",
+                    ["page"] = "team_news",
+                    ["leagueid"] = leagueInfo.LeagueId,
+                    ["seasonid"] = leagueInfo.SeasonId,
+                    ["typeid"] = (int)LeaguegamingNewsType.All,
+                    ["displaylimit"] = 200,
+                }));
+
+            return Regex.Matches(html,
+                @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(m =>
+            {
+                var news = Regex.Match(m.Groups[1].Value,
+                    @"<a[^>]*\bicon\b[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>(?=.*?(?:clinched|eliminated))(.*?)</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                if (!news.Success)
+                    return null;
+
+                return new News
+                {
+                    LeagueId = league.Id,
+                    TeamId = news.Groups[1].Value,
+                    Message = Regex.Replace(Regex.Replace(news.Groups[2].Value, @"<[^>]*>", ""), @" +", " ").Trim(),
+                    Timestamp = ISiteApi.ParseDateTime(news.Groups[3].Value, Timezone),
+                };
+            })
+            .Where(n => n != null)
+            .Cast<News>();
+        }
+        catch (Exception e)
+        {
+            throw new ApiException($"An unexpected error occurred while fetching news for league \"{league.Name}\" [{league.Id}]", e);
+        }
+    }
+
     public async Task<IEnumerable<RosterTransaction>?> GetRosterTransactionsAsync(League league)
     {
         try
@@ -611,7 +661,7 @@ public class LeaguegamingApi
 
                     return null;
                 })
-                .Where(c => c != null)
+                .Where(t => t != null)
                 .Cast<RosterTransaction>();
             })))
             .SelectMany(r => r)
@@ -805,7 +855,7 @@ public class LeaguegamingApi
                     Timestamp = ISiteApi.ParseDateTime(waiver.Groups[6].Value, Timezone),
                 };
             })
-            .Where(c => c != null)
+            .Where(w => w != null)
             .Cast<Waiver>();
         }
         catch (Exception e)
@@ -847,6 +897,18 @@ public class LeaguegamingApi
             return null;
 
         return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=game&gameid={game.Id}";
+    }
+
+    public string? GetNewsUrl(League league, News news)
+    {
+        if (!IsSupported(league))
+            return null;
+
+        if (!IsSupported(league))
+            return null;
+
+        var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+        return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={news.TeamId}&typeid={(int)LeaguegamingNewsType.All}";
     }
 
     public string? GetRosterTransactionUrl(League league, RosterTransaction rosterTransaction)

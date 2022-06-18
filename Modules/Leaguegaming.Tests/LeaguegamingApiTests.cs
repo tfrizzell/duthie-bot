@@ -225,4 +225,18 @@ public class LeaguegamingApiTests
             Assert.True(dailyStar.Rank > 0, $"expected Rank to be greater than 0 but got {dailyStar.Rank}");
         }
     }
+
+    [Fact]
+    public async Task GetNewsAsync_ReturnsNotNull()
+    {
+        var news = await _api.GetNewsAsync(_league);
+        Assert.True(news != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+
+        foreach (var item in news!)
+        {
+            Assert.True(_league.Id == item.LeagueId, $"expected LeagueId to be {_league.Id} but got {item.LeagueId}");
+            Assert.True(int.TryParse(item.TeamId, out var t), $"expected TeamId to be numeric but got {item.TeamId}");
+            Assert.True(!string.IsNullOrWhiteSpace(item.Message), $"expected Message to be non-empty but got {item.Message}");
+        }
+    }
 }

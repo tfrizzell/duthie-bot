@@ -36,6 +36,7 @@ public class Daemon
                     .AddHostedService<ContractBackgroundService>()
                     .AddHostedService<DailyStarBackgroundService>()
                     .AddHostedService<DraftBackgroundService>()
+                    .AddHostedService<NewsBackgroundService>()
                     .AddHostedService<RosterTransactionBackgroundService>()
                     .AddHostedService<TradeBackgroundService>()
                     .AddHostedService<WaiverBackgroundService>()

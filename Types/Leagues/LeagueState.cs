@@ -7,6 +7,7 @@ public class LeagueState
     public string? LastContract { get; set; }
     public DateTimeOffset? LastDailyStar { get; set; }
     public string? LastDraftPick { get; set; }
+    public string? LastNewsItem { get; set; }
     public string? LastRosterTransaction { get; set; }
     public string? LastTrade { get; set; }
     public string? LastWaiver { get; set; }

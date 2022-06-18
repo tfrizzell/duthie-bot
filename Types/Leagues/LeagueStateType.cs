@@ -6,6 +6,7 @@ public enum LeagueStateType
     Contract,
     DailyStar,
     DraftPick,
+    News,
     RosterTransaction,
     Trade,
     Waiver,

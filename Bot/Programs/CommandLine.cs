@@ -96,6 +96,7 @@ public class CommandLine
             .AddSingleton<ContractBackgroundService>()
             .AddSingleton<DailyStarBackgroundService>()
             .AddSingleton<DraftBackgroundService>()
+            .AddSingleton<NewsBackgroundService>()
             .AddSingleton<RosterTransactionBackgroundService>()
             .AddSingleton<TradeBackgroundService>()
             .AddSingleton<WaiverBackgroundService>()
@@ -125,6 +126,9 @@ public class CommandLine
 
         if (types.Intersect(new string[] { "draft", "drafts", "draft-picks", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<DraftBackgroundService>().ExecuteAsync();
+
+        if (types.Intersect(new string[] { "news", "all" }).Count() > 0)
+            await serviceProvider.GetRequiredService<NewsBackgroundService>().ExecuteAsync();
 
         if (types.Intersect(new string[] { "rosters", "all" }).Count() > 0)
             await serviceProvider.GetRequiredService<RosterTransactionBackgroundService>().ExecuteAsync();
