@@ -1,3 +1,5 @@
+[![build and test](https://github.com/tfrizzell/lg-sportscentre/actions/workflows/build-and-test.yml/badge.svg?branch=3.0-dev)](https://github.com/tfrizzell/lg-sportscentre/actions/workflows/build-and-test.yml)
+
 Duthie Bot
 ===============
 **Duthie Bot** is the perfect way to keep your Discord server up to date with game results, trades, roster transactions, and many more pieces of information from our supported leagues.
