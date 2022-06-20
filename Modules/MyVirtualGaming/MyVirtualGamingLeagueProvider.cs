@@ -56,7 +56,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
             AffiliatedLeagueIds = new string[] { "vgahl" },
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
-        Enabled = true,
+        Enabled = false,
     };
 
     internal static readonly League VGHLWC = new League

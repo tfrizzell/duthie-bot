@@ -87,7 +87,6 @@ public class NewsBackgroundService : ScheduledBackgroundService
 
                             if (watchers.Count() > 0)
                             {
-                                var timestamp = DateTimeOffset.UtcNow;
                                 var url = api.GetNewsUrl(league, news);
 
                                 await _guildMessageService.SaveAsync(watchers.Select(watcher =>
@@ -100,7 +99,7 @@ public class NewsBackgroundService : ScheduledBackgroundService
                                         Thumbnail = league.LogoUrl,
                                         Content = news.Message,
                                         Url = url,
-                                        Timestamp = timestamp,
+                                        Timestamp = news.Timestamp,
                                     }));
                             }
                         }

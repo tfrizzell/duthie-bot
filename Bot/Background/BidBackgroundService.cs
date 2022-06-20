@@ -87,7 +87,6 @@ public class BidBackgroundService : ScheduledBackgroundService
 
                             if (watchers.Count() > 0)
                             {
-                                var timestamp = DateTimeOffset.UtcNow;
                                 var url = api.GetBidUrl(league, bid);
 
                                 var message = league.HasPluralTeamNames()
@@ -104,7 +103,6 @@ public class BidBackgroundService : ScheduledBackgroundService
                                         Thumbnail = league.LogoUrl,
                                         Content = message,
                                         Url = url,
-                                        Timestamp = timestamp,
                                     }));
                             }
                         }

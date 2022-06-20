@@ -91,7 +91,6 @@ public class TradeBackgroundService : ScheduledBackgroundService
 
                             if (watchers.Count() > 0)
                             {
-                                var timestamp = DateTimeOffset.UtcNow;
                                 var url = api.GetTradeUrl(league, trade);
 
                                 var fromAssets = Regex.Replace(string.Join(", ",
@@ -145,7 +144,7 @@ public class TradeBackgroundService : ScheduledBackgroundService
                                         Thumbnail = league.LogoUrl,
                                         Content = message,
                                         Url = url,
-                                        Timestamp = timestamp,
+                                        Timestamp = trade.Timestamp,
                                     };
                                 }));
                             }

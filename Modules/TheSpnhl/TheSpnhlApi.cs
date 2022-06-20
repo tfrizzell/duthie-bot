@@ -48,7 +48,8 @@ public class TheSpnhlApi
                 HomeScore = m.Groups[6].Value.ToUpper() == "O"
                     ? 0
                     : int.TryParse(m.Groups[6].Value, out var homeScore) ? homeScore : null,
-            });
+            })
+            .ToList();
         }
         catch (Exception e)
         {
@@ -132,7 +133,8 @@ public class TheSpnhlApi
                     StringComparer.OrdinalIgnoreCase)
                 .Values
                 .Where(t => t != null)
-                .Cast<Team>();
+                .Cast<Team>()
+                .ToList();
         }
         catch (Exception e)
         {

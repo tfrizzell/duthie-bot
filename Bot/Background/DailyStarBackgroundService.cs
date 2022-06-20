@@ -83,8 +83,6 @@ public class DailyStarBackgroundService : ScheduledBackgroundService
 
                         if (watchers.Count() > 0)
                         {
-                            var timestamp = DateTimeOffset.UtcNow;
-
                             await _guildMessageService.SaveAsync(watchers.Select(watcher =>
                             {
                                 var stars = data.Where(s => watcher.Any(w => w.TeamId == teams[s.TeamId].Id));
@@ -108,7 +106,6 @@ public class DailyStarBackgroundService : ScheduledBackgroundService
                                                 new string[] { $"{star.Key}:" }
                                                 .Concat(star.Select(s => $"{s.Rank.Ordinal()} Star - {s.PlayerName}   _{s.GetStatLine()}_")))))),
                                     Url = url,
-                                    Timestamp = timestamp,
                                 };
                             })
                             .Where(m => m != null)

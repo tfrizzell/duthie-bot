@@ -70,27 +70,19 @@ public class MessagingBackgroundService : ScheduledBackgroundService
                     var guild = messages.Key.Guild!;
                     var channel = messages.Key.Channel!;
                     await channel.TriggerTypingAsync();
-                    Embed? embed = null;
 
                     foreach (var message in messages)
                     {
                         try
                         {
-                            var builder = new EmbedBuilder()
+                            await channel.SendMessageAsync("", embed: new EmbedBuilder()
                                 .WithColor((Color?)message.Color ?? Color.Default)
                                 .WithTitle(message.Title)
                                 .WithThumbnailUrl(message.Thumbnail)
                                 .WithDescription(message.Content)
                                 .WithFooter(message.Footer)
-                                .WithUrl(message.Url);
-
-                            if (message.Timestamp != null)
-                                builder.WithTimestamp(message.Timestamp.GetValueOrDefault());
-                            else
-                                builder.WithCurrentTimestamp();
-
-                            embed = builder.Build();
-                            await channel.SendMessageAsync("", embed: embed);
+                                .WithUrl(message.Url)
+                                .WithTimestamp(message.Timestamp ?? message.CreatedAt).Build());
 
                             message.ChannelId = channel.Id;
                             message.SentAt = DateTimeOffset.UtcNow;

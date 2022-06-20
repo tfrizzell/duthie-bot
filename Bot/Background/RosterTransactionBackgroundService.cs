@@ -83,18 +83,22 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
 
                             if (teams.Count() > 0)
                             {
-                                var multipleLeagues = rosterTransaction.TeamIds.Any(teamId => !teamLookup.Has(league, teamId));
+                                var leagueIds = new List<Guid> { league.Id };
+
+                                if (rosterTransaction.TeamIds.Any(teamId => !teamLookup.Has(league, teamId)))
+                                {
+                                    var affiliatedLeagueIds = league.GetAffiliateIds();
+                                    leagueIds.AddRange(leagues.Where(l => affiliatedLeagueIds?.Contains(l.GetLeagueId()) == true).Select(l => l.Id));
+                                }
 
                                 var watchers = (await _watcherService.FindAsync(
-                                    sites: multipleLeagues ? new Guid[] { league.SiteId } : null,
-                                    leagues: multipleLeagues ? null : new Guid[] { league.Id },
+                                    leagues: leagueIds,
                                     teams: teams.Select(t => t.Id),
                                     types: new WatcherType[] { WatcherType.Roster }
                                 )).GroupBy(w => new { w.GuildId, ChannelId = w.ChannelId ?? w.Guild.DefaultChannelId });
 
                                 if (watchers.Count() > 0)
                                 {
-                                    var timestamp = DateTimeOffset.UtcNow;
                                     var url = api.GetRosterTransactionUrl(league, rosterTransaction);
 
                                     var message = Regex.Replace(rosterTransaction.Type switch
@@ -135,7 +139,7 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                                                 Thumbnail = league.LogoUrl,
                                                 Content = message,
                                                 Url = url,
-                                                Timestamp = timestamp,
+                                                Timestamp = rosterTransaction.Timestamp,
                                             }));
                                     }
                                 }

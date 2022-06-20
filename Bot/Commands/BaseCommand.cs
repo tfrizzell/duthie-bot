@@ -122,7 +122,7 @@ public abstract class BaseCommand : ICommand
         {
             if (!command.HasResponded)
                 await command.RespondAsync($"I'm sorry, this seems to be taking longer than expected. {loadingMessage}".Trim(), ephemeral: true);
-        }, null, Math.Max(0, 2000 - (int)(DateTimeOffset.UtcNow - command.CreatedAt).TotalMilliseconds), System.Threading.Timeout.Infinite);
+        }, null, Math.Max(0, 2250 - (int)(DateTimeOffset.UtcNow - command.CreatedAt).TotalMilliseconds), System.Threading.Timeout.Infinite);
 
         await sendResponse();
         await timer.DisposeAsync();

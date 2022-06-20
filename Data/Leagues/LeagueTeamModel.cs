@@ -12,7 +12,10 @@ public class LeagueTeamModel : DataModel<LeagueTeam>
 
         model.HasKey(t => new { t.LeagueId, t.TeamId });
 
-        model.Property(l => l.ExternalId)
-            .HasColumnName("InternalId");
+        model.HasIndex(t => new { t.LeagueId, t.ExternalId })
+            .IsUnique();
+
+        model.Property(t => t.ExternalId)
+            .HasColumnName("ExternalId");
     }
 }

@@ -91,7 +91,6 @@ public class GameBackgroundService : ScheduledBackgroundService
 
                         if (_game != null && game.VisitorScore != null && game.HomeScore != null)
                         {
-                            var timestamp = DateTimeOffset.UtcNow;
                             var url = api.GetGameUrl(league, game);
 
                             var watchers = (await _watcherService.FindAsync(
@@ -152,7 +151,6 @@ public class GameBackgroundService : ScheduledBackgroundService
                                     Thumbnail = league.LogoUrl,
                                     Content = string.IsNullOrWhiteSpace(url) ? message : $"{message}\n\n[Box Score]({url})",
                                     Url = url,
-                                    Timestamp = timestamp,
                                 });
                             }
                         }

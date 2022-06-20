@@ -76,7 +76,8 @@ public class LeaguegamingApi
                 };
             })
             .Where(b => b != null)
-            .Cast<Bid>();
+            .Cast<Bid>()
+            .ToList();
         }
         catch (Exception e)
         {
@@ -128,7 +129,8 @@ public class LeaguegamingApi
                 };
             })
             .Where(c => c != null)
-            .Cast<Contract>();
+            .Cast<Contract>()
+            .ToList();
         }
         catch (Exception e)
         {
@@ -216,7 +218,8 @@ public class LeaguegamingApi
                 };
             })
             .Where(s => s != null)
-            .Cast<DailyStar>();
+            .Cast<DailyStar>()
+            .ToList();
         }
         catch (Exception e)
         {
@@ -347,7 +350,8 @@ public class LeaguegamingApi
                     RoundPick = roundPick > 0 ? roundPick : picksPerRound,
                     OverallPick = overallPick,
                 };
-            });
+            })
+            .ToList();
         }
         catch (Exception e)
         {
@@ -404,7 +408,8 @@ public class LeaguegamingApi
                 };
             })
             .Where(g => g != null)
-            .Cast<Game>();
+            .Cast<Game>()
+            .ToList();
         }
         catch (Exception e)
         {
@@ -468,6 +473,7 @@ public class LeaguegamingApi
                     ForumId = int.Parse(info.Groups[1].Value),
                     DraftId = draft?.Success == true ? int.Parse(draft.Groups[1].Value) : leagueInfo.DraftId,
                     DraftDate = draft?.Success == true ? ISiteApi.ParseDateTime(draft.Groups[2].Value) : leagueInfo.DraftDate,
+                    AffiliatedLeagueIds = leagueInfo.AffiliatedLeagueIds,
                 },
             };
         }
@@ -504,7 +510,7 @@ public class LeaguegamingApi
             .Select(m =>
             {
                 var news = Regex.Match(m.Groups[1].Value,
-                    @"<a[^>]*\bicon\b[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>(?=.*?(?:clinched|eliminated))(.*?)</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                    @"<a[^>]*\bicon\b[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>(?=.*?(?:clinched|eliminated|rights have been acquired))(.*?)</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
                     RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                 if (!news.Success)
@@ -519,7 +525,8 @@ public class LeaguegamingApi
                 };
             })
             .Where(n => n != null)
-            .Cast<News>();
+            .Cast<News>()
+            .ToList();
         }
         catch (Exception e)
         {
@@ -665,7 +672,8 @@ public class LeaguegamingApi
                 .Cast<RosterTransaction>();
             })))
             .SelectMany(r => r)
-            .Where(r => r != null);
+            .Where(r => r != null)
+            .ToList();
         }
         catch (Exception e)
         {
@@ -802,7 +810,8 @@ public class LeaguegamingApi
                 };
             })
             .Where(b => b != null)
-            .Cast<Trade>();
+            .Cast<Trade>()
+            .ToList();
         }
         catch (Exception e)
         {
@@ -856,7 +865,8 @@ public class LeaguegamingApi
                 };
             })
             .Where(w => w != null)
-            .Cast<Waiver>();
+            .Cast<Waiver>()
+            .ToList();
         }
         catch (Exception e)
         {

@@ -87,7 +87,6 @@ public class ContractBackgroundService : ScheduledBackgroundService
 
                             if (watchers.Count() > 0)
                             {
-                                var timestamp = DateTimeOffset.UtcNow;
                                 var url = api.GetContractUrl(league, contract);
 
                                 var message = league.HasPluralTeamNames()
@@ -104,7 +103,6 @@ public class ContractBackgroundService : ScheduledBackgroundService
                                         Thumbnail = league.LogoUrl,
                                         Content = message,
                                         Url = url,
-                                        Timestamp = timestamp,
                                     }));
                             }
                         }

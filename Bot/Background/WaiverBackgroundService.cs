@@ -87,7 +87,6 @@ public class WaiverBackgroundService : ScheduledBackgroundService
 
                             if (watchers.Count() > 0)
                             {
-                                var timestamp = DateTimeOffset.UtcNow;
                                 var url = api.GetWaiverUrl(league, waiver);
 
                                 var message = waiver.Type switch
@@ -119,7 +118,7 @@ public class WaiverBackgroundService : ScheduledBackgroundService
                                             Thumbnail = league.LogoUrl,
                                             Content = message,
                                             Url = url,
-                                            Timestamp = timestamp,
+                                            Timestamp = waiver.Timestamp,
                                         }));
                                 }
                             }

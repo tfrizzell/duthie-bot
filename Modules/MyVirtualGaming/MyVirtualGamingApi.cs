@@ -71,7 +71,8 @@ public class MyVirtualGamingApi
                     State = BidState.Won,
                     Timestamp = ISiteApi.ParseDateTime(m.Groups[3].Value, Timezone),
                 };
-            });
+            })
+            .ToList();
         }
         catch (Exception e)
         {
@@ -125,7 +126,8 @@ public class MyVirtualGamingApi
                 }))
             .SelectMany(c => c)
             .Where(c => c != null)
-            .Cast<Contract>();
+            .Cast<Contract>()
+            .ToList();
         }
         catch (Exception e)
         {
@@ -174,7 +176,8 @@ public class MyVirtualGamingApi
                     OverallPick = int.Parse(m.Groups[1].Value),
                 });
             })
-            .SelectMany(d => d);
+            .SelectMany(d => d)
+            .ToList();
         }
         catch (Exception e)
         {
@@ -286,7 +289,9 @@ public class MyVirtualGamingApi
                 })
                 .Where(g => g != null)
                 .Cast<Game>();
-            }))).SelectMany(g => g);
+            })))
+            .SelectMany(g => g)
+            .ToList();
         }
         catch (Exception e)
         {
@@ -478,7 +483,8 @@ public class MyVirtualGamingApi
                 };
             })
             .SelectMany(r => r)
-            .Where(r => r != null);
+            .Where(r => r != null)
+            .ToList();
         }
         catch (Exception e)
         {
@@ -569,33 +575,20 @@ public class MyVirtualGamingApi
 
     private IEnumerable<Team> FixTeams(List<Team> teams)
     {
-        var leagueId = teams.FirstOrDefault()?.LeagueId;
+        var nhlPredators = teams.FirstOrDefault(t => t.Name == "Nashville Nashville");
 
-        if (leagueId == MyVirtualGamingLeagueProvider.VGNHL.Id)
+        if (nhlPredators != null)
         {
-            teams.AddRange(
-                teams.Where(t => t.Name == "Nashville Nashville")
-                    .ToList()
-                    .Select(t => new Team
-                    {
-                        LeagueId = t.LeagueId,
-                        Id = t.Id,
-                        Name = "Nashville Predators",
-                        ShortName = "Predators",
-                    }));
+            nhlPredators.Name = "Nashville Predators";
+            nhlPredators.ShortName = "Predators";
         }
-        else if (leagueId == MyVirtualGamingLeagueProvider.VGAHL.Id)
+
+        var ahlSenators = teams.FirstOrDefault(t => t.Name == "Bellevile Senators");
+
+        if (ahlSenators != null)
         {
-            teams.AddRange(
-                teams.Where(t => t.Name == "Bellevile Senators")
-                    .ToList()
-                    .Select(t => new Team
-                    {
-                        LeagueId = t.LeagueId,
-                        Id = t.Id,
-                        Name = "Belleville Senators",
-                        ShortName = "Senators",
-                    }));
+            ahlSenators.Name = "Belleville Senators";
+            ahlSenators.ShortName = "Senators";
         }
 
         return teams;
@@ -646,7 +639,8 @@ public class MyVirtualGamingApi
                 };
             })
             .Where(t => t != null)
-            .Cast<Trade>();
+            .Cast<Trade>()
+            .ToList();
         }
         catch (Exception e)
         {

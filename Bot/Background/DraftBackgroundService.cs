@@ -86,7 +86,6 @@ public class DraftBackgroundService : ScheduledBackgroundService
 
                             if (watchers.Count() > 0)
                             {
-                                var timestamp = DateTimeOffset.UtcNow;
                                 var url = api.GetDraftPickUrl(league, draftPick);
 
                                 var message = league.HasPluralTeamNames()
@@ -103,7 +102,6 @@ public class DraftBackgroundService : ScheduledBackgroundService
                                         Thumbnail = league.LogoUrl,
                                         Content = message,
                                         Url = url,
-                                        Timestamp = timestamp,
                                     }));
                             }
                         }
