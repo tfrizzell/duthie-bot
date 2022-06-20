@@ -32,6 +32,7 @@ public class LeagueService
                 .ThenInclude(t => t.Team)
             .Include(l => l.Affiliates)
                 .ThenInclude(a => a.AffiliatedLeague)
+                    .ThenInclude(a => a.Info)
             .OrderBy(l => l.Name);
 
     public async Task<int> DeleteAsync(IEnumerable<Guid> ids) =>

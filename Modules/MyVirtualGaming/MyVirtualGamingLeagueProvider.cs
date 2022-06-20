@@ -20,9 +20,6 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,
-        Affiliates = new LeagueAffiliate[] {
-            new LeagueAffiliate { AffiliatedLeague = VGAHL },
-        },
     };
 
     internal static readonly League VGAHL = new League
@@ -40,10 +37,6 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,
-        Affiliates = new LeagueAffiliate[] {
-            new LeagueAffiliate { AffiliatedLeague = VGNHL },
-            new LeagueAffiliate { AffiliatedLeague = VGPHL },
-        },
     };
 
     internal static readonly League VGPHL = new League
@@ -61,9 +54,6 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = false,
-        Affiliates = new LeagueAffiliate[] {
-            new LeagueAffiliate { AffiliatedLeague = VGAHL },
-        },
     };
 
     internal static readonly League VGHLWC = new League
@@ -133,6 +123,22 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,
     };
+
+    public MyVirtualGamingLeagueProvider()
+    {
+        VGNHL.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate { AffiliatedLeague = VGAHL },
+        };
+
+        VGAHL.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate { AffiliatedLeague = VGNHL },
+            new LeagueAffiliate { AffiliatedLeague = VGPHL },
+        };
+
+        VGPHL.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate { AffiliatedLeague = VGAHL },
+        };
+    }
 
     public IReadOnlyCollection<League> Leagues
     {

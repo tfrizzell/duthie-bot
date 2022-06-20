@@ -16,10 +16,6 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         Info = new LeaguegamingLeagueInfo { LeagueId = 37 },
         Tags = new Tags { "xbox", "ea nhl", "6v6" },
         Enabled = true,
-        Affiliates = new LeagueAffiliate[] {
-            new LeagueAffiliate { AffiliatedLeague = LGAHL_XBOX },
-            new LeagueAffiliate { AffiliatedLeague = LGCHL_XBOX },
-        },
     };
 
     internal static readonly League LGAHL_XBOX = new League
@@ -33,10 +29,6 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         Info = new LeaguegamingLeagueInfo { LeagueId = 38 },
         Tags = new Tags { "xbox", "ea nhl", "6v6" },
         Enabled = true,
-        Affiliates = new LeagueAffiliate[] {
-            new LeagueAffiliate { AffiliatedLeague = LGHL_XBOX },
-            new LeagueAffiliate { AffiliatedLeague = LGCHL_XBOX },
-        },
     };
 
     internal static readonly League LGCHL_XBOX = new League
@@ -50,10 +42,6 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         Info = new LeaguegamingLeagueInfo { LeagueId = 39 },
         Tags = new Tags { "xbox", "ea nhl", "6v6" },
         Enabled = true,
-        Affiliates = new LeagueAffiliate[] {
-            new LeagueAffiliate { AffiliatedLeague = LGHL_XBOX },
-            new LeagueAffiliate { AffiliatedLeague = LGAHL_XBOX },
-        },
     };
 
     internal static readonly League LGHL_PSN = new League
@@ -67,10 +55,6 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         Info = new LeaguegamingLeagueInfo { LeagueId = 67 },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,
-        Affiliates = new LeagueAffiliate[] {
-            new LeagueAffiliate { AffiliatedLeague = LGAHL_PSN },
-            new LeagueAffiliate { AffiliatedLeague = LGCHL_PSN },
-        },
     };
 
     internal static readonly League LGAHL_PSN = new League
@@ -84,10 +68,6 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         Info = new LeaguegamingLeagueInfo { LeagueId = 68 },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,
-        Affiliates = new LeagueAffiliate[] {
-            new LeagueAffiliate { AffiliatedLeague = LGHL_PSN },
-            new LeagueAffiliate { AffiliatedLeague = LGCHL_PSN },
-        },
     };
 
     internal static readonly League LGCHL_PSN = new League
@@ -101,10 +81,6 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         Info = new LeaguegamingLeagueInfo { LeagueId = 69 },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,
-        Affiliates = new LeagueAffiliate[] {
-            new LeagueAffiliate { AffiliatedLeague = LGHL_PSN },
-            new LeagueAffiliate { AffiliatedLeague = LGAHL_PSN },
-        },
     };
 
     internal static readonly League ESHL_XBOX = new League
@@ -223,6 +199,39 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         Tags = new Tags { "psn", "fifa", "11v11" },
         Enabled = true
     };
+
+    public LeaguegamingLeagueProvider()
+    {
+        LGHL_XBOX.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate { AffiliatedLeague = LGAHL_XBOX },
+            new LeagueAffiliate { AffiliatedLeague = LGCHL_XBOX },
+        };
+
+        LGAHL_XBOX.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate { AffiliatedLeague = LGHL_XBOX },
+            new LeagueAffiliate { AffiliatedLeague = LGCHL_XBOX },
+        };
+
+        LGCHL_XBOX.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate { AffiliatedLeague = LGHL_XBOX },
+            new LeagueAffiliate { AffiliatedLeague = LGCHL_XBOX },
+        };
+
+        LGHL_PSN.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate { AffiliatedLeague = LGAHL_PSN },
+            new LeagueAffiliate { AffiliatedLeague = LGCHL_PSN },
+        };
+
+        LGAHL_PSN.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate { AffiliatedLeague = LGHL_PSN },
+            new LeagueAffiliate { AffiliatedLeague = LGCHL_PSN },
+        };
+
+        LGCHL_PSN.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate { AffiliatedLeague = LGHL_PSN },
+            new LeagueAffiliate { AffiliatedLeague = LGCHL_PSN },
+        };
+    }
 
     public IReadOnlyCollection<League> Leagues
     {

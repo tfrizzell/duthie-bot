@@ -1302,6 +1302,7 @@ public static class DefaultTeams
             ["PHI"] = NHLFlyers,
             ["PIT"] = NHLPenguins,
             ["SEA"] = NHLKraken,
+            ["SJ"] = NHLSharks,
             ["SJS"] = NHLSharks,
             ["STL"] = NHLBlues,
             ["TB"] = NHLLightning,
