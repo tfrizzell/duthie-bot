@@ -86,10 +86,7 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                                 var leagueIds = new List<Guid> { league.Id };
 
                                 if (rosterTransaction.TeamIds.Any(teamId => !teamLookup.Has(league, teamId)))
-                                {
-                                    var affiliatedLeagueIds = league.GetAffiliateIds();
-                                    leagueIds.AddRange(leagues.Where(l => affiliatedLeagueIds?.Contains(l.GetLeagueId()) == true).Select(l => l.Id));
-                                }
+                                    leagueIds.AddRange(league.Affiliates.Select(a => a.AffiliateLeagueId));
 
                                 var watchers = (await _watcherService.FindAsync(
                                     leagues: leagueIds,

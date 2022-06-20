@@ -196,9 +196,15 @@ public class MyVirtualGamingApi
                 ["filter_schedule"] = leagueInfo.ScheduleId > 0 ? leagueInfo.ScheduleId : null,
             }));
 
-        if (includeAffiliates && leagueInfo.AffiliatedLeagueIds.Count() > 0)
+        if (includeAffiliates && league.Affiliates.Count() > 0)
+        {
             html += string.Join("", await Task.WhenAll(
-                leagueInfo.AffiliatedLeagueIds.Select(leagueId => _httpClient.GetStringAsync($"https://{Domain}/vghlleagues/{leagueId}/standings"))));
+                league.Affiliates.Select(affiliate =>
+                {
+                    var affiliateInfo = (affiliate.AffiliatedLeague.Info as MyVirtualGamingLeagueInfo)!;
+                    return _httpClient.GetStringAsync($"https://{Domain}/vghlleagues/{affiliateInfo.LeagueId}/standings");
+                })));
+        }
 
         var lookup = Regex.Matches(html,
             @"<a[^>]*/rosters\?id=(\d+)[^>]*>\s*<img[^>]*/(\w+)\.\w{3,4}[^>]*>\s*<\/a>",
@@ -379,7 +385,6 @@ public class MyVirtualGamingApi
                     LeagueId = leagueId,
                     SeasonId = seasonId ?? leagueInfo.SeasonId,
                     ScheduleId = scheduleId ?? leagueInfo.ScheduleId,
-                    AffiliatedLeagueIds = leagueInfo.AffiliatedLeagueIds,
                 },
             };
         }

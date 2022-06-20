@@ -473,7 +473,6 @@ public class LeaguegamingApi
                     ForumId = int.Parse(info.Groups[1].Value),
                     DraftId = draft?.Success == true ? int.Parse(draft.Groups[1].Value) : leagueInfo.DraftId,
                     DraftDate = draft?.Success == true ? ISiteApi.ParseDateTime(draft.Groups[2].Value) : leagueInfo.DraftDate,
-                    AffiliatedLeagueIds = leagueInfo.AffiliatedLeagueIds,
                 },
             };
         }

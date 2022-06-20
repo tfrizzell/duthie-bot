@@ -7,5 +7,4 @@ internal class LeaguegamingLeagueInfo
     public int ForumId { get; set; }
     public int? DraftId { get; set; }
     public DateTimeOffset? DraftDate { get; set; }
-    public int[] AffiliatedLeagueIds { get; set; } = new int[] { };
 }
