@@ -19,7 +19,6 @@ public class DuthieDbContext : DbContext
         new GuildAdminModel(),
         new GuildMessageModel(),
         new GuildModel(),
-        new LeagueAffiliateModel(),
         new LeagueModel(),
         new LeagueStateModel(),
         new LeagueTeamModel(),

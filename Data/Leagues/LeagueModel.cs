@@ -30,6 +30,6 @@ public class LeagueModel : DataModel<League>
             .HasConversion(new TagsToJsonConverter(), new TagsValueComparer());
 
         model.Ignore(l => l.Teams);
-        model.Ignore(l => l.Affiliates);
+        model.HasMany(l => l.Affiliates);
     }
 }

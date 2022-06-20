@@ -20,6 +20,6 @@ public class League
     public virtual Site Site { get; set; }
     public virtual IEnumerable<LeagueTeam> LeagueTeams { get; set; }
     public virtual IEnumerable<Team> Teams => LeagueTeams?.Select(t => t.Team);
-    public virtual IEnumerable<LeagueAffiliate> Affiliates { get; set; }
+    public virtual IEnumerable<League> Affiliates { get; set; }
 #nullable enable
 }
