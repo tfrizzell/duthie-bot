@@ -10,6 +10,7 @@ using Duthie.Types.Leagues;
 using Duthie.Types.Watchers;
 using Microsoft.Extensions.Logging;
 using Duthie.Bot.Extensions;
+using System.Text.RegularExpressions;
 
 namespace Duthie.Bot.Background;
 
@@ -51,7 +52,7 @@ public class DailyStarBackgroundService : ScheduledBackgroundService
         try
         {
             var leagues = await _leagueService.GetAllAsync();
-            leagues = leagues.Where(l => l.State.LastDailyStar == null || (DateTimeOffset.UtcNow - l.State.LastDailyStar.GetValueOrDefault()).TotalDays >= 1);
+            leagues = leagues.Where(l => l.State.LastDailyStar == null || (DateTimeOffset.UtcNow - l.State.LastDailyStar.GetValueOrDefault()).TotalHours >= 18);
 
             var teamLookup = new TeamLookup(leagues);
 
@@ -64,7 +65,7 @@ public class DailyStarBackgroundService : ScheduledBackgroundService
 
                 var data = (await api.GetDailyStarsAsync(league))?
                     .OrderBy(s => s.Timestamp)
-                        .ThenBy(s => s.Position == "Forwards" ? 1 : s.Position == "Defense" ? 2 : 3)
+                        .ThenBy(s => s.Position == "Forward" ? 1 : s.Position == "Defense" ? 2 : 3)
                         .ThenBy(s => s.Rank)
                     .ToList();
 
@@ -100,11 +101,11 @@ public class DailyStarBackgroundService : ScheduledBackgroundService
                                     Title = $"{league.ShortName} Daily Stars",
                                     Thumbnail = league.LogoUrl,
                                     Content = string.Join("\n\n",
-                                        new string[] { $"**Congratulations to today's {league.Name} daily stars!" }
-                                        .Concat(stars.GroupBy(star => star.Position)
+                                        new string[] { $"**Congratulations to today's {league.Name} daily stars!**" }
+                                        .Concat(stars.GroupBy(star => Regex.Replace($"{star.Position}s", @"ses$", "se"))
                                             .Select(star => string.Join("\n  ",
                                                 new string[] { $"{star.Key}:" }
-                                                .Concat(star.Select(s => $"{s.Rank.Ordinal()} Star - {s.PlayerName}   _{s.GetStatLine()}_")))))),
+                                                .Concat(star.Select(s => $"{s.Rank.Ordinal()} Star - {s.PlayerName}     `{s.GetStatLine()}`")))))),
                                     Url = url,
                                 };
                             })
@@ -126,7 +127,7 @@ public class DailyStarBackgroundService : ScheduledBackgroundService
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new daily star")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else
+                else if (league.State.LastDailyStar == null)
                     league.State.LastDailyStar = DateTimeOffset.UtcNow;
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.DailyStar);

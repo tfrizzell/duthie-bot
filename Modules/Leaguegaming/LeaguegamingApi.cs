@@ -146,7 +146,7 @@ public class LeaguegamingApi
                 return null;
 
             var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
-            var date = DateTimeOffset.UtcNow.AddDays(-1).ToOffset(Timezone.BaseUtcOffset).Date;
+            var date = DateTimeOffset.UtcNow.ToOffset(Timezone.BaseUtcOffset).AddDays(-1).Date;
             var url = await GetDailyStarsUrl(league, date);
 
             if (string.IsNullOrWhiteSpace(url))
@@ -158,7 +158,7 @@ public class LeaguegamingApi
             return Regex.Matches(html,
                 @$"(?:{string.Join("|",
                     @"<div[^>]*\bd3_title\b[^>]*>(.*?)</div>",
-                    @"<tr[^>]*>\s*<td[^>]*>\s*((?:<img[^>]*/star\.\w{3,4}[^>]*>)+|\d+\.)\s*</td>\s*(?:<td[^>]*t_threestars[^>]*>\s*<div[^>]*>\s*<img [^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<img[^>]*>\s*</div>\s*</td>\s*<td[^>]*>(.*?)\s*<br[^>]*>\s*<span[^>]*>\((.*?)\)</span>\s*</td>|<td[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*(.*?)\s*\((.*?)\)</td>)\s*<td[^>]*>\s*<a[^>]*>.*?</a>\s*</td>\s*((?:<td[^>]*>.*?</td>)+)\s*</tr>"
+                    @"<tr[^>]*>\s*<td[^>]*>\s*((?:<img[^>]*/star\.\w{3,4}[^>]*>)+|\d+\.)\s*</td>\s*(?:<td[^>]*t_threestars[^>]*>\s*<div[^>]*>\s*<img [^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<img[^>]*>\s*</div>\s*</td>\s*<td[^>]*>.*?(?:\s*<span[^>]*>\s*\d+\s*</span>\s*)?(.*?)\s*<br[^>]*>\s*<span[^>]*>\((.*?)\)</span>\s*</td>|<td[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>.*?(?:\s*<span[^>]*>\s*\d+\s*</span>\s*)?(.*?)\s*\((.*?)\)</td>)\s*<td[^>]*>\s*<a[^>]*>.*?</a>\s*</td>\s*((?:<td[^>]*>.*?</td>)+)\s*</tr>"
                 )})",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
@@ -229,7 +229,7 @@ public class LeaguegamingApi
 
     private async Task<string?> GetDailyStarsUrl(League league, DateTimeOffset? timestamp = null)
     {
-        var date = DateOnly.FromDateTime((timestamp ?? DateTimeOffset.UtcNow.AddDays(-1).ToOffset(Timezone.BaseUtcOffset)).Date);
+        var date = (timestamp ?? DateTimeOffset.UtcNow.ToOffset(Timezone.BaseUtcOffset).AddDays(-1)).Date;
 
         return await _memoryCache.GetOrCreateAsync<string?>(new { type = GetType(), method = "GetAllAsync", league, date }, async entry =>
         {
