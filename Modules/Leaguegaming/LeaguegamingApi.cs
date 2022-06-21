@@ -138,7 +138,7 @@ public class LeaguegamingApi
         }
     }
 
-    public async Task<IEnumerable<DailyStar>?> GetDailyStarsAsync(League league)
+    public async Task<IEnumerable<DailyStar>?> GetDailyStarsAsync(League league, DateTimeOffset? timestamp = null)
     {
         try
         {
@@ -146,7 +146,7 @@ public class LeaguegamingApi
                 return null;
 
             var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
-            var date = DateTimeOffset.UtcNow.ToOffset(Timezone.BaseUtcOffset).AddDays(-1).Date;
+            var date = (timestamp ?? DateTimeOffset.UtcNow.ToOffset(Timezone.BaseUtcOffset).AddDays(-1).Date);
             var url = await GetDailyStarsUrl(league, date);
 
             if (string.IsNullOrWhiteSpace(url))
