@@ -28,8 +28,5 @@ public class LeagueModel : DataModel<League>
 
         model.Property(l => l.Tags)
             .HasConversion(new TagsToJsonConverter(), new TagsValueComparer());
-
-        model.Ignore(l => l.Teams);
-        model.HasMany(l => l.Affiliates);
     }
 }

@@ -95,12 +95,12 @@ public class TradeBackgroundService : ScheduledBackgroundService
 
                                 var fromAssets = Regex.Replace(string.Join(", ",
                                         trade.FromAssets
-                                            .Select(a => league.Teams.Aggregate(a, (a, t) => a.Replace(t.Name, t.ShortName)))
+                                            .Select(a => league.Teams.Aggregate(a, (a, t) => a.Replace(t.Team.Name, t.Team.ShortName)))
                                             .ToArray()), @", ([^,]+)$", @", and $1");
 
                                 var toAssets = Regex.Replace(string.Join(", ",
                                         trade.ToAssets
-                                            .Select(a => league.Teams.Aggregate(a, (a, t) => a.Replace(t.Name, t.ShortName)))
+                                            .Select(a => league.Teams.Aggregate(a, (a, t) => a.Replace(t.Team.Name, t.Team.ShortName)))
                                             .ToArray()), @", ([^,]+)$", @", and $1");
 
                                 await _guildMessageService.SaveAsync(watchers.Select(watcher =>
@@ -183,7 +183,7 @@ public class TradeBackgroundService : ScheduledBackgroundService
 
     private static Team FindTeam(League league, string externalId)
     {
-        var team = league.LeagueTeams.FirstOrDefault(t => t.ExternalId == externalId);
+        var team = league.Teams.FirstOrDefault(t => t.ExternalId == externalId);
 
         if (team == null)
             throw new KeyNotFoundException($"no team with external id {externalId} was found for league \"{league.Name}\" [{league.Id}]");

@@ -201,7 +201,7 @@ public class MyVirtualGamingApi
             html += string.Join("", await Task.WhenAll(
                 league.Affiliates.Select(affiliate =>
                 {
-                    var affiliateInfo = (affiliate.Info as MyVirtualGamingLeagueInfo)!;
+                    var affiliateInfo = (affiliate.Affiliate.Info as MyVirtualGamingLeagueInfo)!;
                     return _httpClient.GetStringAsync($"https://{Domain}/vghlleagues/{affiliateInfo.LeagueId}/standings");
                 })));
         }

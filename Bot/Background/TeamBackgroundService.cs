@@ -63,7 +63,7 @@ public class TeamBackgroundService : ScheduledBackgroundService
                     if (data == null)
                         return;
 
-                    league.LeagueTeams = data.Select(team =>
+                    league.Teams = data.Select(team =>
                     {
                         var key = CreateKey(team.Name);
 

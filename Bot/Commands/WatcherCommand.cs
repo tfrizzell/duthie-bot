@@ -264,7 +264,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
         {
             var watchers = leagues.Where(l => site == null || l.SiteId == site.Id)
                 .Select(league =>
-                    teams.Where(t => league.LeagueTeams.Any(lt => lt.TeamId == t.Id))
+                    teams.Where(t => league.Teams.Any(lt => lt.TeamId == t.Id))
                         .Select(team =>
                             types.Select(type =>
                                 new Watcher

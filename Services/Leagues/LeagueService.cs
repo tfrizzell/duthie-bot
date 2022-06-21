@@ -28,9 +28,10 @@ public class LeagueService
             .AsNoTracking()
             .Include(l => l.State)
             .Include(l => l.Site)
-            .Include(l => l.LeagueTeams)
+            .Include(l => l.Teams)
                 .ThenInclude(t => t.Team)
             .Include(l => l.Affiliates)
+                .ThenInclude(a => a.Affiliate)
             .OrderBy(l => l.Name);
 
     public async Task<int> DeleteAsync(IEnumerable<Guid> ids) =>
@@ -142,11 +143,11 @@ public class LeagueService
             foreach (var league in leagues)
             {
                 var existing = await context.Set<League>()
-                    .Include(l => l.LeagueTeams)
+                    .Include(l => l.Teams)
                     .FirstOrDefaultAsync(l => l.Id == league.Id);
 
                 if (existing != null)
-                    existing.LeagueTeams = await UpdateTeamsAsync(context, league);
+                    existing.Teams = await UpdateTeamsAsync(context, league);
             }
 
             return await context.SaveChangesAsync();
@@ -221,9 +222,9 @@ public class LeagueService
         foreach (var team in oldTeams)
             context.Entry(team).State = EntityState.Deleted;
 
-        foreach (var team in league.LeagueTeams)
+        foreach (var team in league.Teams)
             context.Entry(team).State = EntityState.Added;
 
-        return league.LeagueTeams;
+        return league.Teams;
     }
 }

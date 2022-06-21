@@ -202,13 +202,95 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
 
     public LeaguegamingLeagueProvider()
     {
-        LGHL_XBOX.Affiliates = new League[] { LGAHL_XBOX, LGCHL_XBOX };
-        LGAHL_XBOX.Affiliates = new League[] { LGHL_XBOX, LGCHL_XBOX };
-        LGCHL_XBOX.Affiliates = new League[] { LGHL_XBOX, LGCHL_XBOX };
+        LGHL_XBOX.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = LGHL_XBOX.Id,
+                League = LGHL_XBOX,
+                AffiliateId = LGAHL_XBOX.Id,
+                Affiliate = LGAHL_XBOX,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGHL_XBOX.Id,
+                League = LGHL_XBOX,
+                AffiliateId = LGCHL_XBOX.Id,
+                Affiliate = LGCHL_XBOX,
+            },
+        };
 
-        LGHL_PSN.Affiliates = new League[] { LGAHL_PSN, LGCHL_PSN };
-        LGAHL_PSN.Affiliates = new League[] { LGHL_PSN, LGCHL_PSN };
-        LGCHL_PSN.Affiliates = new League[] { LGHL_PSN, LGCHL_PSN };
+        LGAHL_XBOX.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = LGAHL_XBOX.Id,
+                League = LGAHL_XBOX,
+                AffiliateId = LGHL_XBOX.Id,
+                Affiliate = LGHL_XBOX,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGAHL_XBOX.Id,
+                League = LGAHL_XBOX,
+                AffiliateId = LGCHL_XBOX.Id,
+                Affiliate = LGCHL_XBOX,
+            },
+        };
+
+        LGCHL_XBOX.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = LGCHL_XBOX.Id,
+                League = LGCHL_XBOX,
+                AffiliateId = LGHL_XBOX.Id,
+                Affiliate = LGHL_XBOX,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGCHL_XBOX.Id,
+                League = LGCHL_XBOX,
+                AffiliateId = LGAHL_XBOX.Id,
+                Affiliate = LGAHL_XBOX,
+            },
+        };
+
+        LGHL_PSN.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = LGHL_PSN.Id,
+                League = LGHL_PSN,
+                AffiliateId = LGAHL_PSN.Id,
+                Affiliate = LGAHL_PSN,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGHL_PSN.Id,
+                League = LGHL_PSN,
+                AffiliateId = LGCHL_PSN.Id,
+                Affiliate = LGCHL_PSN,
+            },
+        };
+
+        LGAHL_PSN.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = LGAHL_PSN.Id,
+                League = LGAHL_PSN,
+                AffiliateId = LGHL_PSN.Id,
+                Affiliate = LGHL_PSN,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGAHL_PSN.Id,
+                League = LGAHL_PSN,
+                AffiliateId = LGCHL_PSN.Id,
+                Affiliate = LGCHL_PSN,
+            },
+        };
+
+        LGCHL_PSN.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = LGCHL_PSN.Id,
+                League = LGCHL_PSN,
+                AffiliateId = LGHL_PSN.Id,
+                Affiliate = LGHL_PSN,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGCHL_PSN.Id,
+                League = LGCHL_PSN,
+                AffiliateId = LGAHL_PSN.Id,
+                Affiliate = LGAHL_PSN,
+            },
+        };
     }
 
     public IReadOnlyCollection<League> Leagues

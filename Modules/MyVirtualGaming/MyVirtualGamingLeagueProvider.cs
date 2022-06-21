@@ -126,9 +126,38 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
 
     public MyVirtualGamingLeagueProvider()
     {
-        VGNHL.Affiliates = new League[] { VGAHL };
-        VGAHL.Affiliates = new League[] { VGNHL, VGPHL };
-        VGPHL.Affiliates = new League[] { VGAHL };
+        VGNHL.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = VGNHL.Id,
+                League = VGNHL,
+                AffiliateId = VGAHL.Id,
+                Affiliate = VGAHL,
+            },
+        };
+
+        VGAHL.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = VGAHL.Id,
+                League = VGAHL,
+                AffiliateId = VGNHL.Id,
+                Affiliate = VGNHL,
+            },
+            new LeagueAffiliate {
+                LeagueId = VGAHL.Id,
+                League = VGAHL,
+                AffiliateId = VGPHL.Id,
+                Affiliate = VGPHL,
+            },
+        };
+
+        VGPHL.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = VGPHL.Id,
+                League = VGPHL,
+                AffiliateId = VGAHL.Id,
+                Affiliate = VGAHL,
+            },
+        };
     }
 
     public IReadOnlyCollection<League> Leagues

@@ -12,12 +12,12 @@ internal sealed class TeamLookup
     public TeamLookup(IEnumerable<League> leagues)
     {
         _siteTeamLookup = leagues.GroupBy(l => l.SiteId)
-            .ToDictionary(g => g.Key, g => g.SelectMany(l => l.LeagueTeams)
+            .ToDictionary(g => g.Key, g => g.SelectMany(l => l.Teams)
                 .GroupBy(t => t.ExternalId)
                 .ToDictionary(t => t.Key, t => t.First().Team));
 
         _leagueTeamLookup = leagues.GroupBy(l => l.Id)
-            .ToDictionary(g => g.Key, g => g.SelectMany(l => l.LeagueTeams)
+            .ToDictionary(g => g.Key, g => g.SelectMany(l => l.Teams)
                 .GroupBy(t => t.ExternalId)
                 .ToDictionary(t => t.Key, t => t.First().Team));
     }
