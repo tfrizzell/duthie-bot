@@ -79,7 +79,8 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                     {
                         try
                         {
-                            var teams = rosterTransaction.TeamIds.Select(teamId => teamLookup.Get(league.Site, teamId));
+                            var teams = rosterTransaction.TeamIds.Where(teamId => teamId != Guid.Empty.ToString())
+                                .Select(teamId => teamLookup.Get(league.Site, teamId));
 
                             if (teams.Count() > 0)
                             {
@@ -98,31 +99,33 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                                 {
                                     var url = api.GetRosterTransactionUrl(league, rosterTransaction);
 
-                                    var message = Regex.Replace(rosterTransaction.Type switch
-                                    {
-                                        RosterTransactionType.PlacedOnIr => league.HasPluralTeamNames()
-                                            ? $"The **{MessageUtils.Escape(teams.First().Name)}** have placed **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** on injured reserved"
-                                            : $"**{MessageUtils.Escape(teams.First().Name)}** has placed **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** on injured reserved",
-                                        RosterTransactionType.RemovedFromIr => league.HasPluralTeamNames()
-                                            ? $"The **{MessageUtils.Escape(teams.First().Name)}** have removed **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** from injured reserved"
-                                            : $"**{MessageUtils.Escape(teams.First().Name)}** has removed **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** from injured reserved",
-                                        RosterTransactionType.ReportedInactive => league.HasPluralTeamNames()
-                                            ? $"The **{MessageUtils.Escape(teams.First().Name)}** have reported **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** as inactive and removed them from their roster"
-                                            : $"**{MessageUtils.Escape(teams.First().Name)}** has reported **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** as inactive and removed them from their roster",
-                                        RosterTransactionType.CalledUp => league.HasPluralTeamNames()
-                                            ? $"The **{MessageUtils.Escape(teams.First().Name)}** have called **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** up from the **{MessageUtils.Escape(teams.Last().Name)}**"
-                                            : $"**{MessageUtils.Escape(teams.First().Name)}** has called **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** up from **{MessageUtils.Escape(teams.Last().Name)}**",
-                                        RosterTransactionType.SentDown => league.HasPluralTeamNames()
-                                            ? $"The **{MessageUtils.Escape(teams.First().Name)}** have sent **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** down to the **{MessageUtils.Escape(teams.Last().Name)}**"
-                                            : $"**{MessageUtils.Escape(teams.First().Name)}** has sent **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** down to **{MessageUtils.Escape(teams.Last().Name)}**",
-                                        RosterTransactionType.Banned => league.HasPluralTeamNames()
-                                            ? $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been banned by the **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**"
-                                            : $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been banned by **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**",
-                                        RosterTransactionType.Suspended => league.HasPluralTeamNames()
-                                            ? $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been suspended by the **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**"
-                                            : $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been suspended by **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**",
-                                        _ => "",
-                                    }, @" by\s*(the)?\s*\*\*\*\*", "").Trim();
+                                    var message = Regex.Replace(
+                                        Regex.Replace(rosterTransaction.Type switch
+                                        {
+                                            RosterTransactionType.PlacedOnIr => league.HasPluralTeamNames()
+                                                ? $"The **{MessageUtils.Escape(teams.First().Name)}** have placed **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** on injured reserved"
+                                                : $"**{MessageUtils.Escape(teams.First().Name)}** has placed **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** on injured reserved",
+                                            RosterTransactionType.RemovedFromIr => league.HasPluralTeamNames()
+                                                ? $"The **{MessageUtils.Escape(teams.First().Name)}** have removed **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** from injured reserved"
+                                                : $"**{MessageUtils.Escape(teams.First().Name)}** has removed **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** from injured reserved",
+                                            RosterTransactionType.ReportedInactive => league.HasPluralTeamNames()
+                                                ? $"The **{MessageUtils.Escape(teams.First().Name)}** have reported **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** as inactive and removed them from their roster"
+                                                : $"**{MessageUtils.Escape(teams.First().Name)}** has reported **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** as inactive and removed them from their roster",
+                                            RosterTransactionType.CalledUp => league.HasPluralTeamNames()
+                                                ? $"The **{MessageUtils.Escape(teams.First().Name)}** have called **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** up from the **{MessageUtils.Escape(teams.Skip(1).LastOrDefault()?.Name ?? "training camp")}**"
+                                                : $"**{MessageUtils.Escape(teams.First().Name)}** has called **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** up from **{MessageUtils.Escape(teams.Skip(1).LastOrDefault()?.Name ?? "training camp")}**",
+                                            RosterTransactionType.SentDown => league.HasPluralTeamNames()
+                                                ? $"The **{MessageUtils.Escape(teams.First().Name)}** have sent **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** down to the **{MessageUtils.Escape(teams.Skip(1).LastOrDefault()?.Name ?? "training camp")}**"
+                                                : $"**{MessageUtils.Escape(teams.First().Name)}** has sent **{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** down to **{MessageUtils.Escape(teams.Skip(1).LastOrDefault()?.Name ?? "training camp")}**",
+                                            RosterTransactionType.Banned => league.HasPluralTeamNames()
+                                                ? $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been banned by the **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**"
+                                                : $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been banned by **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**",
+                                            RosterTransactionType.Suspended => league.HasPluralTeamNames()
+                                                ? $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been suspended by the **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**"
+                                                : $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been suspended by **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**",
+                                            _ => "",
+                                        }, @" by\s*(the)?\s*\*\*\*\*", "")
+                                    , @" the \*\*training camp\*\*$", " training camp").Trim();
 
                                     if (!string.IsNullOrWhiteSpace(message))
                                     {

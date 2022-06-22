@@ -544,6 +544,7 @@ public class LeaguegamingApi
             var teamIds = await GetTeamIdsAsync(league);
 
             return (await Task.WhenAll(new LeaguegamingNewsType[] {
+                LeaguegamingNewsType.AccountUpdate,
                 LeaguegamingNewsType.Bans,
                 LeaguegamingNewsType.CallUpDown,
                 LeaguegamingNewsType.InjuredReserve,
@@ -595,6 +596,22 @@ public class LeaguegamingApi
                         {
                             LeagueId = league.Id,
                             TeamIds = new string[] { callUp.Groups[1].Value, callUp.Groups[2].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { callUp.Groups[3].Value.Trim() },
+                            Type = RosterTransactionType.CalledUp,
+                            Timestamp = ISiteApi.ParseDateTime(callUp.Groups[4].Value, Timezone),
+                        };
+                    }
+
+                    var callUpFromTc = Regex.Match(m.Groups[1].Value,
+                        @"<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(.*?)</span>\s*has cleared\s*<span[^>]*>Training Camp</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                        RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                    if (callUp.Success == true && teamIds.Contains(callUp.Groups[1].Value) == true)
+                    {
+                        return new RosterTransaction
+                        {
+                            LeagueId = league.Id,
+                            TeamIds = new string[] { callUp.Groups[1].Value, Guid.Empty.ToString() }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
                             PlayerNames = new string[] { callUp.Groups[3].Value.Trim() },
                             Type = RosterTransactionType.CalledUp,
                             Timestamp = ISiteApi.ParseDateTime(callUp.Groups[4].Value, Timezone),

@@ -3,6 +3,7 @@ namespace Duthie.Modules.Leaguegaming;
 internal enum LeaguegamingNewsType
 {
     All = 0,
+    AccountUpdate = 4,
     Bans = 11,
     Bids = 1,
     CallUpDown = 13,
