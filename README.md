@@ -30,10 +30,10 @@ List the available data in **Duthie Bot**.
 ```vb
 # SYNTAX
   /duthie list admins
-  /duthie list leagues [...filters]
-  /duthie list sites [...filters]
-  /duthie list teams [...filters]
-  /duthie list watchers [...filters]
+  /duthie list leagues (...filters)
+  /duthie list sites (...filters)
+  /duthie list teams (...filters)
+  /duthie list watchers (...filters)
   /duthie list watcher-types
 ```
 
@@ -64,8 +64,8 @@ Supported Sites
 **Daily Stars**         | ✔️                                                   | ❌                                                         | ❌                                      
 **Draft Picks**         | ✔️                                                   | ✔️                                                         | ❌                                      
 **Game Results**        | ✔️                                                   | ✔️                                                         | ✔️                                      
-**General News**        | ✔️                                                   | ❌                                                         | ❌                                      
 **Roster Transactions** | ✔️                                                   | ✔️                                                         | ❌                                      
+**Team News**           | ✔️                                                   | ❌                                                         | ❌                                      
 **Trades**              | ✔️                                                   | ✔️                                                         | ❌                                      
 **Waiver Wire**         | ✔️                                                   | ❌                                                         | ❌                                      
 **Winning Bids**        | ✔️                                                   | ✔️                                                         | ❌                                      
