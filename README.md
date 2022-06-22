@@ -64,8 +64,8 @@ Supported Sites
 **Daily Stars**         | ✔️                                                   | ❌                                                         | ❌                                      
 **Draft Picks**         | ✔️                                                   | ✔️                                                         | ❌                                      
 **Game Results**        | ✔️                                                   | ✔️                                                         | ✔️                                      
-**General News**        | ✔️                                                   | ❌                                                         | ❌                                      
 **Roster Transactions** | ✔️                                                   | ✔️                                                         | ❌                                      
+**Team News**           | ✔️                                                   | ❌                                                         | ❌                                      
 **Trades**              | ✔️                                                   | ✔️                                                         | ❌                                      
 **Waiver Wire**         | ✔️                                                   | ❌                                                         | ❌                                      
 **Winning Bids**        | ✔️                                                   | ✔️                                                         | ❌                                      
