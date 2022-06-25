@@ -160,7 +160,7 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new roster transaction")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else
+                else if (league.State.LastRosterTransaction == null)
                     league.State.LastRosterTransaction = data?.LastOrDefault()?.GetHash() ?? "";
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.RosterTransaction);

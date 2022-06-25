@@ -121,7 +121,7 @@ public class ContractBackgroundService : ScheduledBackgroundService
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new contract")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else
+                else if (league.State.LastContract == null)
                     league.State.LastContract = data?.LastOrDefault()?.GetHash() ?? "";
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.Contract);

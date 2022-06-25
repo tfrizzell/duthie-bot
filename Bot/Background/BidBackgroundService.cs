@@ -121,7 +121,7 @@ public class BidBackgroundService : ScheduledBackgroundService
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new winning bid")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else
+                else if (league.State.LastBid == null)
                     league.State.LastBid = data?.LastOrDefault()?.GetHash() ?? "";
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.Bid);

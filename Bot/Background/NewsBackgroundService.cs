@@ -118,7 +118,7 @@ public class NewsBackgroundService : ScheduledBackgroundService
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new winning news")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else
+                else if (league.State.LastNewsItem == null)
                     league.State.LastNewsItem = data?.LastOrDefault()?.GetHash() ?? "";
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.News);

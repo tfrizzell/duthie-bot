@@ -120,7 +120,7 @@ public class DraftBackgroundService : ScheduledBackgroundService
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new draft pick")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else
+                else if (league.State.LastDraftPick == null)
                     league.State.LastDraftPick = data?.LastOrDefault()?.GetHash() ?? "";
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.DraftPick);

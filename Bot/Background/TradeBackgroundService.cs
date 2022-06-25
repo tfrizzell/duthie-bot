@@ -164,7 +164,7 @@ public class TradeBackgroundService : ScheduledBackgroundService
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new trade")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else
+                else if (league.State.LastTrade == null)
                     league.State.LastTrade = data?.LastOrDefault()?.GetHash() ?? "";
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.Trade);

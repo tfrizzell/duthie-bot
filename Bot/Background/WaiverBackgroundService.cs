@@ -139,7 +139,7 @@ public class WaiverBackgroundService : ScheduledBackgroundService
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new waiver")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else
+                else if (league.State.LastWaiver == null)
                     league.State.LastWaiver = data?.LastOrDefault()?.GetHash() ?? "";
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.Waiver);
