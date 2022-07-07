@@ -8,5 +8,6 @@ public class DatabaseConfiguration
 
 public enum DatabaseType
 {
-    Sqlite
+    Sqlite,
+    Mysql
 }

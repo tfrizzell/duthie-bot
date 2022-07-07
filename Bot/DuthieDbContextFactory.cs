@@ -16,13 +16,17 @@ internal class DuthieDbContextFactory : IDesignTimeDbContextFactory<DuthieDbCont
 
     public DuthieDbContext CreateDbContext(string[] args)
     {
-        var config = GetDatabaseConfiguration();
-        var optionsBuilder = new DbContextOptionsBuilder<DuthieDbContext>();
-        optionsBuilder.UseSqlite(config.ConnectionString, b => b.MigrationsAssembly("Duthie.Bot"));
-        return new DuthieDbContext(optionsBuilder.Options);
+        var configuration = GetConfiguration(args);
+        var databaseConfiguration = GetDatabaseConfiguration(configuration);
+        databaseConfiguration.Type = configuration.GetValue<DatabaseType>("Provider", databaseConfiguration.Type);
+        databaseConfiguration.ConnectionString = configuration.GetValue<string>("ConnectionString", databaseConfiguration.ConnectionString);
+
+        var options = new DbContextOptionsBuilder<DuthieDbContext>();
+        DuthieDbContextFactory.ConfigureOptions(options, databaseConfiguration);
+        return new DuthieDbContext(options.Options);
     }
 
-    private static IConfiguration GetConfiguration()
+    private static IConfiguration GetConfiguration(string[] args)
     {
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
 
@@ -31,13 +35,34 @@ internal class DuthieDbContextFactory : IDesignTimeDbContextFactory<DuthieDbCont
             .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
             .AddUserSecrets<Program>()
             .AddEnvironmentVariables()
+            .AddCommandLine(args)
             .Build();
     }
 
-    private static DatabaseConfiguration GetDatabaseConfiguration()
+    private static DatabaseConfiguration GetDatabaseConfiguration(string[] args) =>
+        GetDatabaseConfiguration(GetConfiguration(args));
+
+    private static DatabaseConfiguration GetDatabaseConfiguration(IConfiguration configuration)
     {
         var databaseConfiguration = new DatabaseConfiguration();
-        GetConfiguration().GetSection("Database").Bind(databaseConfiguration);
+        configuration.GetSection("Database").Bind(databaseConfiguration);
         return databaseConfiguration;
+    }
+
+    public static void ConfigureOptions(DbContextOptionsBuilder options, DatabaseConfiguration configuration)
+    {
+        switch (configuration.Type)
+        {
+            case DatabaseType.Sqlite:
+                options.UseSqlite(configuration.ConnectionString, b => b.MigrationsAssembly("Duthie.Migrations.Sqlite"));
+                break;
+
+            case DatabaseType.Mysql:
+                options.UseMySql(configuration.ConnectionString, ServerVersion.AutoDetect(configuration.ConnectionString), b => b.MigrationsAssembly("Duthie.Migrations.Mysql"));
+                break;
+
+            default:
+                throw new ArgumentException($"Invalid database type {configuration.Type}");
+        }
     }
 }

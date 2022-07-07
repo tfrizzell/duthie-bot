@@ -8,57 +8,57 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Duthie.Bot.Migrations.Sqlite
+namespace Duthie.Migrations.Mysql.Migrations
 {
     [DbContext(typeof(DuthieDbContext))]
-    [Migration("20220606031756_ContractTracking")]
-    partial class ContractTracking
+    [Migration("20220701004955_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.5");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "6.0.6")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("Duthie.Types.Games.Game", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
-                    b.Property<string>("GameId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<ulong>("GameId")
+                        .HasColumnType("bigint unsigned");
 
                     b.Property<Guid>("HomeId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<int?>("HomeScore")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<Guid?>("HomeTeamId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<Guid>("LeagueId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<bool?>("Overtime")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool?>("Shootout")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("tinyint(1)");
 
-                    b.Property<string>("Timestamp")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("VisitorId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<int?>("VisitorScore")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<Guid?>("VisitorTeamId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.HasKey("Id");
 
@@ -73,24 +73,22 @@ namespace Duthie.Bot.Migrations.Sqlite
 
             modelBuilder.Entity("Duthie.Types.Guilds.Guild", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<ulong>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("bigint unsigned");
 
-                    b.Property<string>("DefaultChannelId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<ulong>("DefaultChannelId")
+                        .HasColumnType("bigint unsigned");
 
-                    b.Property<string>("JoinedAt")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("datetime(6)");
 
-                    b.Property<string>("LeftAt")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTimeOffset?>("LeftAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -99,11 +97,11 @@ namespace Duthie.Bot.Migrations.Sqlite
 
             modelBuilder.Entity("Duthie.Types.Guilds.GuildAdmin", b =>
                 {
-                    b.Property<string>("GuildId")
-                        .HasColumnType("TEXT");
+                    b.Property<ulong>("GuildId")
+                        .HasColumnType("bigint unsigned");
 
-                    b.Property<string>("MemberId")
-                        .HasColumnType("TEXT");
+                    b.Property<ulong>("MemberId")
+                        .HasColumnType("bigint unsigned");
 
                     b.HasKey("GuildId", "MemberId");
 
@@ -114,26 +112,41 @@ namespace Duthie.Bot.Migrations.Sqlite
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
-                    b.Property<string>("ChannelId")
+                    b.Property<ulong>("ChannelId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<uint?>("Color")
+                        .HasColumnType("int unsigned");
+
+                    b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext");
 
-                    b.Property<string>("CreatedAt")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
 
-                    b.Property<string>("GuildId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<string>("Footer")
+                        .HasColumnType("longtext");
 
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<ulong>("GuildId")
+                        .HasColumnType("bigint unsigned");
 
-                    b.Property<string>("SentAt")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Thumbnail")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTimeOffset?>("Timestamp")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -146,24 +159,31 @@ namespace Duthie.Bot.Migrations.Sqlite
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Info")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LogoUrl")
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ShortName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<Guid>("SiteId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Tags")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -176,38 +196,74 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.ToTable("Leagues", (string)null);
                 });
 
+            modelBuilder.Entity("Duthie.Types.Leagues.LeagueAffiliate", b =>
+                {
+                    b.Property<Guid>("LeagueId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("AffiliateId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("LeagueId", "AffiliateId");
+
+                    b.HasIndex("AffiliateId");
+
+                    b.ToTable("LeagueAffiliates", (string)null);
+                });
+
             modelBuilder.Entity("Duthie.Types.Leagues.LeagueState", b =>
                 {
                     b.Property<Guid>("LeagueId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("LastBid")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("LastContract")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTimeOffset?>("LastDailyStar")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("LastDraftPick")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LastNewsItem")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LastRosterTransaction")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LastTrade")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LastWaiver")
+                        .HasColumnType("longtext");
 
                     b.HasKey("LeagueId");
 
-                    b.ToTable("LeagueState", (string)null);
+                    b.ToTable("LeagueStates", (string)null);
                 });
 
             modelBuilder.Entity("Duthie.Types.Leagues.LeagueTeam", b =>
                 {
                     b.Property<Guid>("LeagueId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<Guid>("TeamId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("ExternalId")
                         .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("InternalId");
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("ExternalId");
 
                     b.HasKey("LeagueId", "TeamId");
 
                     b.HasIndex("TeamId");
+
+                    b.HasIndex("LeagueId", "ExternalId")
+                        .IsUnique();
 
                     b.ToTable("LeagueTeams", (string)null);
                 });
@@ -216,22 +272,22 @@ namespace Duthie.Bot.Migrations.Sqlite
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Tags")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -245,19 +301,19 @@ namespace Duthie.Bot.Migrations.Sqlite
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("ShortName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Tags")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -1358,30 +1414,28 @@ namespace Duthie.Bot.Migrations.Sqlite
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
-                    b.Property<string>("ArchivedAt")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTimeOffset?>("ArchivedAt")
+                        .HasColumnType("datetime(6)");
 
-                    b.Property<string>("ChannelId")
-                        .HasColumnType("TEXT");
+                    b.Property<ulong?>("ChannelId")
+                        .HasColumnType("bigint unsigned");
 
-                    b.Property<string>("CreatedAt")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetime(6)");
 
-                    b.Property<string>("GuildId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<ulong>("GuildId")
+                        .HasColumnType("bigint unsigned");
 
                     b.Property<Guid>("LeagueId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<Guid>("TeamId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("char(36)");
 
                     b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -1451,6 +1505,25 @@ namespace Duthie.Bot.Migrations.Sqlite
                     b.Navigation("Site");
                 });
 
+            modelBuilder.Entity("Duthie.Types.Leagues.LeagueAffiliate", b =>
+                {
+                    b.HasOne("Duthie.Types.Leagues.League", "Affiliate")
+                        .WithMany()
+                        .HasForeignKey("AffiliateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Duthie.Types.Leagues.League", "League")
+                        .WithMany("Affiliates")
+                        .HasForeignKey("LeagueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Affiliate");
+
+                    b.Navigation("League");
+                });
+
             modelBuilder.Entity("Duthie.Types.Leagues.LeagueState", b =>
                 {
                     b.HasOne("Duthie.Types.Leagues.League", null)
@@ -1463,7 +1536,7 @@ namespace Duthie.Bot.Migrations.Sqlite
             modelBuilder.Entity("Duthie.Types.Leagues.LeagueTeam", b =>
                 {
                     b.HasOne("Duthie.Types.Leagues.League", "League")
-                        .WithMany("LeagueTeams")
+                        .WithMany("Teams")
                         .HasForeignKey("LeagueId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1508,10 +1581,12 @@ namespace Duthie.Bot.Migrations.Sqlite
 
             modelBuilder.Entity("Duthie.Types.Leagues.League", b =>
                 {
-                    b.Navigation("LeagueTeams");
+                    b.Navigation("Affiliates");
 
                     b.Navigation("State")
                         .IsRequired();
+
+                    b.Navigation("Teams");
                 });
 
             modelBuilder.Entity("Duthie.Types.Sites.Site", b =>

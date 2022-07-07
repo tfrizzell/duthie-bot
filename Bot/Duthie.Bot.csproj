@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Duthie.Bot</RootNamespace>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <AssemblyFileVersion>3.0.0.0</AssemblyFileVersion>
     <Version>3.0.0</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -17,17 +19,19 @@
     <ProjectReference Include="..\Modules\Leaguegaming\Duthie.Modules.Leaguegaming.csproj" />
     <ProjectReference Include="..\Modules\MyVirtualGaming\Duthie.Modules.MyVirtualGaming.csproj" />
     <ProjectReference Include="..\Modules\TheSpnhl\Duthie.Modules.TheSpnhl.csproj" />
+    <ProjectReference Include="..\Migrations\Sqlite\Duthie.Migrations.Sqlite.csproj" />
+    <ProjectReference Include="..\Migrations\Mysql\Duthie.Migrations.Mysql.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Cronos" Version="0.7.1" />
     <PackageReference Include="Discord.Net" Version="3.6.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.5">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.6">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.6" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="6.0.1" />
@@ -37,6 +41,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,5 +50,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
+
+  <Target Name="RenameExecutable" AfterTargets="Publish">
+    <Move SourceFiles="$(PublishDir)\Duthie.Bot" DestinationFiles="$(PublishDir)\duthie.exe" OverwriteReadOnlyFiles="true"/>
+  </Target>
 
 </Project>

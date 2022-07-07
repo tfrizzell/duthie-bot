@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Duthie.Bot.Migrations.Sqlite
+namespace Duthie.Migrations.Sqlite.Migrations
 {
     public partial class Initial : Migration
     {
@@ -15,6 +15,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
+                    DefaultChannelId = table.Column<string>(type: "TEXT", nullable: false),
                     JoinedAt = table.Column<string>(type: "TEXT", nullable: false),
                     LeftAt = table.Column<string>(type: "TEXT", nullable: true)
                 },
@@ -77,7 +78,13 @@ namespace Duthie.Bot.Migrations.Sqlite
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     GuildId = table.Column<string>(type: "TEXT", nullable: false),
                     ChannelId = table.Column<string>(type: "TEXT", nullable: false),
-                    Message = table.Column<string>(type: "TEXT", nullable: false),
+                    Color = table.Column<uint>(type: "INTEGER", nullable: true),
+                    Title = table.Column<string>(type: "TEXT", nullable: true),
+                    Thumbnail = table.Column<string>(type: "TEXT", nullable: true),
+                    Content = table.Column<string>(type: "TEXT", nullable: false),
+                    Footer = table.Column<string>(type: "TEXT", nullable: true),
+                    Url = table.Column<string>(type: "TEXT", nullable: true),
+                    Timestamp = table.Column<string>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<string>(type: "TEXT", nullable: false),
                     SentAt = table.Column<string>(type: "TEXT", nullable: true)
                 },
@@ -99,6 +106,8 @@ namespace Duthie.Bot.Migrations.Sqlite
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     SiteId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
+                    ShortName = table.Column<string>(type: "TEXT", nullable: false),
+                    LogoUrl = table.Column<string>(type: "TEXT", nullable: true),
                     Info = table.Column<string>(type: "TEXT", nullable: true),
                     Tags = table.Column<string>(type: "TEXT", nullable: false),
                     Enabled = table.Column<bool>(type: "INTEGER", nullable: false)
@@ -153,17 +162,48 @@ namespace Duthie.Bot.Migrations.Sqlite
                 });
 
             migrationBuilder.CreateTable(
-                name: "LeagueState",
+                name: "LeagueAffiliates",
                 columns: table => new
                 {
                     LeagueId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    LastBid = table.Column<string>(type: "TEXT", nullable: true)
+                    AffiliateId = table.Column<Guid>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_LeagueState", x => x.LeagueId);
+                    table.PrimaryKey("PK_LeagueAffiliates", x => new { x.LeagueId, x.AffiliateId });
                     table.ForeignKey(
-                        name: "FK_LeagueState_Leagues_LeagueId",
+                        name: "FK_LeagueAffiliates_Leagues_AffiliateId",
+                        column: x => x.AffiliateId,
+                        principalTable: "Leagues",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_LeagueAffiliates_Leagues_LeagueId",
+                        column: x => x.LeagueId,
+                        principalTable: "Leagues",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LeagueStates",
+                columns: table => new
+                {
+                    LeagueId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    LastBid = table.Column<string>(type: "TEXT", nullable: true),
+                    LastContract = table.Column<string>(type: "TEXT", nullable: true),
+                    LastDailyStar = table.Column<string>(type: "TEXT", nullable: true),
+                    LastDraftPick = table.Column<string>(type: "TEXT", nullable: true),
+                    LastNewsItem = table.Column<string>(type: "TEXT", nullable: true),
+                    LastRosterTransaction = table.Column<string>(type: "TEXT", nullable: true),
+                    LastTrade = table.Column<string>(type: "TEXT", nullable: true),
+                    LastWaiver = table.Column<string>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LeagueStates", x => x.LeagueId);
+                    table.ForeignKey(
+                        name: "FK_LeagueStates_Leagues_LeagueId",
                         column: x => x.LeagueId,
                         principalTable: "Leagues",
                         principalColumn: "Id",
@@ -176,7 +216,7 @@ namespace Duthie.Bot.Migrations.Sqlite
                 {
                     LeagueId = table.Column<Guid>(type: "TEXT", nullable: false),
                     TeamId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    InternalId = table.Column<string>(type: "TEXT", nullable: false)
+                    ExternalId = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1027,6 +1067,11 @@ namespace Duthie.Bot.Migrations.Sqlite
                 column: "GuildId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_LeagueAffiliates_AffiliateId",
+                table: "LeagueAffiliates",
+                column: "AffiliateId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Leagues_Name",
                 table: "Leagues",
                 column: "Name",
@@ -1036,6 +1081,12 @@ namespace Duthie.Bot.Migrations.Sqlite
                 name: "IX_Leagues_SiteId_Name",
                 table: "Leagues",
                 columns: new[] { "SiteId", "Name" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LeagueTeams_LeagueId_ExternalId",
+                table: "LeagueTeams",
+                columns: new[] { "LeagueId", "ExternalId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -1084,7 +1135,10 @@ namespace Duthie.Bot.Migrations.Sqlite
                 name: "GuildMessages");
 
             migrationBuilder.DropTable(
-                name: "LeagueState");
+                name: "LeagueAffiliates");
+
+            migrationBuilder.DropTable(
+                name: "LeagueStates");
 
             migrationBuilder.DropTable(
                 name: "LeagueTeams");

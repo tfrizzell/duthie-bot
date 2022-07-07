@@ -17,7 +17,6 @@ using Duthie.Services.Sites;
 using Duthie.Services.Teams;
 using Duthie.Services.Watchers;
 using Duthie.Types.Modules.Api;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -42,7 +41,7 @@ public static class CompositionRoot
 
         return services.AddDbContextFactory<DuthieDbContext>(options =>
             {
-                options.UseSqlite(databaseConfiguration.ConnectionString, b => b.MigrationsAssembly("Duthie.Bot"));
+                DuthieDbContextFactory.ConfigureOptions(options, databaseConfiguration);
             })
             .AddLogging(options =>
             {

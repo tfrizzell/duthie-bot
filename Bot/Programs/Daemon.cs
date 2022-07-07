@@ -81,7 +81,10 @@ public class Daemon
 
             using (var context = await _contextFactory.CreateDbContextAsync())
             {
+                _logger.LogTrace("Applying database migrations");
                 context.Database.Migrate();
+
+                _logger.LogTrace("Populating tables");
                 await context.PopulateAsync();
             }
 
