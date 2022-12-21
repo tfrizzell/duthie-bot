@@ -1,0 +1,8 @@
+.github/
+.vscode/
+bin/
+dist/
+obj/
+*.db
+*.log
+*.sh
