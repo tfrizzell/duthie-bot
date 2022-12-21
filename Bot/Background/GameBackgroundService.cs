@@ -89,7 +89,7 @@ public class GameBackgroundService : ScheduledBackgroundService
 
                         var messages = new List<GuildMessage>();
 
-                        if (_game != null && game.VisitorScore != null && game.HomeScore != null)
+                        if (ShouldNotify(_game, game))
                         {
                             var url = api.GetGameUrl(league, game);
 
@@ -192,4 +192,15 @@ public class GameBackgroundService : ScheduledBackgroundService
             _logger.LogError(e, "An unexpected error during game update task.");
         }
     }
+
+    private static bool ShouldNotify(Game? prev, Types.Modules.Data.Game next) =>
+        prev != null
+        && next.VisitorScore != null
+        && next.HomeScore != null
+        && (
+            prev.VisitorScore != next.VisitorScore
+            || prev.HomeScore != next.HomeScore
+            || prev.Overtime != next.Overtime
+            || prev.Shootout != next.Shootout
+        );
 }
