@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Duthie.Services.Api;
+using Duthie.Services.Games;
 using Duthie.Services.Guilds;
 using Duthie.Services.Watchers;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,7 @@ public class PruningBackgroundService : ScheduledBackgroundService
 {
     private readonly ILogger<PruningBackgroundService> _logger;
     private readonly ApiService _apiService;
+    private readonly GameService _gameService;
     private readonly GuildMessageService _guildMessageService;
     private readonly GuildService _guildService;
     private readonly WatcherService _watcherService;
@@ -17,12 +19,14 @@ public class PruningBackgroundService : ScheduledBackgroundService
     public PruningBackgroundService(
         ILogger<PruningBackgroundService> logger,
         ApiService apiService,
+        GameService gameService,
         GuildMessageService guildMessageService,
         GuildService guildService,
         WatcherService watcherService) : base(logger)
     {
         _logger = logger;
         _apiService = apiService;
+        _gameService = gameService;
         _guildMessageService = guildMessageService;
         _guildService = guildService;
         _watcherService = watcherService;
@@ -44,6 +48,7 @@ public class PruningBackgroundService : ScheduledBackgroundService
         try
         {
             await Task.WhenAll(
+                _gameService.PruneAsync(),
                 _guildMessageService.PruneAsync(),
                 _guildService.PruneAsync(),
                 _watcherService.PruneAsync());

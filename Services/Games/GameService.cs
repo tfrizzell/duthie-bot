@@ -95,6 +95,26 @@ public class GameService
         }
     }
 
+    public async Task<int> PruneAsync()
+    {
+        using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            var pruneFrom = DateTimeOffset.UtcNow.AddMonths(-6);
+
+            var toPrune = await context.Set<Game>()
+                .Where(g => g.Timestamp <= pruneFrom.DateTime)
+                .ToListAsync();
+
+            if (toPrune.Count() > 0)
+            {
+                await context.Set<Game>().RemoveRangeAsync(toPrune);
+                return await context.SaveChangesAsync();
+            }
+        }
+
+        return 0;
+    }
+
     public async Task<int> SaveAsync(IEnumerable<Game> games) =>
         await SaveAsync(games.ToArray());
 
