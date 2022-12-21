@@ -101,11 +101,11 @@ public class DailyStarBackgroundService : ScheduledBackgroundService
                                     Title = $"{league.ShortName} Daily Stars",
                                     Thumbnail = league.LogoUrl,
                                     Content = string.Join("\n\n",
-                                        new string[] { $"**Congratulations to today's {league.Name} daily stars!**" }
-                                        .Concat(stars.GroupBy(star => Regex.Replace($"{star.Position}s", @"ses$", "se"))
+                                        new string[] { $"**Congratulations to today's {MessageUtils.Escape(league.Name)} daily stars!**" }
+                                        .Concat(stars.GroupBy(star => Regex.Replace($"{MessageUtils.Escape(star.Position)}s", @"ses$", "se"))
                                             .Select(star => string.Join("\n  ",
                                                 new string[] { $"{star.Key}:" }
-                                                .Concat(star.Select(s => $"{s.Rank.Ordinal()} Star - {s.PlayerName}     `{s.GetStatLine()}`")))))),
+                                                .Concat(star.Select(s => $"{s.Rank.Ordinal()} Star - {MessageUtils.Escape(s.PlayerName)} | `{s.GetStatLine()}`")))))),
                                     Url = url,
                                 };
                             })
