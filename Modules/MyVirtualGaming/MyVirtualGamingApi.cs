@@ -686,7 +686,7 @@ public class MyVirtualGamingApi
             return null;
 
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-        return $"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&(?:amp;)?layout=game&(?:amp;)?id={game.Id}";
+        return $"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/schedule?view=game&layout=game&id={game.Id}";
     }
 
     public string? GetRosterTransactionUrl(League league, RosterTransaction rosterTransaction)
