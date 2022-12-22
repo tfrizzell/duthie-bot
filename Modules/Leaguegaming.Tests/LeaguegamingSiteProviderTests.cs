@@ -27,7 +27,7 @@ public class LeaguegamingSiteProviderTests
         Assert.True(count == 1, $"expected 1 site with name {name} but found {count}");
     }
 
-    internal static IEnumerable<object[]> DefaultSites()
+    public static IEnumerable<object[]> DefaultSites()
     {
         yield return new object[] { "e3f25028-0a34-4430-a2a5-a1a7fab73b41", "Leaguegaming", "www.leaguegaming.com" };
     }

@@ -27,7 +27,7 @@ public class TheSpnhlSiteProviderTests
         Assert.True(count == 1, $"expected 1 site with name {name} but found {count}");
     }
 
-    internal static IEnumerable<object[]> DefaultSites()
+    public static IEnumerable<object[]> DefaultSites()
     {
         yield return new object[] { "c193a2eb-f6fd-4c1d-bf2b-b77ef05f236c", "SPNHL", "thespnhl.com" };
     }

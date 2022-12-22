@@ -27,7 +27,7 @@ public class MyVirtualGamingSiteProviderTests
         Assert.True(count == 1, $"expected 1 site with name {name} but found {count}");
     }
 
-    internal static IEnumerable<object[]> DefaultSites()
+    public static IEnumerable<object[]> DefaultSites()
     {
         yield return new object[] { "40a06d17-e48f-49f1-9184-7393f035322c", "VGHL", "vghl.myvirtualgaming.com" };
     }

@@ -30,7 +30,7 @@ public class MyVirtualGamingLeagueProviderTests
         Assert.True(count == 1, $"expected 1 league with name {name} but found {count}");
     }
 
-    internal static IEnumerable<object[]> DefaultLeagues()
+    public static IEnumerable<object[]> DefaultLeagues()
     {
         yield return new object[] { new Guid("5957b164-7bb5-4324-967a-16c3044260b2"), "VGNHL National League", "vgnhl" };
         yield return new object[] { new Guid("0fc1b6e9-9181-4545-9d32-5edbd67b276a"), "VGAHL Affiliate League", "vgahl" };

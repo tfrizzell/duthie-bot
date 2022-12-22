@@ -30,7 +30,7 @@ public class LeaguegamingLeagueProviderTests
         Assert.True(count == 1, $"expected 1 league with name {name} but found {count}");
     }
 
-    internal static IEnumerable<object[]> DefaultLeagues()
+    public static IEnumerable<object[]> DefaultLeagues()
     {
         yield return new object[] { new Guid("25e5037d-cf8c-4a36-852c-e3cec36a5dc5"), "LGHL", 37 };
         yield return new object[] { new Guid("981d1b21-fa47-4979-9684-13336ecb3f6c"), "LGAHL", 38 };

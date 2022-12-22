@@ -26,7 +26,7 @@ public class TheSpnhlLeagueProviderTests
         Assert.True(count == 1, $"expected 1 league with name {name} but found {count}");
     }
 
-    internal static IEnumerable<object[]> DefaultLeagues()
+    public static IEnumerable<object[]> DefaultLeagues()
     {
         yield return new object[] { new Guid("6991c990-a4fa-488b-884a-79b00e4e3577"), "SPNHL" };
     }
