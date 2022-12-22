@@ -49,10 +49,6 @@
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="appsettings.Development.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-    </Content>
   </ItemGroup>
 
   <Target Name="RenameExecutable" AfterTargets="Publish">
