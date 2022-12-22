@@ -236,7 +236,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (leagues, leagueOption) = await GetLeaguesAsync(cmd, returnAllLeagues: true);
 
-        if (leagues == null)
+        if (leagues == null || leagues.Count() == 0)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league `{leagueOption}`.", ephemeral: true);
             return;
@@ -244,7 +244,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (teams, teamOption) = await GetTeamsAsync(cmd, returnAllTeams: true);
 
-        if (teams == null)
+        if (teams == null || teams.Count() == 0)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team `{teamOption}`.", ephemeral: true);
             return;
@@ -252,9 +252,15 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (types, typeOption) = await GetTypesAsync(cmd);
 
-        if (types == null)
+        if (types == null || types.Count() == 0)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher type `{typeOption}`.", ephemeral: true);
+            return;
+        }
+
+        if (leagueOption!.ToLower() != "all" && teamOption!.ToLower() != "all" && leagues.First().Teams.Any(lt => lt.TeamId == teams.First().Id) != true)
+        {
+            await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team `{teams.First().Name}` in the league `{leagues.First().Name}`.", ephemeral: true);
             return;
         }
 
@@ -305,7 +311,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (leagues, leagueOption) = await GetLeaguesAsync(cmd);
 
-        if (leagueOption != null && leagueOption.ToLower() != "all" && leagues == null)
+        if (leagueOption != null && leagueOption.ToLower() != "all" && (leagues == null || leagues.Count() == 0))
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league `{leagueOption}`.", ephemeral: true);
             return;
@@ -313,7 +319,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (teams, teamOption) = await GetTeamsAsync(cmd);
 
-        if (teamOption != null && teamOption.ToLower() != "all" && teams == null)
+        if (teamOption != null && teamOption.ToLower() != "all" && (teams == null || teams.Count() == 0))
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team `{teamOption}`.", ephemeral: true);
             return;
@@ -321,7 +327,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (types, typeOption) = await GetTypesAsync(cmd);
 
-        if (typeOption != null && types == null)
+        if (typeOption != null && (types == null || types.Count() == 0))
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher type `{typeOption}`.", ephemeral: true);
             return;
@@ -380,7 +386,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (leagues, leagueOption) = await GetLeaguesAsync(cmd, returnAllLeagues: site != null);
 
-        if (leagueOption != null && leagueOption.ToLower() != "all" && leagues == null)
+        if (leagueOption != null && leagueOption.ToLower() != "all" && (leagues == null || leagues.Count() == 0))
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league `{leagueOption}`.", ephemeral: true);
             return;
@@ -388,7 +394,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (teams, teamOption) = await GetTeamsAsync(cmd);
 
-        if (teamOption != null && teamOption.ToLower() != "all" && teams == null)
+        if (teamOption != null && teamOption.ToLower() != "all" && (teams == null || teams.Count() == 0))
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the teams `{teamOption}`.", ephemeral: true);
             return;
@@ -396,7 +402,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (types, typeOption) = await GetTypesAsync(cmd);
 
-        if (typeOption != null && types == null)
+        if (typeOption != null && (types == null || types.Count() == 0))
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher types `{typeOption}`.", ephemeral: true);
             return;
@@ -430,7 +436,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (leagues, leagueOption) = await GetLeaguesAsync(cmd, returnAllLeagues: true);
 
-        if (leagues == null)
+        if (leagues == null || leagues.Count() == 0)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the league `{leagueOption}`.", ephemeral: true);
             return;
@@ -438,7 +444,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (teams, teamOption) = await GetTeamsAsync(cmd, returnAllTeams: true);
 
-        if (teams == null)
+        if (teams == null || teams.Count() == 0)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team `{teamOption}`.", ephemeral: true);
             return;
@@ -446,7 +452,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         var (types, typeOption) = await GetTypesAsync(cmd);
 
-        if (types == null)
+        if (types == null || types.Count() == 0)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the watcher type `{typeOption}`.", ephemeral: true);
             return;
