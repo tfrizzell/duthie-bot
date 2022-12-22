@@ -26,9 +26,9 @@ public class GuildAdminService
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            foreach (var id in memberIds)
+            foreach (var memberId in memberIds)
             {
-                var admin = await context.Set<GuildAdmin>().FirstOrDefaultAsync(a => a.GuildId == guildId && a.MemberId == guildId);
+                var admin = await context.Set<GuildAdmin>().FirstOrDefaultAsync(a => a.GuildId == guildId && a.MemberId == memberId);
 
                 if (admin != null)
                     await context.Set<GuildAdmin>().RemoveAsync(admin);
