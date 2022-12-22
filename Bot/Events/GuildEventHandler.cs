@@ -168,7 +168,15 @@ public class GuildEventHandler : IAsyncHandler
 
         foreach (var guild in client.Guilds)
         {
-            if (!guildIds.Contains(guild.Id))
+            if (guildIds.Contains(guild.Id))
+            {
+                var adminIds = await _guildAdminService.GetAllAsync(guild.Id);
+                var invalidAdminIds = adminIds.Where(adminId => guild.GetUser(adminId) == null);
+
+                if (invalidAdminIds.Count() > 0)
+                    await _guildAdminService.DeleteAsync(guild.Id, invalidAdminIds.ToArray());
+            }
+            else
                 await JoinAsync(guild.ToGuild());
         }
 
