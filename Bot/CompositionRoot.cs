@@ -76,7 +76,7 @@ public static class CompositionRoot
 
         var client = new DiscordShardedClient(new DiscordSocketConfig
         {
-            GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers,
+            GatewayIntents = GatewayIntents.AllUnprivileged,
         });
 
         var commands = new CommandService(new CommandServiceConfig
