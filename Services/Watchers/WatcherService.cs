@@ -60,7 +60,7 @@ public class WatcherService
             return await context.Set<Watcher>()
                 .Include(w => w.League)
                     .ThenInclude(l => l.Site)
-                .AnyAsync(w => w.Id == id && w.ArchivedAt == null && w.League.Enabled && w.League.Site.Enabled);
+                .AnyAsync(w => w.Id == id && w.ArchivedAt == null && w.Guild.LeftAt == null && w.League.Enabled && w.League.Site.Enabled);
         }
     }
 
@@ -68,7 +68,7 @@ public class WatcherService
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            var query = CreateQuery(context).Where(w => w.GuildId == guildId && w.ArchivedAt == null && w.League.Enabled && w.League.Site.Enabled);
+            var query = CreateQuery(context).Where(w => w.GuildId == guildId && w.ArchivedAt == null && w.Guild.LeftAt == null && w.League.Enabled && w.League.Site.Enabled);
 
             if (sites?.Count() > 0)
                 query = query.Where(w => sites.Contains(w.League.SiteId));
@@ -90,7 +90,7 @@ public class WatcherService
     {
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
-            var query = CreateQuery(context).Where(w => w.ArchivedAt == null && w.League.Enabled && w.League.Site.Enabled);
+            var query = CreateQuery(context).Where(w => w.ArchivedAt == null && w.Guild.LeftAt == null && w.League.Enabled && w.League.Site.Enabled);
 
             if (sites?.Count() > 0)
                 query = query.Where(w => sites.Contains(w.League.SiteId));
@@ -124,7 +124,7 @@ public class WatcherService
         using (var context = await _contextFactory.CreateDbContextAsync())
         {
             return await CreateQuery(context)
-                .Where(w => w.GuildId == guildId && w.ArchivedAt == null && w.League.Enabled && w.League.Site.Enabled)
+                .Where(w => w.GuildId == guildId && w.ArchivedAt == null && w.Guild.LeftAt == null && w.League.Enabled && w.League.Site.Enabled)
                 .ToListAsync();
         }
     }
