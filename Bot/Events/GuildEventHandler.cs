@@ -74,7 +74,7 @@ public class GuildEventHandler : IAsyncHandler
             sw.Stop();
             _logger.LogTrace($"Guild update failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during guild update.");
-            Environment.Exit(0);
+            Environment.Exit(ExitCode.GuildUpdateFailure);
         }
     }
 

@@ -77,6 +77,6 @@ public class ProgramEventHandler : IAsyncHandler
             }
         }).GetAwaiter().GetResult();
 
-        Environment.Exit(0);
+        Environment.Exit(ExitCode.UnhandledException);
     }
 }

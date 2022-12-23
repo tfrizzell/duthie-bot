@@ -35,7 +35,7 @@ public class CommandLine
                 return;
         }
 
-        Environment.Exit(0);
+        Environment.Exit(ExitCode.Success);
     }
 
     private static async Task BroadcastMessageAsync(params string[] args)
@@ -67,7 +67,7 @@ public class CommandLine
             logger.LogTrace($"Sent message to guild \"{guild.Name}\" [{guild.Id}]");
         }
 
-        Environment.Exit(0);
+        Environment.Exit(ExitCode.Success);
     }
 
     private static async Task PruneDataAsync(params string[] args)

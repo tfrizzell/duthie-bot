@@ -59,7 +59,7 @@ public class CommandRegistrationService
             sw.Stop();
             _logger.LogTrace($"Command registration failed in {sw.Elapsed.TotalSeconds}s");
             _logger.LogError(e, "An unexpected error during command registration.");
-            Environment.Exit(0);
+            Environment.Exit(ExitCode.CommandRegistrationFailure);
         }
     }
 
@@ -80,7 +80,7 @@ public class CommandRegistrationService
             sw.Stop();
 
             _logger.LogError(e, $"Command registration failed in {sw.Elapsed.TotalSeconds}s");
-            Environment.Exit(0);
+            Environment.Exit(ExitCode.CommandRegistrationFailure);
         }
     }
 }
