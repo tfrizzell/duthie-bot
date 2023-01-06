@@ -42,8 +42,15 @@ public class TheSpnhlApiTests
     [Fact]
     public async Task GetTeamsAsync_ReturnsExpectedTeams()
     {
+        var league = await _api.GetLeagueAsync(_league);
+
         var actualTeams = await _api.GetTeamsAsync(_league);
         Assert.True(actualTeams != null, $"{_api.GetType().Name} does not support league {_league.Id}");
+
+        // thespnhl.com doesn't provide historical schedules. Once the season is updated, the rest of the tests
+        // will fail.
+        if ((league!.Info as TheSpnhlLeagueInfo)!.SeasonId != (_league.Info as TheSpnhlLeagueInfo)!.SeasonId)
+            return;
 
         var expectedTeams = JsonSerializer.Deserialize<IEnumerable<Team>>(File.ReadAllText(@"./Files/teams.json"))!;
         var expectedTeamCount = expectedTeams.Count();
