@@ -10,6 +10,6 @@ public static class SocketGuildToGuildConverter
         {
             Id = guild.Id,
             Name = guild.Name,
-            DefaultChannelId = guild.DefaultChannel.Id,
+            DefaultChannelId = guild.GetDefaultTextChannelId(),
         };
 }

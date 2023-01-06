@@ -159,7 +159,7 @@ public class GuildEventHandler : IAsyncHandler
             else if (activeGuilds.ContainsKey(guild.Id))
             {
                 guild.Name = activeGuilds[guild.Id].Name;
-                guild.DefaultChannelId = activeGuilds[guild.Id].DefaultChannel.Id;
+                guild.DefaultChannelId = activeGuilds[guild.Id].GetDefaultTextChannelId();
                 await _guildService.SaveAsync(guild);
             }
         }
