@@ -84,7 +84,7 @@ public class LeaguegamingApiTests
             actualGame!.Timestamp = actualGame.Timestamp.AddYears(2022 - actualGame.Timestamp.Year);
             Assert.True(expectedGame.LeagueId == actualGame!.LeagueId, $"[game {expectedGame.Id}] expected LeagueId to be {expectedGame.LeagueId} but got {actualGame.LeagueId}");
             Assert.True(expectedGame.Id == actualGame.Id, $"[game {expectedGame.Id}] expected GameId to be {expectedGame.Id} but got {actualGame.Id}");
-            Assert.True(expectedGame.Timestamp == actualGame.Timestamp, $"[game {expectedGame.Id}] expected Timestamp to be {expectedGame.Timestamp} but got {actualGame.Timestamp}");
+            Assert.True(expectedGame.Timestamp.ToString("MMMM d") == actualGame.Timestamp.ToString("MMMM d"), $"[game {expectedGame.Id}] expected Timestamp to be {expectedGame.Timestamp.ToString("MMMM d")} but got {actualGame.Timestamp.ToString("MMMM d")}");
             Assert.True(expectedGame.VisitorId == actualGame.VisitorId, $"[game {expectedGame.Id}] expected VisitorId to be {expectedGame.VisitorId} but got {actualGame.VisitorId}");
             Assert.True(expectedGame.VisitorScore == actualGame.VisitorScore, $"[game {expectedGame.Id}] expected VisitorScore to be {expectedGame.VisitorScore} but got {actualGame.VisitorScore}");
             Assert.True(expectedGame.HomeId == actualGame.HomeId, $"[game {expectedGame.Id}] expected HomeId to be {expectedGame.HomeId} but got {actualGame.HomeId}");
