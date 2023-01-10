@@ -10,4 +10,5 @@ RUN dotnet restore && \
 FROM mcr.microsoft.com/dotnet/runtime:6.0
 WORKDIR /app
 COPY --from=build-env /build/dist .
+RUN chmod +x duthie.exe
 ENTRYPOINT ["./duthie.exe"]
