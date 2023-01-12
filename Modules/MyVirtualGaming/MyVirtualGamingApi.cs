@@ -69,7 +69,7 @@ public class MyVirtualGamingApi
                     PlayerName = player.Groups[2].Value.Trim(),
                     Amount = ISiteApi.ParseDollars(Regex.Match(m.Groups[2].Value, @"\$[\d\.]+( \w)?", RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups[0].Value),
                     State = BidState.Won,
-                    Timestamp = ISiteApi.ParseDateTime(m.Groups[3].Value, Timezone),
+                    Timestamp = ISiteApi.ParseDateTime(m.Groups[3].Value, TimeZoneInfo.Utc),
                 };
             })
             .ToList();
@@ -121,7 +121,7 @@ public class MyVirtualGamingApi
                         TeamId = m.Groups[1].Value,
                         PlayerName = contract.Groups[1].Value.Trim(),
                         Amount = ISiteApi.ParseDollars(contract.Groups[2].Value),
-                        Timestamp = ISiteApi.ParseDateTime(m.Groups[3].Value, Timezone),
+                        Timestamp = ISiteApi.ParseDateTime(m.Groups[3].Value, TimeZoneInfo.Utc),
                     };
                 }))
             .SelectMany(c => c)
@@ -434,7 +434,7 @@ public class MyVirtualGamingApi
                             Type = m.Groups[1].Value.ToLower().Contains("placed")
                                 ? RosterTransactionType.PlacedOnIr
                                 : RosterTransactionType.RemovedFromIr,
-                            Timestamp = ISiteApi.ParseDateTime(m.Groups[5].Value, Timezone),
+                            Timestamp = ISiteApi.ParseDateTime(m.Groups[5].Value, TimeZoneInfo.Utc),
                         }
                         )
                         .Cast<RosterTransaction>(),
@@ -450,7 +450,7 @@ public class MyVirtualGamingApi
                             PlayerIds = new string[] { m.Groups[1].Value },
                             PlayerNames = new string[] { m.Groups[2].Value.Trim() },
                             Type = RosterTransactionType.ReportedInactive,
-                            Timestamp = ISiteApi.ParseDateTime(m.Groups[4].Value, Timezone),
+                            Timestamp = ISiteApi.ParseDateTime(m.Groups[4].Value, TimeZoneInfo.Utc),
                         })
                         .Cast<RosterTransaction>(),
 
@@ -466,7 +466,7 @@ public class MyVirtualGamingApi
                             Type = m.Groups[3].Value.ToLower().Contains("called up")
                                 ? RosterTransactionType.CalledUp
                                 : RosterTransactionType.SentDown,
-                            Timestamp = ISiteApi.ParseDateTime(m.Groups[5].Value, Timezone),
+                            Timestamp = ISiteApi.ParseDateTime(m.Groups[5].Value, TimeZoneInfo.Utc),
                         })
                         .Cast<RosterTransaction>(),
 
@@ -480,7 +480,7 @@ public class MyVirtualGamingApi
                             TeamIds = new string[] { lookup[m.Groups[1].Value.Trim()] },
                             PlayerNames = new string[] { m.Groups[2].Value.Trim() },
                             Type = RosterTransactionType.Banned,
-                            Timestamp = ISiteApi.ParseDateTime(m.Groups[3].Value, Timezone),
+                            Timestamp = ISiteApi.ParseDateTime(m.Groups[3].Value, TimeZoneInfo.Utc),
                         })
                         .Cast<RosterTransaction>(),
 
@@ -640,7 +640,7 @@ public class MyVirtualGamingApi
                     FromId = lookup[m.Groups[1].Value.Trim()],
                     ToId = lookup[m.Groups[2].Value.Trim()],
                     FromAssets = new string[] { Regex.Replace(trade.Groups[1].Value.Trim(), @"the (.*? \d+\S+) round draft pick", @"$1 Round Pick") },
-                    Timestamp = ISiteApi.ParseDateTime(m.Groups[4].Value, Timezone),
+                    Timestamp = ISiteApi.ParseDateTime(m.Groups[4].Value, TimeZoneInfo.Utc),
                 };
             })
             .Where(t => t != null)
