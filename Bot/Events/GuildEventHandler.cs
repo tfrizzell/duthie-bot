@@ -159,7 +159,7 @@ public class GuildEventHandler : IAsyncHandler
             else if (activeGuilds.ContainsKey(guild.Id))
             {
                 if (!activeGuilds[guild.Id].Channels.Any(c => !(c is SocketVoiceChannel) && c.Id == guild.DefaultChannelId))
-                    guild.DefaultChannelId = activeGuilds[guild.Id].GetDefaultTextChannelId();
+                    guild.DefaultChannelId = activeGuilds[guild.Id].GetDefaultTextChannelId() ?? guild.DefaultChannelId;
 
                 guild.Name = activeGuilds[guild.Id].Name;
                 await _guildService.SaveAsync(guild);

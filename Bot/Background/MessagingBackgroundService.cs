@@ -61,7 +61,7 @@ public class MessagingBackgroundService : ScheduledBackgroundService
                     return new
                     {
                         Guild = guild,
-                        Channel = (guild?.GetChannel(m.ChannelId) ?? guild?.DefaultChannel) as IMessageChannel
+                        Channel = (guild?.GetChannel(m.ChannelId) ?? guild?.SystemChannel) as IMessageChannel
                     };
                 })
                 .Where(g => g.Key.Guild != null && g.Key.Channel != null)
