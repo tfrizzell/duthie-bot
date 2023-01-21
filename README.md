@@ -6,7 +6,7 @@ Duthie Bot
 
 How to Use
 ==========
-To get started using **Duthie Bot**, you'll first need to authorize it to use your server. To accomplish this, go to https://discordapp.com/oauth2/authorize?&client_id=356076231185268746&scope=bot&permissions=2048, select the server you're adding it to, and click "Authorize".
+To get started using **Duthie Bot**, you'll first need to authorize it to use your server. To accomplish this, go to https://discordapp.com/oauth2/authorize?client_id=356076231185268746&scope=bot&permissions=2048, select the server you're adding it to, and click "Authorize".
 
 <p align="center"><img alt="duthie-bot-discord-authorize.png" src="https://i.imgur.com/Tk4Tk8z.png" /></p>
 
