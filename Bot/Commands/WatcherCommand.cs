@@ -279,7 +279,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
                                     LeagueId = league.Id,
                                     TeamId = team.Id,
                                     Type = type,
-                                    ChannelId = channel?.Id,
+                                    ChannelId = channel?.Id ?? command.ChannelId,
                                 }))
                         .SelectMany(w => w))
                 .SelectMany(w => w);
@@ -416,7 +416,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
                 leagues: leagues == null ? null : leagues.Select(l => l.Id),
                 teams: teams == null ? null : teams.Select(t => t.Id),
                 types: types,
-                channels: channel == null ? null : new List<ulong?>() { channel.Id }));
+                channels: channel == null ? null : new ulong?[] { channel.Id }));
     }
 
     private async Task RemoveWatchersAsync(SocketSlashCommand command, SocketSlashCommandDataOption cmd)
@@ -466,7 +466,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
                 leagues: leagues.Select(l => l.Id),
                 teams: teams.Select(t => t.Id),
                 types: types,
-                channels: channel == null ? null : new List<ulong?>() { channel.Id }));
+                channels: new ulong?[] { channel?.Id ?? command.ChannelId }));
     }
 
     private async Task RemoveWatchersAsync(SocketSlashCommand command, IEnumerable<Watcher> watchers)
