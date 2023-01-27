@@ -3,60 +3,62 @@ using System;
 using Duthie.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Duthie.Migrations.Mysql.Migrations
+namespace Duthie.Migrations.Sqlite.Migrations
 {
     [DbContext(typeof(DuthieDbContext))]
-    partial class DuthieDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230127034049_CommandNotification")]
+    partial class CommandNotification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.12")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.12");
 
             modelBuilder.Entity("Duthie.Types.Games.Game", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
-                    b.Property<ulong>("GameId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<string>("GameId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("HomeId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("HomeScore")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid?>("HomeTeamId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("LeagueId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool?>("Overtime")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool?>("Shootout")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .HasColumnType("datetime(6)");
+                    b.Property<string>("Timestamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("VisitorId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("VisitorScore")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid?>("VisitorTeamId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -71,25 +73,27 @@ namespace Duthie.Migrations.Mysql.Migrations
 
             modelBuilder.Entity("Duthie.Types.Guilds.Guild", b =>
                 {
-                    b.Property<ulong>("Id")
+                    b.Property<string>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint unsigned");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("CommandNotificationSent")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<ulong>("DefaultChannelId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<string>("DefaultChannelId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("JoinedAt")
-                        .HasColumnType("datetime(6)");
+                    b.Property<string>("JoinedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("LeftAt")
-                        .HasColumnType("datetime(6)");
+                    b.Property<string>("LeftAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -98,11 +102,11 @@ namespace Duthie.Migrations.Mysql.Migrations
 
             modelBuilder.Entity("Duthie.Types.Guilds.GuildAdmin", b =>
                 {
-                    b.Property<ulong>("GuildId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<string>("GuildId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<ulong>("MemberId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<string>("MemberId")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("GuildId", "MemberId");
 
@@ -113,41 +117,44 @@ namespace Duthie.Migrations.Mysql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
-                    b.Property<ulong>("ChannelId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<string>("ChannelId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<uint?>("Color")
-                        .HasColumnType("int unsigned");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Footer")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
-                    b.Property<ulong>("GuildId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<string>("GuildId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("SentAt")
-                        .HasColumnType("datetime(6)");
+                    b.Property<string>("SentAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Thumbnail")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("Timestamp")
-                        .HasColumnType("datetime(6)");
+                    b.Property<string>("Timestamp")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Url")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -160,31 +167,31 @@ namespace Duthie.Migrations.Mysql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("Enabled")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Info")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LogoUrl")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ShortName")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("SiteId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Tags")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -200,10 +207,10 @@ namespace Duthie.Migrations.Mysql.Migrations
             modelBuilder.Entity("Duthie.Types.Leagues.LeagueAffiliate", b =>
                 {
                     b.Property<Guid>("LeagueId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("AffiliateId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("LeagueId", "AffiliateId");
 
@@ -215,31 +222,31 @@ namespace Duthie.Migrations.Mysql.Migrations
             modelBuilder.Entity("Duthie.Types.Leagues.LeagueState", b =>
                 {
                     b.Property<Guid>("LeagueId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LastBid")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LastContract")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("LastDailyStar")
-                        .HasColumnType("datetime(6)");
+                    b.Property<string>("LastDailyStar")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LastDraftPick")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LastNewsItem")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LastRosterTransaction")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LastTrade")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LastWaiver")
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("LeagueId");
 
@@ -249,14 +256,14 @@ namespace Duthie.Migrations.Mysql.Migrations
             modelBuilder.Entity("Duthie.Types.Leagues.LeagueTeam", b =>
                 {
                     b.Property<Guid>("LeagueId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("TeamId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ExternalId")
                         .IsRequired()
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("ExternalId");
 
                     b.HasKey("LeagueId", "TeamId");
@@ -273,22 +280,22 @@ namespace Duthie.Migrations.Mysql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("Enabled")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Tags")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -302,19 +309,19 @@ namespace Duthie.Migrations.Mysql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ShortName")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Tags")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -1415,28 +1422,30 @@ namespace Duthie.Migrations.Mysql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset?>("ArchivedAt")
-                        .HasColumnType("datetime(6)");
+                    b.Property<string>("ArchivedAt")
+                        .HasColumnType("TEXT");
 
-                    b.Property<ulong?>("ChannelId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<string>("ChannelId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.Property<ulong>("GuildId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<string>("GuildId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("LeagueId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("TeamId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Type")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

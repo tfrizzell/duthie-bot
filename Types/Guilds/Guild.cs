@@ -7,4 +7,5 @@ public class Guild
     public ulong DefaultChannelId { get; set; }
     public DateTimeOffset JoinedAt { get; set; }
     public DateTimeOffset? LeftAt { get; set; } = null;
+    public Boolean CommandNotificationSent { get; set; }
 }

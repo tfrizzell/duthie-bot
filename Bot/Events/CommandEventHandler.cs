@@ -66,6 +66,6 @@ public class CommandEventHandler : IAsyncHandler
 
     private async Task HandleJoinedGuildAsync(SocketGuild guild)
     {
-        await _commandRegistrationService.RegisterCommandsAsync(guild);
+        await _commandRegistrationService.RegisterCommandsAsync(_client, guild);
     }
 }

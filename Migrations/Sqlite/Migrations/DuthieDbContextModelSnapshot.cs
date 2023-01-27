@@ -15,7 +15,7 @@ namespace Duthie.Migrations.Sqlite.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.6");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.12");
 
             modelBuilder.Entity("Duthie.Types.Games.Game", b =>
                 {
@@ -74,6 +74,9 @@ namespace Duthie.Migrations.Sqlite.Migrations
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("CommandNotificationSent")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("DefaultChannelId")
                         .IsRequired()

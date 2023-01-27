@@ -3,6 +3,7 @@ using System;
 using Duthie.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Duthie.Migrations.Mysql.Migrations
 {
     [DbContext(typeof(DuthieDbContext))]
-    partial class DuthieDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230127034104_CommandNotification")]
+    partial class CommandNotification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
