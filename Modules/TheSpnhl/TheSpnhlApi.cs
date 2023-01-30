@@ -32,22 +32,22 @@ public class TheSpnhlApi
             var html = await _httpClient.GetStringAsync($"https://{Domain}/calendar/fixtures-results/");
 
             return Regex.Matches(html,
-                @"<span[^>]*\bteam-logo\b[^>]*>\s*<meta(?=[^>]*itemprop=""name"")[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>\s*<img[^>]*>\s*</a>\s*</span>\s*<span[^>]*\bteam-logo\b[^>]*>\s*<meta(?=[^>]*itemprop=""name"")[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>\s*<img[^>]*>\s*</a>\s*</span>\s*<time(?=[^>]*\bsp-event-date\b)[^>]*content=""(.*?)""[^>]*>\s*<a[^>]*>.*?</a>\s*</time>\s*<h5[^>]*\bsp-event-results\b[^>]*>\s*<a(?=[^>]*itemprop=""url"")[^>]*/event/(\d+)[^>]*>\s*(?:<span[^>]*>([\dO]+)</span>\s*-\s*<span[^>]*>([\dO]+)</span>|<span[^>]*>.*?</span>)\s*</a>\s*</h5>",
+                @"<span[^>]*\bteam-logo\b[^>]*>\s*<meta(?=[^>]*itemprop=""name"")[^>]*content=""(?<visitorId>.*?)""[^>]*>\s*<a[^>]*>\s*<img[^>]*>\s*</a>\s*</span>\s*<span[^>]*\bteam-logo\b[^>]*>\s*<meta(?=[^>]*itemprop=""name"")[^>]*content=""(?<homeId>.*?)""[^>]*>\s*<a[^>]*>\s*<img[^>]*>\s*</a>\s*</span>\s*<time(?=[^>]*\bsp-event-date\b)[^>]*content=""(?<timestamp>.*?)""[^>]*>\s*<a[^>]*>.*?</a>\s*</time>\s*<h5[^>]*\bsp-event-results\b[^>]*>\s*<a(?=[^>]*itemprop=""url"")[^>]*/event/(?<gameId>\d+)[^>]*>\s*(?:<span[^>]*>(?<visitorScore>[\dO]+)</span>\s*-\s*<span[^>]*>(?<homeScore>[\dO]+)</span>|<span[^>]*>.*?</span>)\s*</a>\s*</h5>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(m => new Game
             {
                 LeagueId = league.Id,
-                Id = ulong.Parse(m.Groups[4].Value),
-                Timestamp = DateTimeOffset.Parse(m.Groups[3].Value.Trim()),
-                VisitorId = m.Groups[1].Value.Trim(),
-                VisitorScore = m.Groups[5].Value.ToUpper() == "O"
+                Id = ulong.Parse(m.Groups["gameId"].Value),
+                Timestamp = DateTimeOffset.Parse(m.Groups["timestamp"].Value.Trim()),
+                VisitorId = m.Groups["visitorId"].Value.Trim(),
+                VisitorScore = m.Groups["visitorScore"].Value.ToUpper() == "O"
                     ? 0
-                    : int.TryParse(m.Groups[5].Value, out var visitorScore) ? visitorScore : null,
-                HomeId = m.Groups[2].Value.Trim(),
-                HomeScore = m.Groups[6].Value.ToUpper() == "O"
+                    : int.TryParse(m.Groups["visitorScore"].Value, out var visitorScore) ? visitorScore : null,
+                HomeId = m.Groups["homeId"].Value.Trim(),
+                HomeScore = m.Groups["homeScore"].Value.ToUpper() == "O"
                     ? 0
-                    : int.TryParse(m.Groups[6].Value, out var homeScore) ? homeScore : null,
+                    : int.TryParse(m.Groups["homeScore"].Value, out var homeScore) ? homeScore : null,
             })
             .ToList();
         }
@@ -68,22 +68,22 @@ public class TheSpnhlApi
             var html = await _httpClient.GetStringAsync($"https://{Domain}/calendar/fixtures-results/");
 
             var logo = Regex.Match(html,
-                @"<a[^>]*\bsite-logo\b[^>]*>\s*<img[^>]*src=([""'])(.*?)\1[^>]*>\s*</a>",
+                @"<a[^>]*\bsite-logo\b[^>]*>\s*<img[^>]*src=([""'])(?<logoUrl>.*?)\1[^>]*>\s*</a>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             var season = Regex.Match(html,
-                @"Season\s*(\d+)",
+                @"Season\s*(?<seasonId>\d+)",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             return new Types.Modules.Data.League
             {
                 Id = league.Id,
                 Name = league.Name,
-                LogoUrl = logo.Success ? $"https://{Domain}/{Regex.Replace(logo.Groups[2].Value.Trim(), @$"^(https://{Domain})?/?", "")}" : league.LogoUrl,
+                LogoUrl = logo.Success ? $"https://{Domain}/{Regex.Replace(logo.Groups["logoUrl"].Value.Trim(), @$"^(https://{Domain})?/?", "")}" : league.LogoUrl,
                 Info = new TheSpnhlLeagueInfo
                 {
                     LeagueType = leagueInfo.LeagueType,
-                    SeasonId = season.Success ? int.Parse(season.Groups[1].Value) : leagueInfo.SeasonId
+                    SeasonId = season.Success ? int.Parse(season.Groups["seasonId"].Value) : leagueInfo.SeasonId
                 },
             };
         }
@@ -104,7 +104,7 @@ public class TheSpnhlApi
             var html = await _httpClient.GetStringAsync($"https://{Domain}/standings/");
 
             var matches = Regex.Matches(html,
-                @"<a[^>]*><span[^>]*\bteam-logo\b[^>]*>\s*<img[^>]*>\s*</span>(.*?)</a>",
+                @"<a[^>]*><span[^>]*\bteam-logo\b[^>]*>\s*<img[^>]*>\s*</span>(?<teamId>.*?)</a>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             if (matches.Count() == 0)
@@ -112,12 +112,12 @@ public class TheSpnhlApi
 
             return matches
                 .Cast<Match>()
-                .DistinctBy(m => m.Groups[1].Value.Trim())
+                .DistinctBy(m => m.Groups["teamId"].Value.Trim())
                 .ToDictionary(
-                    m => m.Groups[1].Value.Trim(),
+                    m => m.Groups["teamId"].Value.Trim(),
                     m =>
                     {
-                        var team = Types.Teams.DefaultTeams.GetByAbbreviation(m.Groups[1].Value.Trim(), leagueInfo.LeagueType);
+                        var team = Types.Teams.DefaultTeams.GetByAbbreviation(m.Groups["teamId"].Value.Trim(), leagueInfo.LeagueType);
 
                         if (team == null)
                             return null;
@@ -125,7 +125,7 @@ public class TheSpnhlApi
                         return new Team
                         {
                             LeagueId = league.Id,
-                            Id = m.Groups[1].Value.Trim(),
+                            Id = m.Groups["teamId"].Value.Trim(),
                             Name = team.Name,
                             ShortName = team.ShortName,
                         };

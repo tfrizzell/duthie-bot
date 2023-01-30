@@ -53,13 +53,13 @@ public class LeaguegamingApi
                 }));
 
             return Regex.Matches(html,
-                @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
+                @"<li[^>]*\bNewsFeedItem\b[^>]*>(?<item>.*?)</li>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(m =>
             {
-                var bid = Regex.Match(m.Groups[1].Value,
-                    @"<h3[^>]*>\s*<img[^>]*team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(.*?)</span>\s*have earned the player rights for\s*<span[^>]*\bnewsfeed_atn\b[^>]*>(.*?)</span>\s*with a bid amount of\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(\$[\d,]+)</span>.*?</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                var bid = Regex.Match(m.Groups["item"].Value,
+                    @"<h3[^>]*>\s*<img[^>]*team(?<teamId>\d+)\.\w{3,4}[^>]*>\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(?<teamName>.*?)</span>\s*have earned the player rights for\s*<span[^>]*\bnewsfeed_atn\b[^>]*>(?<playerName>.*?)</span>\s*with a bid amount of\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(?<amount>\$[\d,]+)</span>.*?</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>",
                     RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                 if (!bid.Success)
@@ -68,11 +68,11 @@ public class LeaguegamingApi
                 return new Bid
                 {
                     LeagueId = league.Id,
-                    TeamId = bid.Groups[1].Value,
-                    PlayerName = bid.Groups[3].Value.Trim(),
-                    Amount = ISiteApi.ParseDollars(bid.Groups[4].Value),
+                    TeamId = bid.Groups["teamId"].Value,
+                    PlayerName = bid.Groups["playerName"].Value.Trim(),
+                    Amount = ISiteApi.ParseDollars(bid.Groups["amount"].Value),
                     State = BidState.Won,
-                    Timestamp = ISiteApi.ParseDateTime(bid.Groups[5].Value, Timezone),
+                    Timestamp = ISiteApi.ParseDateTime(bid.Groups["timestamp"].Value, Timezone),
                 };
             })
             .Where(b => b != null)
@@ -106,13 +106,13 @@ public class LeaguegamingApi
                 }));
 
             return Regex.Matches(html,
-                @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
+                @"<li[^>]*\bNewsFeedItem\b[^>]*>(?<item>.*?)</li>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(m =>
             {
-                var contract = Regex.Match(m.Groups[1].Value,
-                    @"<h3[^>]*>\s*<span[^>]*\bnewsfeed_atn\b[^>]*>(.*?)</span>\s*and the\s*<img[^>]*/team(\d+).\w{3,4}[^>]*>\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(.*?)</span>\s*have agreed to a (\d+) season deal at (\$[\d,]+) per season</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                var contract = Regex.Match(m.Groups["item"].Value,
+                    @"<h3[^>]*>\s*<span[^>]*\bnewsfeed_atn\b[^>]*>(?<playerName>.*?)</span>\s*and the\s*<img[^>]*/team(?<teamId>\d+).\w{3,4}[^>]*>\s*<span[^>]*\bnewsfeed_atn2\b[^>]*>(?<teamName>.*?)</span>\s*have agreed to a (?<length>\d+) season deal at (?<amount>\$[\d,]+) per season</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>",
                     RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                 if (!contract.Success)
@@ -121,11 +121,11 @@ public class LeaguegamingApi
                 return new Contract
                 {
                     LeagueId = league.Id,
-                    TeamId = contract.Groups[2].Value,
-                    PlayerName = contract.Groups[1].Value.Trim(),
-                    Length = int.TryParse(contract.Groups[4].Value, out var length) ? length : 1,
-                    Amount = ISiteApi.ParseDollars(contract.Groups[5].Value),
-                    Timestamp = ISiteApi.ParseDateTime(contract.Groups[6].Value, Timezone),
+                    TeamId = contract.Groups["teamId"].Value,
+                    PlayerName = contract.Groups["playerName"].Value.Trim(),
+                    Length = int.TryParse(contract.Groups["length"].Value, out var length) ? length : 1,
+                    Amount = ISiteApi.ParseDollars(contract.Groups["amount"].Value),
+                    Timestamp = ISiteApi.ParseDateTime(contract.Groups["timestamp"].Value, Timezone),
                 };
             })
             .Where(c => c != null)
@@ -153,65 +153,65 @@ public class LeaguegamingApi
                 return new List<DailyStar>();
 
             var html = await _httpClient.GetStringAsync(url);
-            string type = "";
+            string position = "";
 
             return Regex.Matches(html,
                 @$"(?:{string.Join("|",
-                    @"<div[^>]*\bd3_title\b[^>]*>(.*?)</div>",
-                    @"<tr[^>]*>\s*<td[^>]*>\s*((?:<img[^>]*/star\.\w{3,4}[^>]*>)+|\d+\.)\s*</td>\s*(?:<td[^>]*t_threestars[^>]*>\s*<div[^>]*>\s*<img [^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<img[^>]*>\s*</div>\s*</td>\s*<td[^>]*>.*?(?:\s*<span[^>]*>\s*\d+\s*</span>\s*)?(.*?)\s*<br[^>]*>\s*<span[^>]*>\((.*?)\)</span>\s*</td>|<td[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>.*?(?:\s*<span[^>]*>\s*\d+\s*</span>\s*)?(.*?)\s*\((.*?)\)</td>)\s*<td[^>]*>\s*<a[^>]*>.*?</a>\s*</td>\s*((?:<td[^>]*>.*?</td>)+)\s*</tr>"
+                    @"<div[^>]*\bd3_title\b[^>]*>(?<position>.*?)</div>",
+                    @"<tr[^>]*>\s*<td[^>]*>\s*(?<rank>(?:<img[^>]*/star\.\w{3,4}[^>]*>)+|\d+\.)\s*</td>\s*(?:<td[^>]*t_threestars[^>]*>\s*<div[^>]*>\s*<img[^>]*/team(?<teamId>\d+)\.\w{3,4}[^>]*>\s*<img[^>]*>\s*</div>\s*</td>\s*<td[^>]*>.*?(?:\s*<span[^>]*>\s*\d+\s*</span>\s*)?(?<playerName>.*?)\s*<br[^>]*>\s*<span[^>]*>\((.*?)\)</span>\s*</td>|<td[^>]*>\s*<img[^>]*/team(?<teamId>\d+)\.\w{3,4}[^>]*>.*?(?:\s*<span[^>]*>\s*\d+\s*</span>\s*)?(?<playerName>.*?)\s*\((.*?)\)</td>)\s*<td[^>]*>\s*<a[^>]*>.*?</a>\s*</td>\s*(?<stats>(?:<td[^>]*>.*?</td>)+)\s*</tr>"
                 )})",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(m =>
             {
-                if (!string.IsNullOrWhiteSpace(m.Groups[1].Value))
+                if (!string.IsNullOrWhiteSpace(m.Groups["position"].Value))
                 {
-                    type = m.Groups[1].Value.Trim();
+                    position = m.Groups["position"].Value.Trim();
                     return null;
                 }
 
-                if (string.IsNullOrWhiteSpace(type))
+                if (string.IsNullOrWhiteSpace(position))
                     return null;
 
-                var data = Regex.Matches(m.Groups[9].Value,
-                    @"<td[^>]*>(.*?)</td>");
+                var stats = Regex.Matches(m.Groups["stats"].Value,
+                    @"<td[^>]*>(?<value>.*?)</td>");
 
-                return type.Trim().ToUpper() switch
+                return position.Trim().ToUpper() switch
                 {
                     "FORWARDS" => new DailyStarForward
                     {
                         LeagueId = league.Id,
-                        TeamId = (string.IsNullOrWhiteSpace(m.Groups[3].Value) ? m.Groups[6].Value : m.Groups[3].Value).Trim(),
-                        PlayerName = Regex.Replace((string.IsNullOrWhiteSpace(m.Groups[4].Value) ? m.Groups[7].Value : m.Groups[4].Value), @"<(\S+)[^>]*>.*?</\1>", "").Trim(),
-                        Rank = int.TryParse(m.Groups[2].Value.TrimEnd('.'), out var rank) ? rank : Regex.Matches(m.Groups[2].Value, @"star\.\w{3,4}").Count(),
+                        TeamId = m.Groups["teamId"].Value.Trim(),
+                        PlayerName = Regex.Replace(m.Groups["playerName"].Value, @"<(\S+)[^>]*>.*?</\1>", "").Trim(),
+                        Rank = int.TryParse(m.Groups["rank"].Value.TrimEnd('.'), out var rank) ? rank : Regex.Matches(m.Groups["rank"].Value, @"star\.\w{3,4}").Count(),
                         Timestamp = date,
-                        Goals = int.Parse(data[1].Groups[1].Value.Trim()),
-                        Assists = int.Parse(data[2].Groups[1].Value.Trim()),
-                        PlusMinus = int.Parse(data[3].Groups[1].Value.Trim()),
+                        Goals = int.Parse(stats[1].Groups["value"].Value.Trim()),
+                        Assists = int.Parse(stats[2].Groups["value"].Value.Trim()),
+                        PlusMinus = int.Parse(stats[3].Groups["value"].Value.Trim()),
                     },
 
                     "DEFENDERS" => new DailyStarDefense
                     {
                         LeagueId = league.Id,
-                        TeamId = (string.IsNullOrWhiteSpace(m.Groups[3].Value) ? m.Groups[6].Value : m.Groups[3].Value).Trim(),
-                        PlayerName = Regex.Replace((string.IsNullOrWhiteSpace(m.Groups[4].Value) ? m.Groups[7].Value : m.Groups[4].Value), @"<[^>]+>", "").Trim(),
-                        Rank = int.TryParse(m.Groups[2].Value.TrimEnd('.'), out var rank) ? rank : Regex.Matches(m.Groups[2].Value, @"star\.\w{3,4}").Count(),
+                        TeamId = m.Groups["teamId"].Value.Trim(),
+                        PlayerName = Regex.Replace(m.Groups["playerName"].Value, @"<(\S+)[^>]*>.*?</\1>", "").Trim(),
+                        Rank = int.TryParse(m.Groups["rank"].Value.TrimEnd('.'), out var rank) ? rank : Regex.Matches(m.Groups["rank"].Value, @"star\.\w{3,4}").Count(),
                         Timestamp = date,
-                        Goals = int.Parse(data[1].Groups[1].Value.Trim()),
-                        Assists = int.Parse(data[2].Groups[1].Value.Trim()),
-                        PlusMinus = int.Parse(data[3].Groups[1].Value.Trim()),
+                        Goals = int.Parse(stats[1].Groups["value"].Value.Trim()),
+                        Assists = int.Parse(stats[2].Groups["value"].Value.Trim()),
+                        PlusMinus = int.Parse(stats[3].Groups["value"].Value.Trim()),
                     },
 
                     "GOALIES" => new DailyStarGoalie
                     {
                         LeagueId = league.Id,
-                        TeamId = (string.IsNullOrWhiteSpace(m.Groups[3].Value) ? m.Groups[6].Value : m.Groups[3].Value).Trim(),
-                        PlayerName = Regex.Replace((string.IsNullOrWhiteSpace(m.Groups[4].Value) ? m.Groups[7].Value : m.Groups[4].Value), @"<[^>]+>", "").Trim(),
-                        Rank = int.TryParse(m.Groups[2].Value.TrimEnd('.'), out var rank) ? rank : Regex.Matches(m.Groups[2].Value, @"star\.\w{3,4}").Count(),
+                        TeamId = m.Groups["teamId"].Value.Trim(),
+                        PlayerName = Regex.Replace(m.Groups["playerName"].Value, @"<(\S+)[^>]*>.*?</\1>", "").Trim(),
+                        Rank = int.TryParse(m.Groups["rank"].Value.TrimEnd('.'), out var rank) ? rank : Regex.Matches(m.Groups["rank"].Value, @"star\.\w{3,4}").Count(),
                         Timestamp = date,
-                        GoalsAgainstAvg = decimal.Parse(data[1].Groups[1].Value.Trim()),
-                        Saves = int.Parse(data[2].Groups[1].Value.Trim()),
-                        ShotsAgainst = int.Parse(data[3].Groups[1].Value.Trim()),
+                        GoalsAgainstAvg = decimal.Parse(stats[1].Groups["value"].Value.Trim()),
+                        Saves = int.Parse(stats[2].Groups["value"].Value.Trim()),
+                        ShotsAgainst = int.Parse(stats[3].Groups["value"].Value.Trim()),
                     },
 
                     _ => (DailyStar?)null,
@@ -322,13 +322,13 @@ public class LeaguegamingApi
                 }));
 
             var teamCount = Regex.Matches(html,
-                @"<img[^>]*/team(\d+)\.\w{3,4}[^>]*>",
+                @"<img[^>]*/team(?<teamId>\d+)\.\w{3,4}[^>]*>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
-            .DistinctBy(m => m.Groups[1].Value)
+            .DistinctBy(m => m.Groups["teamId"].Value)
             .Count();
 
             var picks = Regex.Matches(html,
-                @"<td[^>]*>(\d+)</td>\s*<td[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>\s*<a[^>]*/member\.(\d+)[^>]*>(.*?)</a>\s*</td>",
+                @"<td[^>]*>(?<pickNumber>\d+)</td>\s*<td[^>]*>\s*<img[^>]*/team(?<teamId>\d+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>\s*<a[^>]*/member\.(?<playerId>\d+)[^>]*>(?<playerName>.*?)</a>\s*</td>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>();
 
@@ -337,15 +337,15 @@ public class LeaguegamingApi
 
             return picks.Select(m =>
             {
-                var overallPick = int.Parse(m.Groups[1].Value);
+                var overallPick = int.Parse(m.Groups["pickNumber"].Value);
                 var roundPick = overallPick % picksPerRound;
 
                 return new DraftPick
                 {
                     LeagueId = league.Id,
-                    TeamId = m.Groups[2].Value,
-                    PlayerId = m.Groups[3].Value,
-                    PlayerName = m.Groups[4].Value.Trim(),
+                    TeamId = m.Groups["teamId"].Value,
+                    PlayerId = m.Groups["playerId"].Value,
+                    PlayerName = m.Groups["playerName"].Value.Trim(),
                     RoundNumber = (int)Math.Ceiling((decimal)overallPick / picksPerRound),
                     RoundPick = roundPick > 0 ? roundPick : picksPerRound,
                     OverallPick = overallPick,
@@ -381,15 +381,15 @@ public class LeaguegamingApi
 
             return Regex.Matches(html,
                 @$"(?:{string.Join("|",
-                    @"<h4[^>]*sh4[^>]*>(.*?)</h4>",
-                    @"<span[^>]*sweekid[^>]*>Week\s*(\d+)</span>\s*(?:<span[^>]*sgamenumber[^>]*>Game\s*#\s*(\d+)</span>)?\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<a[^>]*&(?:amp;)?gameid=(\d+)[^>]*>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*<span[^>]*sscore[^>]*>(vs|(\d+)\D+(\d+))</span>\s*<span[^>]*steamname[^>]*>(.*?)</span>\s*</a>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>")})",
+                    @"<h4[^>]*sh4[^>]*>(?<date>.*?)</h4>",
+                    @"<span[^>]*sweekid[^>]*>\s*Week\s*(?<weekNumber>\d+)\s*</span>\s*(?:<span[^>]*sgamenumber[^>]*>\s*Game\s*#\s*(?<gameNumber>\d+)\s*</span>)?\s*<img[^>]*/team(?<visitorId>\d+)\.\w{3,4}[^>]*>\s*<a[^>]*&(?:amp;)?gameid=(?<gameId>\d+)[^>]*>\s*<span[^>]*steamname[^>]*>(?<visitorShortName>.*?)</span>\s*<span[^>]*sscore[^>]*>(?:vs|(?<visitorScore>\d+)\D+(?<homeScore>\d+))</span>\s*<span[^>]*steamname[^>]*>(?<homeShortName>.*?)</span>\s*</a>\s*<img[^>]*/team(?<homeId>\d+)\.\w{3,4}[^>]*>")})",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(m =>
             {
-                if (!string.IsNullOrWhiteSpace(m.Groups[1].Value))
+                if (!string.IsNullOrWhiteSpace(m.Groups["date"].Value))
                 {
-                    date = ISiteApi.ParseDateWithNoYear(Regex.Replace(m.Groups[1].Value, @"(\d+)[\D\S]{2}", @"$1"), Timezone);
+                    date = ISiteApi.ParseDateWithNoYear(Regex.Replace(m.Groups["date"].Value, @"(\d+)[\D\S]{2}", @"$1"), Timezone);
                     return null;
                 }
 
@@ -399,12 +399,12 @@ public class LeaguegamingApi
                 return new Game
                 {
                     LeagueId = league.Id,
-                    Id = ulong.Parse(m.Groups[5].Value),
+                    Id = ulong.Parse(m.Groups["gameId"].Value),
                     Timestamp = date.GetValueOrDefault(),
-                    VisitorId = m.Groups[4].Value,
-                    VisitorScore = int.TryParse(m.Groups[8].Value, out var visitorScore) ? visitorScore : null,
-                    HomeId = m.Groups[11].Value,
-                    HomeScore = int.TryParse(m.Groups[9].Value, out var homeScore) ? homeScore : null,
+                    VisitorId = m.Groups["visitorId"].Value,
+                    VisitorScore = int.TryParse(m.Groups["visitorScore"].Value, out var visitorScore) ? visitorScore : null,
+                    HomeId = m.Groups["homeId"].Value,
+                    HomeScore = int.TryParse(m.Groups["homeScore"].Value, out var homeScore) ? homeScore : null,
                 };
             })
             .Where(g => g != null)
@@ -436,14 +436,14 @@ public class LeaguegamingApi
                 }));
 
             var info = Regex.Match(html,
-                @$"<li[^>]*\bcustom-tab-{leagueInfo.LeagueId}\b[^>]*>\s*<a[^>]*forums/[^>]*\.(\d+)[^>]*>.*?<span[^>]*>(.*?)</span>.*?</a>",
+                @$"<li[^>]*\bcustom-tab-{leagueInfo.LeagueId}\b[^>]*>\s*<a[^>]*forums/[^>]*\.(?<forumId>\d+)[^>]*>.*?<span[^>]*>(?<leagueName>.*?)</span>.*?</a>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             if (!info.Success)
                 return null;
 
             var season = Regex.Match(html,
-                @$"<a[^>]*leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid=(\d+)[^>]*>Roster</a>",
+                @$"<a[^>]*leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid=(?<seasonId>\d+)[^>]*>Roster</a>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             html = await _httpClient.GetStringAsync(GetUrl(league,
@@ -456,7 +456,7 @@ public class LeaguegamingApi
                 }));
 
             var draft = Regex.Matches(html,
-                @$"<td[^>]*>\s*<a[^>]*league_draft&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?lgdraftid=(\d+)[^>]*>.*?</a>\s*</td>\s*<td[^>]*>(.*?)</td>",
+                @$"<td[^>]*>\s*<a[^>]*league_draft&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?lgdraftid=(?<draftId>\d+)[^>]*>.*?</a>\s*</td>\s*<td[^>]*>(?<draftDate>.*?)</td>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
                 .Cast<Match>()
                 .LastOrDefault();
@@ -464,15 +464,15 @@ public class LeaguegamingApi
             return new Types.Modules.Data.League
             {
                 Id = league.Id,
-                Name = info.Groups[2].Value.Trim(),
+                Name = info.Groups["leagueName"].Value.Trim(),
                 LogoUrl = $"https://{Domain}/images/league/icon/l{leagueInfo.LeagueId}.png",
                 Info = new LeaguegamingLeagueInfo
                 {
                     LeagueId = leagueInfo.LeagueId,
-                    SeasonId = season.Success ? int.Parse(season.Groups[1].Value) : leagueInfo.SeasonId,
-                    ForumId = int.Parse(info.Groups[1].Value),
-                    DraftId = draft?.Success == true ? int.Parse(draft.Groups[1].Value) : leagueInfo.DraftId,
-                    DraftDate = draft?.Success == true ? ISiteApi.ParseDateTime(draft.Groups[2].Value) : leagueInfo.DraftDate,
+                    SeasonId = season.Success ? int.Parse(season.Groups["seasonId"].Value) : leagueInfo.SeasonId,
+                    ForumId = int.Parse(info.Groups["forumId"].Value),
+                    DraftId = draft?.Success == true ? int.Parse(draft.Groups["draftId"].Value) : leagueInfo.DraftId,
+                    DraftDate = draft?.Success == true ? ISiteApi.ParseDateTime(draft.Groups["draftDate"].Value) : leagueInfo.DraftDate,
                 },
             };
         }
@@ -503,13 +503,13 @@ public class LeaguegamingApi
                 }));
 
             return Regex.Matches(html,
-                @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
+                @"<li[^>]*\bNewsFeedItem\b[^>]*>(?<item>.*?)</li>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(m =>
             {
-                var news = Regex.Match(m.Groups[1].Value,
-                    @"<a[^>]*\bicon\b[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>(?=.*?(?:clinched|eliminated|rights have been acquired))(.*?)</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                var news = Regex.Match(m.Groups["item"].Value,
+                    @"<a[^>]*\bicon\b[^>]*>\s*<img[^>]*/team(?<teamId>\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>(?=.*?(?:clinched|eliminated|rights have been acquired))(?<content>.*?)</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>",
                     RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                 if (!news.Success)
@@ -518,9 +518,9 @@ public class LeaguegamingApi
                 return new News
                 {
                     LeagueId = league.Id,
-                    TeamId = news.Groups[1].Value,
-                    Message = Regex.Replace(Regex.Replace(news.Groups[2].Value, @"<[^>]*>", ""), @" +", " ").Trim(),
-                    Timestamp = ISiteApi.ParseDateTime(news.Groups[3].Value, Timezone),
+                    TeamId = news.Groups["teamId"].Value,
+                    Message = Regex.Replace(Regex.Replace(news.Groups["content"].Value, @"<[^>]*>", ""), @" +", " ").Trim(),
+                    Timestamp = ISiteApi.ParseDateTime(news.Groups["timestamp"].Value, Timezone),
                 };
             })
             .Where(n => n != null)
@@ -565,13 +565,13 @@ public class LeaguegamingApi
                     }));
 
                 return Regex.Matches(html,
-                    @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
+                    @"<li[^>]*\bNewsFeedItem\b[^>]*>(?<item>.*?)</li>",
                     RegexOptions.IgnoreCase | RegexOptions.Singleline)
                 .Cast<Match>()
                 .Select(m =>
                 {
-                    var ban = Regex.Match(m.Groups[1].Value,
-                        @"<a[^>]*>\s*<img[^>]*/(?:team(\d+)|l\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(.*?)</span>\s*has been issued a\s*<span[^>]*>.*? Ban</span>\s*in Season \d+ of the\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                    var ban = Regex.Match(m.Groups["item"].Value,
+                        @"<a[^>]*>\s*<img[^>]*/(?:team(?<teamId>\d+)|l\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(?<playerName>.*?)</span>\s*has\s+been\s+issued\s+a\s*<span[^>]*>.*?Ban\s*</span>\s*in\s+Season\s+\d+\s+of\s+the\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>\s*</div>",
                         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                     if (ban.Success == true)
@@ -579,47 +579,47 @@ public class LeaguegamingApi
                         return new RosterTransaction
                         {
                             LeagueId = league.Id,
-                            TeamIds = new string[] { ban.Groups[1].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
-                            PlayerNames = new string[] { ban.Groups[2].Value.Trim() },
+                            TeamIds = new string[] { ban.Groups["teamId"].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { ban.Groups["playerName"].Value.Trim() },
                             Type = RosterTransactionType.Banned,
-                            Timestamp = ISiteApi.ParseDateTime(ban.Groups[3].Value, Timezone),
+                            Timestamp = ISiteApi.ParseDateTime(ban.Groups["timestamp"].Value, Timezone),
                         };
                     }
 
-                    var callUp = Regex.Match(m.Groups[1].Value,
-                        @"<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/arrow1\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*The\s*<img[^>]*/team\2\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have sent\s*<span[^>]*>(.*?)</span>\s*to the\s*<img[^>]*/team\1\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                    var callUp = Regex.Match(m.Groups["item"].Value,
+                        @"<a[^>]*>\s*<img[^>]*/team(?<toTeamId>\d+)\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/arrow1\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/team(?<fromTeamId>\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*The\s*<img[^>]*/team\2\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have\s+sent\s*<span[^>]*>(?<playerName>.*?)</span>\s*to\s+the\s*<img[^>]*/team\1\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>\s*</div>",
                         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
-                    if (callUp.Success == true && teamIds.Contains(callUp.Groups[1].Value) == true)
+                    if (callUp.Success == true && teamIds.Contains(callUp.Groups["toTeamId"].Value) == true)
                     {
                         return new RosterTransaction
                         {
                             LeagueId = league.Id,
-                            TeamIds = new string[] { callUp.Groups[1].Value, callUp.Groups[2].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
-                            PlayerNames = new string[] { callUp.Groups[3].Value.Trim() },
+                            TeamIds = new string[] { callUp.Groups["toTeamId"].Value, callUp.Groups["fromTeamId"].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { callUp.Groups["playerName"].Value.Trim() },
                             Type = RosterTransactionType.CalledUp,
-                            Timestamp = ISiteApi.ParseDateTime(callUp.Groups[4].Value, Timezone),
+                            Timestamp = ISiteApi.ParseDateTime(callUp.Groups["timestamp"].Value, Timezone),
                         };
                     }
 
-                    var callUpFromTc = Regex.Match(m.Groups[1].Value,
-                        @"<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(.*?)</span>\s*has cleared\s*<span[^>]*>Training Camp</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                    var callUpFromTc = Regex.Match(m.Groups["item"].Value,
+                        @"<a[^>]*>\s*<img[^>]*/team(?<teamId>\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(?<playerName>.*?)</span>\s*has\s+cleared\s*<span[^>]*>\s*Training\s+Camp\s*</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>\s*</div>",
                         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
-                    if (callUp.Success == true && teamIds.Contains(callUp.Groups[1].Value) == true)
+                    if (callUpFromTc.Success == true && teamIds.Contains(callUpFromTc.Groups["teamId"].Value) == true)
                     {
                         return new RosterTransaction
                         {
                             LeagueId = league.Id,
-                            TeamIds = new string[] { callUp.Groups[1].Value, Guid.Empty.ToString() }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
-                            PlayerNames = new string[] { callUp.Groups[3].Value.Trim() },
+                            TeamIds = new string[] { callUpFromTc.Groups["teamId"].Value, Guid.Empty.ToString() }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { callUpFromTc.Groups["playerName"].Value.Trim() },
                             Type = RosterTransactionType.CalledUp,
-                            Timestamp = ISiteApi.ParseDateTime(callUp.Groups[4].Value, Timezone),
+                            Timestamp = ISiteApi.ParseDateTime(callUpFromTc.Groups["timestamp"].Value, Timezone),
                         };
                     }
 
-                    var placedOnIr = Regex.Match(m.Groups[1].Value,
-                        @"<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(.*?)</span>\s*has been moved to the\s*<span[^>]*>Injured Reserve</span>\s*list\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                    var placedOnIr = Regex.Match(m.Groups["item"].Value,
+                        @"<a[^>]*>\s*<img[^>]*/team(?<teamId>\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(?<playerName>.*?)</span>\s*has\s+been\s+moved\s+to\s+the\s*<span[^>]*>\s*Injured\s+Reserve\s*</span>\s*list\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>\s*</div>",
                         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                     if (placedOnIr.Success == true)
@@ -627,15 +627,15 @@ public class LeaguegamingApi
                         return new RosterTransaction
                         {
                             LeagueId = league.Id,
-                            TeamIds = new string[] { placedOnIr.Groups[1].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
-                            PlayerNames = new string[] { placedOnIr.Groups[2].Value.Trim() },
+                            TeamIds = new string[] { placedOnIr.Groups["teamId"].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { placedOnIr.Groups["playerName"].Value.Trim() },
                             Type = RosterTransactionType.PlacedOnIr,
-                            Timestamp = ISiteApi.ParseDateTime(placedOnIr.Groups[3].Value, Timezone),
+                            Timestamp = ISiteApi.ParseDateTime(placedOnIr.Groups["timestamp"].Value, Timezone),
                         };
                     }
 
-                    var removedFromIr = Regex.Match(m.Groups[1].Value,
-                        @"<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(.*?)</span>\s*has been taken off the\s*<span[^>]*>Injured Reserve</span>\s*list\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                    var removedFromIr = Regex.Match(m.Groups["item"].Value,
+                        @"<a[^>]*>\s*<img[^>]*/team(?<teamId>\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(?<playerName>.*?)</span>\s*has\s+been\s+taken\s+off\s+the\s*<span[^>]*>\s*Injured\s+Reserve\s*</span>\s*list\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>\s*</div>",
                         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                     if (removedFromIr.Success == true)
@@ -643,31 +643,31 @@ public class LeaguegamingApi
                         return new RosterTransaction
                         {
                             LeagueId = league.Id,
-                            TeamIds = new string[] { removedFromIr.Groups[1].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
-                            PlayerNames = new string[] { removedFromIr.Groups[2].Value.Trim() },
+                            TeamIds = new string[] { removedFromIr.Groups["teamId"].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { removedFromIr.Groups["playerName"].Value.Trim() },
                             Type = RosterTransactionType.RemovedFromIr,
-                            Timestamp = ISiteApi.ParseDateTime(removedFromIr.Groups[3].Value, Timezone),
+                            Timestamp = ISiteApi.ParseDateTime(removedFromIr.Groups["timestamp"].Value, Timezone),
                         };
                     }
 
-                    var sendDown = Regex.Match(m.Groups[1].Value,
-                        @"<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/arrow2\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*The\s*<img[^>]*/team\1\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have sent\s*<span[^>]*>(.*?)</span>\s*to the\s*<img[^>]*/team\2\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                    var sendDown = Regex.Match(m.Groups["item"].Value,
+                        @"<a[^>]*>\s*<img[^>]*/team(?<fromTeamId>\d+)\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/arrow2\.\w{3,4}[^>]*>.*?<a[^>]*>\s*<img[^>]*/team(?<toTeamId>\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*The\s*<img[^>]*/team\1\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have\s+sent\s*<span[^>]*>(?<playerName>.*?)</span>\s*to\s+the\s*<img[^>]*/team\2\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>\s*</div>",
                         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
-                    if (sendDown.Success == true && teamIds?.Contains(sendDown.Groups[1].Value) == true)
+                    if (sendDown.Success == true && teamIds?.Contains(sendDown.Groups["fromTeamId"].Value) == true)
                     {
                         return new RosterTransaction
                         {
                             LeagueId = league.Id,
-                            TeamIds = new string[] { sendDown.Groups[1].Value, sendDown.Groups[2].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
-                            PlayerNames = new string[] { sendDown.Groups[3].Value.Trim() },
+                            TeamIds = new string[] { sendDown.Groups["fromTeamId"].Value, sendDown.Groups["toTeamId"].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { sendDown.Groups["playerName"].Value.Trim() },
                             Type = RosterTransactionType.SentDown,
-                            Timestamp = ISiteApi.ParseDateTime(sendDown.Groups[4].Value, Timezone),
+                            Timestamp = ISiteApi.ParseDateTime(sendDown.Groups["timestamp"].Value, Timezone),
                         };
                     }
 
-                    var suspension = Regex.Match(m.Groups[1].Value,
-                        @"<a[^>]*>\s*<img[^>]*/(?:team(\d+)|l\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(.*?)</span>\s*has been issued a\s*<span[^>]*>.*? Suspension</span>\s*in Season \d+ of the\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>\s*</div>",
+                    var suspension = Regex.Match(m.Groups["item"].Value,
+                        @"<a[^>]*>\s*<img[^>]*/(?:team(?<teamId>\d+)|l\d+)\.\w{3,4}[^>]*>\s*</a>\s*<div[^>]*>\s*<h3[^>]*>\s*<span[^>]*>(?<playerName>.*?)</span>\s*has\s+been\s+issued\s+a\s*<span[^>]*>.*?Suspension\s*</span>\s*in\s+Season\s+\d+\s+of\s+the\s*<span[^>]*>.*?</span>\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>\s*</div>",
                         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                     if (suspension.Success == true)
@@ -675,10 +675,10 @@ public class LeaguegamingApi
                         return new RosterTransaction
                         {
                             LeagueId = league.Id,
-                            TeamIds = new string[] { suspension.Groups[1].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
-                            PlayerNames = new string[] { suspension.Groups[2].Value.Trim() },
+                            TeamIds = new string[] { suspension.Groups["teamId"].Value }.Where(t => !string.IsNullOrWhiteSpace(t) && t != "0").ToArray(),
+                            PlayerNames = new string[] { suspension.Groups["playerName"].Value.Trim() },
                             Type = RosterTransactionType.Suspended,
-                            Timestamp = ISiteApi.ParseDateTime(suspension.Groups[3].Value, Timezone),
+                            Timestamp = ISiteApi.ParseDateTime(suspension.Groups["timestamp"].Value, Timezone),
                         };
                     }
 
@@ -711,10 +711,10 @@ public class LeaguegamingApi
             }));
 
         return Regex.Matches(html,
-            @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
+            @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&(?:amp;)?teamid=(?<teamId>\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
             RegexOptions.IgnoreCase | RegexOptions.Singleline)
         .Cast<Match>()
-        .Select(m => m.Groups[1].Value);
+        .Select(m => m.Groups["teamId"].Value);
     }
 
     public async Task<IEnumerable<Team>?> GetTeamsAsync(League league)
@@ -736,7 +736,7 @@ public class LeaguegamingApi
                 }));
 
             var nameMatches = Regex.Matches(html,
-                @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(.*?)</a>\s*</div>",
+                @$"<div[^>]*\bteam_box_icon\b[^>]*>.*?<a[^>]*page=team_page&(?:amp;)?teamid=(?<teamId>\d+)&(?:amp;)?leagueid={leagueInfo.LeagueId}&(?:amp;)?seasonid={leagueInfo.SeasonId}[^>]*>(?<teamName>.*?)</a>\s*</div>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
             if (nameMatches.Count() == 0)
@@ -744,31 +744,31 @@ public class LeaguegamingApi
 
             var teams = nameMatches
                 .Cast<Match>()
-                .DistinctBy(m => m.Groups[1].Value)
+                .DistinctBy(m => m.Groups["teamId"].Value)
                 .ToDictionary(
-                    m => m.Groups[1].Value,
+                    m => m.Groups["teamId"].Value,
                     m => new Team
                     {
                         LeagueId = league.Id,
-                        Id = m.Groups[1].Value,
-                        Name = m.Groups[2].Value.Trim(),
-                        ShortName = m.Groups[2].Value.Trim(),
+                        Id = m.Groups["teamId"].Value,
+                        Name = m.Groups["teamName"].Value.Trim(),
+                        ShortName = m.Groups["teamName"].Value.Trim(),
                     },
                     StringComparer.OrdinalIgnoreCase);
 
             var shortNameMatches = Regex.Matches(html,
-                @$"<td[^>]*>\s*<img[^>]*/team\d+\.\w{{3,4}}[^>]*>\s*\d+\)\s*.*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(.*?)</a>\s*</td>",
+                @$"<td[^>]*>\s*<img[^>]*/team\d+\.\w{{3,4}}[^>]*>\s*\d+\)\s*.*?\*?<a[^>]*page=team_page&(?:amp;)?teamid=(?<teamId>\d+)&(?:amp;)?leagueid=(?:{leagueInfo.LeagueId})?&(?:amp;)?seasonid=(?:{leagueInfo.SeasonId})?[^>]*>(?<teamShortName>.*?)</a>\s*</td>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>();
 
             foreach (var match in shortNameMatches)
             {
-                var id = match.Groups[1].Value;
+                var id = match.Groups["teamId"].Value;
 
                 if (!teams.ContainsKey(id))
                     teams.Add(id, new Team { LeagueId = league.Id, Id = id });
 
-                teams[id].ShortName = match.Groups[2].Value.Trim();
+                teams[id].ShortName = match.Groups["teamShortName"].Value.Trim();
 
                 if (string.IsNullOrWhiteSpace(teams[id].Name))
                     teams[id].Name = teams[id].ShortName;
@@ -803,13 +803,13 @@ public class LeaguegamingApi
                 }));
 
             return Regex.Matches(html,
-                @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
+                @"<li[^>]*\bNewsFeedItem\b[^>]*>(?<item>.*?)</li>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(m =>
             {
-                var trade = Regex.Match(m.Groups[1].Value,
-                    @"<h3[^>]*>.*?<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have traded\s*(.*?)\s*to the\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*for\s*(.*?)\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                var trade = Regex.Match(m.Groups["item"].Value,
+                    @"<h3[^>]*>.*?<img[^>]*/team(?<fromTeamId>\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have traded\s*(?<fromAssets>.*?)\s*to the\s*<img[^>]*/team(?<toTeamId>\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*for\s*(?<toAssets>.*?)\s*</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>",
                     RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                 if (!trade.Success)
@@ -818,11 +818,11 @@ public class LeaguegamingApi
                 return new Trade
                 {
                     LeagueId = league.Id,
-                    FromId = trade.Groups[1].Value,
-                    ToId = trade.Groups[3].Value,
-                    FromAssets = Regex.Split(Regex.Replace(trade.Groups[2].Value, @"<[^>]*>", ""), @"\s*&\s*").Select(a => a.Trim()).Where(a => a.ToLower() != "nothing").ToArray(),
-                    ToAssets = Regex.Split(Regex.Replace(trade.Groups[4].Value, @"<[^>]*>", ""), @"\s*&\s*").Select(a => a.Trim()).Where(a => a.ToLower() != "nothing").ToArray(),
-                    Timestamp = ISiteApi.ParseDateTime(trade.Groups[5].Value, Timezone),
+                    FromId = trade.Groups["fromTeamId"].Value,
+                    ToId = trade.Groups["toTeamId"].Value,
+                    FromAssets = Regex.Split(Regex.Replace(trade.Groups["fromAssets"].Value, @"<[^>]*>", ""), @"\s*&\s*").Select(a => a.Trim()).Where(a => a.ToLower() != "nothing").ToArray(),
+                    ToAssets = Regex.Split(Regex.Replace(trade.Groups["toAssets"].Value, @"<[^>]*>", ""), @"\s*&\s*").Select(a => a.Trim()).Where(a => a.ToLower() != "nothing").ToArray(),
+                    Timestamp = ISiteApi.ParseDateTime(trade.Groups["timestamp"].Value, Timezone),
                 };
             })
             .Where(b => b != null)
@@ -856,16 +856,16 @@ public class LeaguegamingApi
                 }));
 
             return Regex.Matches(html,
-                @"<li[^>]*\bNewsFeedItem\b[^>]*>(.*?)</li>",
+                @"<li[^>]*\bNewsFeedItem\b[^>]*>(?<item>.*?)</li>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .Select(m =>
             {
-                var waiver = Regex.Match(m.Groups[1].Value,
+                var waiver = Regex.Match(m.Groups["item"].Value,
                     @$"<h3[^>]*>.*?(?:{string.Join("|",
-                        @"<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have (placed|removed|claimed)\s*<span[^>]*>(.*?)</span>",
-                        @"<span[^>]*>(.*?)</span>\s*has cleared waivers and is reporting to.*?\s*<img[^>]*/team(\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>"
-                    )}).*?</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(.*?)</abbr>",
+                        @"<img[^>]*/team(?<teamId>\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>\s*have\s*(?<action>placed|removed|claimed)\s*<span[^>]*>(?<playerName>.*?)</span>",
+                        @"<span[^>]*>(?<playerName>.*?)</span>\s*has\s+cleared\s+waivers\s+and\s+is\s+reporting\s+to.*?\s*<img[^>]*/team(?<teamId>\d+)\.\w{3,4}[^>]*>\s*<span[^>]*>.*?</span>"
+                    )}).*?</h3>\s*<abbr[^>]*\bDateTime\b[^>]*>(?<timestamp>.*?)</abbr>",
                     RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
                 if (!waiver.Success)
@@ -874,10 +874,10 @@ public class LeaguegamingApi
                 return new Waiver
                 {
                     LeagueId = league.Id,
-                    TeamId = string.Join("", waiver.Groups[1].Value, waiver.Groups[5].Value).Trim(),
-                    PlayerName = string.Join("", waiver.Groups[3].Value, waiver.Groups[4].Value).Trim(),
-                    Type = Enum.TryParse<WaiverActionType>(waiver.Groups[2].Value, true, out var action) ? action : WaiverActionType.Cleared,
-                    Timestamp = ISiteApi.ParseDateTime(waiver.Groups[6].Value, Timezone),
+                    TeamId = waiver.Groups["teamId"].Value.Trim(),
+                    PlayerName = waiver.Groups["playerName"].Value.Trim(),
+                    Type = Enum.TryParse<WaiverActionType>(waiver.Groups["action"].Value, true, out var action) ? action : WaiverActionType.Cleared,
+                    Timestamp = ISiteApi.ParseDateTime(waiver.Groups["timestamp"].Value, Timezone),
                 };
             })
             .Where(w => w != null)
