@@ -40,4 +40,6 @@ public enum RosterTransactionType
     SentDown,
     Banned,
     Suspended,
+    Dropped,
+    AssignedToPracticeRoster,
 }
