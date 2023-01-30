@@ -119,7 +119,7 @@ public class MyVirtualGamingApi
                     {
                         LeagueId = league.Id,
                         TeamId = m.Groups["teamId"].Value,
-                        PlayerName = contract.Groups[1].Value.Trim(),
+                        PlayerName = contract.Groups["playerName"].Value.Trim(),
                         Amount = ISiteApi.ParseDollars(contract.Groups["playerContract"].Value),
                         Timestamp = ISiteApi.ParseDateTime(m.Groups["timestamp"].Value, TimeZoneInfo.Utc),
                     };
