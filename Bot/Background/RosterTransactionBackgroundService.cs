@@ -123,6 +123,12 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                                             RosterTransactionType.Suspended => league.HasPluralTeamNames()
                                                 ? $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been suspended by the **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**"
                                                 : $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been suspended by **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**",
+                                            RosterTransactionType.Dropped => league.HasPluralTeamNames()
+                                                ? $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been dropped by the **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**"
+                                                : $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been dropped by **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}**",
+                                            RosterTransactionType.AssignedToPracticeRoster => league.HasPluralTeamNames()
+                                                ? $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been added to the **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}** practice roster"
+                                                : $"**{MessageUtils.Escape(rosterTransaction.PlayerNames.First())}** has been added to **{MessageUtils.Escape(teams.FirstOrDefault()?.Name ?? "")}** practice roster",
                                             _ => "",
                                         }, @" by\s*(the)?\s*\*\*\*\*", "")
                                     , @" the \*\*training camp\*\*$", " training camp").Trim();
