@@ -258,7 +258,7 @@ public class WatcherCommand : BaseCommandWithAdminCheck
             return;
         }
 
-        if (leagueOption!.ToLower() != "all" && teamOption!.ToLower() != "all" && leagues.First().Teams.Any(lt => lt.TeamId == teams.First().Id) != true)
+        if (leagueOption!.ToLower() != "all" && teamOption!.ToLower() != "all" && leagues.Any(l => l.Teams.Any(lt => teams.Any(t => t.Id == lt.TeamId))) != true)
         {
             await command.RespondAsync($"I'm sorry {command.User.Mention}, but I couldn't find the team `{teams.First().Name}` in the league `{leagues.First().Name}`.", ephemeral: true);
             return;
@@ -515,9 +515,8 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         if (leagueOption.ToLower() != "all")
         {
-            var league = (await _leagueService.FindAsync(leagueOption)).FirstOrDefault();
-            if (league == null) return (null, leagueOption);
-            leagues.Add(league);
+            leagues.AddRange(await _leagueService.FindAsync(leagueOption));
+            if (leagues.Count() < 1) return (null, leagueOption);
         }
         else if (!returnAllLeagues)
             return (null, leagueOption);
@@ -545,9 +544,8 @@ public class WatcherCommand : BaseCommandWithAdminCheck
 
         if (teamOption.ToLower() != "all")
         {
-            var team = (await _teamService.FindAsync(teamOption)).FirstOrDefault();
-            if (team == null) return (null, teamOption);
-            teams.Add(team);
+            teams.AddRange(await _teamService.FindAsync(teamOption));
+            if (teams.Count() < 1) return (null, teamOption);
         }
         else if (!returnAllTeams)
             return (null, teamOption);
