@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Migrations.Sqlite", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Migrations.Mysql", "Migrations\Mysql\Duthie.Migrations.Mysql.csproj", "{8D1D6F0A-FD11-40F3-BA57-8B3C4C867DBE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duthie.Extensions", "Extensions\Duthie.Extensions.csproj", "{967618F1-8FD3-4A0B-BA4C-F1ABFC6EC96C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +90,10 @@ Global
 		{8D1D6F0A-FD11-40F3-BA57-8B3C4C867DBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D1D6F0A-FD11-40F3-BA57-8B3C4C867DBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D1D6F0A-FD11-40F3-BA57-8B3C4C867DBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{967618F1-8FD3-4A0B-BA4C-F1ABFC6EC96C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{967618F1-8FD3-4A0B-BA4C-F1ABFC6EC96C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{967618F1-8FD3-4A0B-BA4C-F1ABFC6EC96C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{967618F1-8FD3-4A0B-BA4C-F1ABFC6EC96C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{36E91667-8AD1-4E5F-BF8D-0B4B1EBE4066} = {4F407175-26F4-428E-9647-A0F49CA336D9}

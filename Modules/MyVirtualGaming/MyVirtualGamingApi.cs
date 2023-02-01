@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
+using Duthie.Extensions;
 using Duthie.Types.Modules.Api;
 using Duthie.Types.Modules.Data;
 using League = Duthie.Types.Leagues.League;
@@ -25,7 +26,7 @@ public class MyVirtualGamingApi
         var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
         var queryString = parameters == null ? string.Empty
             : string.Join("&", parameters.Where(p => p.Value != null).Select(p => string.Join("=", HttpUtility.UrlEncode(p.Key), HttpUtility.UrlEncode(p.Value!.ToString()))));
-        return Regex.Replace($"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/{path}?{queryString}".Replace("?&", "?"), @"[?&]+$", "");
+        return Regex.Replace($"https://{Domain}/vghlleagues/{leagueInfo.LeagueId}/{Regex.Replace(path, @"^/+", "")}?{queryString}".Replace("?&", "?"), @"[?&]+$", "");
     }
 
     private bool IsSupported(League league) =>
@@ -232,77 +233,142 @@ public class MyVirtualGamingApi
             if (!IsSupported(league))
                 return null;
 
-            var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
-
-            var html = await _httpClient.GetStringAsync(GetUrl(league,
-                path: "schedule",
-                parameters: new Dictionary<string, object?>
-                {
-                    ["single_seasons"] = leagueInfo.SeasonId > 0 ? leagueInfo.SeasonId : null,
-                }));
-
-            var weeks = Regex.Matches(html,
-                @"<option[^>]*value=[""']?(?<week>\d{8})[""']?[^>]*>\d{4}-\d{2}-\d{2}</option>",
-                RegexOptions.IgnoreCase | RegexOptions.Singleline)
-                    .Select(m => m.Groups["week"].Value);
-
-            if (weeks.Count() == 0)
-                return new List<Game>();
-
             var teams = await GetTeamLookupAsync(league);
-
-            return (await Task.WhenAll(weeks.Select(async week =>
-            {
-                var _html = await _httpClient.GetStringAsync(GetUrl(league,
-                    path: "schedule",
-                    parameters: new Dictionary<string, object?>
-                    {
-                        ["single_seasons"] = leagueInfo.SeasonId > 0 ? leagueInfo.SeasonId : null,
-                        ["filter_scheduled_week"] = week,
-                    }));
-
-                DateTimeOffset? date = null;
-
-                return Regex.Matches(_html,
-                    @$"(?:{string.Join("|",
-                        @"(?<timestamp>\d+.{2} \S+ \d{4} @ \d+:\d+[ap]m)",
-                        @"<div[^>]*\bgame_div_(?<gameId>\d+)\b[^>]*>\s*<div[^>]*>\s*<div[^>]*>\s*<div[^>]*>\s*<div[^>]*\bschedule-team-logo\b[^>]*>\s*<img[^>]*/(?<visitorId>\w+)\.\w{3,4}[^>]*>\s*</div>\s*<div[^>]*>.*?</div>\s*<div[^>]*\bschedule-team-score\b[^>]*>\s*(?<visitorScore>\d+|-)\s*</div>\s*</div>\s*<div[^>]*>\s*<div[^>]*\bschedule-team-logo\b[^>]*>\s*<img[^>]*/(?<homeId>\w+)\.\w{3,4}[^>]*>\s*</div>\s*<div[^>]*>.*?</div>\s*<div[^>]*\bschedule-team-score\b[^>]*>\s*(?<homeScore>\d+|-)\s*</div>\s*</div>\s*<div[^>]*>.*?</div>\s*</div>\s*<div[^>]*\bschedule-summary-link\b[^>]*>\s*<a[^>]*>(?<status>Final|Stats)(?:/(?<period>OT|SO))?</a>\s*</div>")})",
-                    RegexOptions.IgnoreCase | RegexOptions.Singleline)
-                .Cast<Match>()
-                .Select(m =>
-                {
-                    if (!string.IsNullOrWhiteSpace(m.Groups["timestamp"].Value))
-                    {
-                        date = ISiteApi.ParseDateTime(Regex.Replace(m.Groups["timestamp"].Value, @"^(\d+).{2} (\S+) (\d+) @ (.*?)", @"$2 $1, $3 $4"), Timezone);
-                        return null;
-                    }
-
-                    if (date == null)
-                        return null;
-
-                    return new Game
-                    {
-                        LeagueId = league.Id,
-                        Id = ulong.Parse(m.Groups["gameId"].Value),
-                        Timestamp = date.GetValueOrDefault(),
-                        VisitorId = teams[m.Groups["visitorId"].Value.Trim()],
-                        VisitorScore = int.TryParse(m.Groups["visitorScore"].Value, out var visitorScore) ? visitorScore : null,
-                        HomeId = teams[m.Groups["homeId"].Value.Trim()],
-                        HomeScore = int.TryParse(m.Groups["homeScore"].Value, out var homeScore) ? homeScore : null,
-                        Overtime = m.Groups["period"].Value.ToUpper().Contains("OT"),
-                        Shootout = m.Groups["period"].Value.ToUpper().Contains("SO"),
-                    };
-                })
-                .Where(g => g != null)
-                .Cast<Game>();
-            })))
-            .SelectMany(g => g)
-            .ToList();
+            return (await GetRegularSeasonGamesAsync(league, teams))
+                .Concat(await GetPlayoffGamesAsync(league, teams));
         }
         catch (Exception e)
         {
             throw new ApiException($"An unexpected error occurred while fetching games for league \"{league.Name}\" [{league.Id}]", e);
         }
+    }
+
+    private async Task<IEnumerable<Game>> GetRegularSeasonGamesAsync(League league, IDictionary<string, string>? teams = null)
+    {
+        var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+
+        var html = await _httpClient.GetStringAsync(GetUrl(league,
+            path: "schedule",
+            parameters: new Dictionary<string, object?>
+            {
+                ["single_seasons"] = leagueInfo.SeasonId > 0 ? leagueInfo.SeasonId : null,
+            }));
+
+        var weeks = Regex.Matches(html,
+            @"<option[^>]*value=[""']?(?<week>\d{8})[""']?[^>]*>\d{4}-\d{2}-\d{2}</option>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline)
+                .Select(m => m.Groups["week"].Value);
+
+        if (weeks.Count() == 0)
+            return new List<Game>();
+
+        teams ??= await GetTeamLookupAsync(league);
+
+        return (await Task.WhenAll(weeks.Select(async week =>
+        {
+            var _html = await _httpClient.GetStringAsync(GetUrl(league,
+                path: "schedule",
+                parameters: new Dictionary<string, object?>
+                {
+                    ["single_seasons"] = leagueInfo.SeasonId > 0 ? leagueInfo.SeasonId : null,
+                    ["filter_scheduled_week"] = week,
+                }));
+
+            DateTimeOffset? date = null;
+
+            return Regex.Matches(_html,
+                @$"(?:{string.Join("|",
+                    @"(?<timestamp>\d+.{2} \S+ \d{4} @ \d+:\d+[ap]m)",
+                    @"<div[^>]*\bgame_div_(?<gameId>\d+)\b[^>]*>\s*<div[^>]*>\s*<div[^>]*>\s*<div[^>]*>\s*<div[^>]*\bschedule-team-logo\b[^>]*>\s*<img[^>]*/(?<visitorId>\w+)\.\w{3,4}[^>]*>\s*</div>\s*<div[^>]*>.*?</div>\s*<div[^>]*\bschedule-team-score\b[^>]*>\s*(?<visitorScore>\d+|-)\s*</div>\s*</div>\s*<div[^>]*>\s*<div[^>]*\bschedule-team-logo\b[^>]*>\s*<img[^>]*/(?<homeId>\w+)\.\w{3,4}[^>]*>\s*</div>\s*<div[^>]*>.*?</div>\s*<div[^>]*\bschedule-team-score\b[^>]*>\s*(?<homeScore>\d+|-)\s*</div>\s*</div>\s*<div[^>]*>.*?</div>\s*</div>\s*<div[^>]*\bschedule-summary-link\b[^>]*>\s*<a[^>]*>(?<status>Final|Stats)(?:/(?<period>OT|SO))?</a>\s*</div>")})",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(m =>
+            {
+                if (!string.IsNullOrWhiteSpace(m.Groups["timestamp"].Value))
+                {
+                    date = ISiteApi.ParseDateTime(Regex.Replace(m.Groups["timestamp"].Value, @"^(\d+).{2} (\S+) (\d+) @ (.*?)", @"$2 $1, $3 $4"), Timezone);
+                    return null;
+                }
+
+                if (date == null)
+                    return null;
+
+                return new Game
+                {
+                    LeagueId = league.Id,
+                    Id = ulong.Parse(m.Groups["gameId"].Value),
+                    Timestamp = date.GetValueOrDefault(),
+                    VisitorId = teams[m.Groups["visitorId"].Value.Trim()],
+                    VisitorScore = int.TryParse(m.Groups["visitorScore"].Value, out var visitorScore) ? visitorScore : null,
+                    HomeId = teams[m.Groups["homeId"].Value.Trim()],
+                    HomeScore = int.TryParse(m.Groups["homeScore"].Value, out var homeScore) ? homeScore : null,
+                    Overtime = m.Groups["period"].Value.ToUpper().Contains("OT"),
+                    Shootout = m.Groups["period"].Value.ToUpper().Contains("SO"),
+                };
+            })
+            .Where(g => g != null)
+            .Cast<Game>();
+        })))
+        .SelectMany(g => g)
+        .ToList();
+    }
+
+    private async Task<IEnumerable<Game>> GetPlayoffGamesAsync(League league, IDictionary<string, string>? teams = null)
+    {
+        var leagueInfo = (league.Info as MyVirtualGamingLeagueInfo)!;
+
+        if (string.IsNullOrWhiteSpace(leagueInfo.PlayoffEndpoint))
+            return new List<Game>();
+
+        var html = await _httpClient.GetStringAsync(GetUrl(league,
+            path: leagueInfo.PlayoffEndpoint), removeComments: true);
+
+        var series = Regex.Matches(html,
+            @$"<a[^>]*href=""(?<seriesUrl>(?=[^""]+\bview=playoffseries\b)(?=[^""]+\bschedule={leagueInfo.ScheduleId}\b)[^""]+)[^>]*>\s*<div[^>]*>\s*<div[^>]*>\s*<div[^>]*>\s*<div[^>]*>\s*<div[^>]*>\s*<img[^>]*/(?<topTeamAbbrev>\w+)\.\w{{3,4}}[^>]*>\s*</div>\s*<div[^>]*>\s*<span[^>]*>.*?</span>\s*<br[^>]*>\s*<span[^>]*club-name-header[^>]*>(?<topTeamName>.*?)</span>\s*</div>\s*</div>\s*<div[^>]*>\s*<div[^>]*>\s*<img[^>]*/(?<bottomTeamAbbrev>\w+)\.\w{{3,4}}[^>]*>\s*</div>\s*<div[^>]*>\s*<span[^>]*>.*?</span>\s*<br[^>]*>\s*<span[^>]*club-name-header[^>]*>(?<bottomTeamName>.*?)</span>\s*</div>\s*</div>\s*</div>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        if (series.Count() == 0)
+            return new List<Game>();
+
+        teams ??= await GetTeamLookupAsync(league);
+
+        return (await Task.WhenAll(series.Select(async s =>
+        {
+            var _teams = new Dictionary<string, string>() {
+                { s.Groups["topTeamName"].Value, teams[s.Groups["topTeamAbbrev"].Value] },
+                { s.Groups["bottomTeamName"].Value, teams[s.Groups["bottomTeamAbbrev"].Value] },
+            };
+
+            var _html = await _httpClient.GetStringAsync(GetUrl(league,
+                path: Regex.Replace(s.Groups["seriesUrl"].Value, @$"^(https://{Domain})?/?vghlleagues/{leagueInfo.LeagueId}", "")));
+
+            return Regex.Matches(_html,
+                @"<tr[^>]*playoffseriesRow[^>]*>\s*<td[^>]*>\s*<span[^>]*>\s*(?<timestamp>\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s*</span>\s*</td>\s*<td[^>]*>\s*<span[^>]*>\s*(?<visitorTeamName>.*?)\s*</span>\s*</td>\s*<td[^>]*>\s*<span[^>]*>\s*(?<homeTeamName>.*?)\s*</span>\s*</td>\s*<td[^>]*>\s*<div[^>]*>\s*<a[^>]*id=(?<gameId>\d+)[^>]*>\s*(?:Edit|(?<visitorScore>\d+)\s*-\s*(?<homeScore>\d+)\s*(?:\((?<period>\w+)\))?)\s*</a>\s*</div>\s*</td>\s*</tr>",
+                RegexOptions.IgnoreCase | RegexOptions.Singleline)
+            .Cast<Match>()
+            .Select(m =>
+            {
+                if (!_teams.TryGetValue(m.Groups["visitorTeamName"].Value.Trim(), out var visitorId) || !_teams.TryGetValue(m.Groups["homeTeamName"].Value.Trim(), out var homeId))
+                    return null;
+
+                return new Game
+                {
+                    LeagueId = league.Id,
+                    Id = ulong.Parse(m.Groups["gameId"].Value),
+                    Timestamp = ISiteApi.ParseDateTime(m.Groups["timestamp"].Value, Timezone),
+                    VisitorId = visitorId!,
+                    VisitorScore = int.TryParse(m.Groups["visitorScore"].Value, out var visitorScore) ? visitorScore : null,
+                    HomeId = homeId,
+                    HomeScore = int.TryParse(m.Groups["homeScore"].Value, out var homeScore) ? homeScore : null,
+                    Overtime = m.Groups["period"].Value.ToUpper().Contains("OT"),
+                    Shootout = m.Groups["period"].Value.ToUpper().Contains("SO"),
+                };
+            })
+            .Where(g => g != null)
+            .Cast<Game>();
+        })))
+        .SelectMany(g => g)
+        .ToList();
     }
 
     public async Task<Types.Modules.Data.League?> GetLeagueAsync(League league)
@@ -349,12 +415,12 @@ public class MyVirtualGamingApi
             .FirstOrDefault();
 
             html = await _httpClient.GetStringAsync(GetUrl(league,
-                path: "standings"));
+                path: "player-statistics"));
 
             var scheduleId = Regex.Matches(
                 Regex.Match(html,
                     @"<select[^>]*\bfilter_schedule\b[^>]*>(?<schedules>.*?)</select>",
-                    RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups["scheduled"].Value,
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups["schedules"].Value,
                 @"<option[^>]*value=[""']?(?<scheduleId>\d+)[""']?[^>]*>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
@@ -379,7 +445,7 @@ public class MyVirtualGamingApi
                 Id = league.Id,
                 Name = Regex.Replace(title.InnerText.Trim(), @"\s+Home$", ""),
                 LogoUrl = league.LogoUrl,
-                Info = new MyVirtualGamingLeagueInfo
+                Info = leagueInfo with
                 {
                     Features = features,
                     LeagueId = leagueId,
