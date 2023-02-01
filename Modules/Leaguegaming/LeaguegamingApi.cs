@@ -466,9 +466,8 @@ public class LeaguegamingApi
                 Id = league.Id,
                 Name = info.Groups["leagueName"].Value.Trim(),
                 LogoUrl = $"https://{Domain}/images/league/icon/l{leagueInfo.LeagueId}.png",
-                Info = new LeaguegamingLeagueInfo
+                Info = leagueInfo with
                 {
-                    LeagueId = leagueInfo.LeagueId,
                     SeasonId = season.Success ? int.Parse(season.Groups["seasonId"].Value) : leagueInfo.SeasonId,
                     ForumId = int.Parse(info.Groups["forumId"].Value),
                     DraftId = draft?.Success == true ? int.Parse(draft.Groups["draftId"].Value) : leagueInfo.DraftId,
