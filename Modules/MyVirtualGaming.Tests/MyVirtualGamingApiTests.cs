@@ -68,9 +68,9 @@ public class MyVirtualGamingApiTests
         Assert.True(actualGames != null, $"{_api.GetType().Name} does not support league {_league.Id}");
 
         var expectedGames = JsonSerializer.Deserialize<IEnumerable<Game>>(File.ReadAllText(@"./Files/games.json"))!;
-        var expectedTeamCount = expectedGames.Count();
+        var expectedGameCount = expectedGames.Count();
         var actualGameCount = actualGames!.Count();
-        Assert.True(expectedTeamCount == actualGameCount, $"expected {expectedTeamCount} games but found {actualGameCount}");
+        Assert.True(expectedGameCount == actualGameCount, $"expected {expectedGameCount} games but found {actualGameCount}");
 
         foreach (var expectedGame in expectedGames)
         {

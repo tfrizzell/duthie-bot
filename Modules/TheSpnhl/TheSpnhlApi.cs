@@ -80,7 +80,7 @@ public class TheSpnhlApi
                 Id = league.Id,
                 Name = league.Name,
                 LogoUrl = logo.Success ? $"https://{Domain}/{Regex.Replace(logo.Groups["logoUrl"].Value.Trim(), @$"^(https://{Domain})?/?", "")}" : league.LogoUrl,
-                Info = new TheSpnhlLeagueInfo
+                Info = leagueInfo with
                 {
                     LeagueType = leagueInfo.LeagueType,
                     SeasonId = season.Success ? int.Parse(season.Groups["seasonId"].Value) : leagueInfo.SeasonId

@@ -17,6 +17,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         {
             Features = MyVirtualGamingFeatures.All,
             LeagueId = "vgnhl",
+            PlayoffEndpoint = "/playoffs",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,
@@ -34,6 +35,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         {
             Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vgahl",
+            PlayoffEndpoint = "/playoffs",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,
@@ -51,6 +53,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         {
             Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vgphl",
+            PlayoffEndpoint = "/playoffs",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = false,
@@ -68,6 +71,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         {
             Features = MyVirtualGamingFeatures.None,
             LeagueId = "vghlwc",
+            PlayoffEndpoint = "/elimination-games",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6", "tournament" },
         Enabled = true,
@@ -85,6 +89,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         {
             Features = MyVirtualGamingFeatures.None,
             LeagueId = "vghlclub",
+            PlayoffEndpoint = "/playofflist",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6", "club teams" },
         Enabled = true,
@@ -102,6 +107,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         {
             Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vghl3",
+            PlayoffEndpoint = "/playoffs",
         },
         Tags = new Tags { "psn", "ea nhl", "3v3" },
         Enabled = true,
@@ -119,6 +125,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
         {
             Features = MyVirtualGamingFeatures.RecentTransactions,
             LeagueId = "vgihl",
+            PlayoffEndpoint = "/playoffs",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = true,
