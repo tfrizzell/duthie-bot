@@ -281,6 +281,7 @@ public class MyVirtualGamingApi
                 playoffScheduleId = null;
 
             var leagueId = Regex.Split(id.InnerText.Trim(), @"/+")[3] ?? leagueInfo.LeagueId;
+            var playoffEndpoint = Regex.Match(html, @$"/vghlleagues/{leagueId}(?<playoffEndpoint>/(playoffs|elimination-games|playofflist))", RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups["playoffEndpoint"].Value;
             var features = MyVirtualGamingFeatures.None;
 
             if (Regex.Match(html, @$"/vghlleagues/{leagueId}/recent-transactions", RegexOptions.IgnoreCase | RegexOptions.Singleline).Success)
@@ -301,6 +302,7 @@ public class MyVirtualGamingApi
                     SeasonId = seasonId ?? leagueInfo.SeasonId,
                     ScheduleId = scheduleId ?? leagueInfo.ScheduleId,
                     PlayoffScheduleId = playoffScheduleId,
+                    PlayoffEndpoint = string.IsNullOrWhiteSpace(playoffEndpoint) ? null : playoffEndpoint,
                 },
             };
         }
