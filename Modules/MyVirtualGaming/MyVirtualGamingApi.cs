@@ -374,13 +374,19 @@ public class MyVirtualGamingApi
                             @"<td[^>]*>\s*<img[^>]*/(?<teamAbbrev>\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>(?<playerName>.*?)\s*(?<playerPosition>\S+/\S+)\s*has\s+been\s+auto\s+assigned\s+a\s+Practice\s+Roster\s+contract\s+with\s+.*?</td>\s*<td[^>]*>(?<timestamp>.*?)</td>",
                             RegexOptions.IgnoreCase | RegexOptions.Singleline)
                         .Cast<Match>()
-                        .Select(m => new RosterTransaction
+                        .Select(m =>
                         {
-                            LeagueId = league.Id,
-                            TeamIds = new string[] { lookup[m.Groups["teamAbbrev"].Value.Trim()] },
-                            PlayerNames = new string[] { m.Groups["playerName"].Value.Trim() },
-                            Type = RosterTransactionType.AssignedToPracticeRoster,
-                            Timestamp = ISiteApi.ParseDateTime(m.Groups["timestamp"].Value, TimeZoneInfo.Utc),
+                            if (!lookup.ContainsKey(m.Groups["teamAbbrev"].Value.Trim()))
+                                return null;
+
+                            return new RosterTransaction
+                            {
+                                LeagueId = league.Id,
+                                TeamIds = new string[] { lookup[m.Groups["teamAbbrev"].Value.Trim()] },
+                                PlayerNames = new string[] { m.Groups["playerName"].Value.Trim() },
+                                Type = RosterTransactionType.AssignedToPracticeRoster,
+                                Timestamp = ISiteApi.ParseDateTime(m.Groups["timestamp"].Value, TimeZoneInfo.Utc),
+                            };
                         })
                         .Cast<RosterTransaction>(),
 
@@ -388,15 +394,21 @@ public class MyVirtualGamingApi
                             @"<td[^>]*>\s*<img[^>]*/(?<fromTeamAbbrev>\w+)\.\w{3,4}[^>]*>\s*<i[^>]*>\s*</i>\s*<img[^>]*/(?<toTeamAbbrev>\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>.*?have\s*(?<action>called up|sent down)\s*(?<playerName>.*?)\s*(?<playerPosition>\S+/\S+)\s*(?<playerContract>.*?)\s*(?:from|to)\s*.*?</td>\s*<td[^>]*>(?<timestamp>.*?)</td>",
                             RegexOptions.IgnoreCase | RegexOptions.Singleline)
                         .Cast<Match>()
-                        .Select(m => new RosterTransaction
+                        .Select(m =>
                         {
-                            LeagueId = league.Id,
-                            TeamIds = new string[] { lookup[m.Groups["fromTeamAbbrev"].Value.Trim()], lookup[m.Groups["toTeamAbbrev"].Value.Trim()] },
-                            PlayerNames = new string[] { m.Groups["playerName"].Value.Trim() },
-                            Type = m.Groups["action"].Value.ToLower().Contains("called up")
+                            if (!lookup.ContainsKey(m.Groups["fromTeamAbbrev"].Value.Trim()) || !lookup.ContainsKey(m.Groups["toTeamAbbrev"].Value.Trim()))
+                                return null;
+
+                            return new RosterTransaction
+                            {
+                                LeagueId = league.Id,
+                                TeamIds = new string[] { lookup[m.Groups["fromTeamAbbrev"].Value.Trim()], lookup[m.Groups["toTeamAbbrev"].Value.Trim()] },
+                                PlayerNames = new string[] { m.Groups["playerName"].Value.Trim() },
+                                Type = m.Groups["action"].Value.ToLower().Contains("called up")
                                 ? RosterTransactionType.CalledUp
                                 : RosterTransactionType.SentDown,
-                            Timestamp = ISiteApi.ParseDateTime(m.Groups["timestamp"].Value, TimeZoneInfo.Utc),
+                                Timestamp = ISiteApi.ParseDateTime(m.Groups["timestamp"].Value, TimeZoneInfo.Utc),
+                            };
                         })
                         .Cast<RosterTransaction>(),
 
@@ -404,15 +416,21 @@ public class MyVirtualGamingApi
                             @"<td[^>]*>\s*<img[^>]*/(?<teamAbbrev>\w+)\.\w{3,4}[^>]*>\s*</td>\s*<td[^>]*>.*?dropped\s*(?<playerName>.*?)\s*(?<playerPosition>\S+/\S+)\s*(?<playerContract>.*?)\s*.*?</td>\s*<td[^>]*>(?<timestamp>.*?)</td>",
                             RegexOptions.IgnoreCase | RegexOptions.Singleline)
                         .Cast<Match>()
-                        .Select(m => new RosterTransaction
+                        .Select(m =>
                         {
-                            LeagueId = league.Id,
-                            TeamIds = new string[] { lookup[m.Groups["teamAbbrev"].Value.Trim()] },
-                            PlayerNames = new string[] { m.Groups["playerName"].Value.Trim() },
-                            Type = Regex.Match(m.Groups[0].Value, @"\bBL\d*\b").Success
+                            if (!lookup.ContainsKey(m.Groups["teamAbbrev"].Value.Trim()))
+                                return null;
+
+                            return new RosterTransaction
+                            {
+                                LeagueId = league.Id,
+                                TeamIds = new string[] { lookup[m.Groups["teamAbbrev"].Value.Trim()] },
+                                PlayerNames = new string[] { m.Groups["playerName"].Value.Trim() },
+                                Type = Regex.Match(m.Groups[0].Value, @"\bBL\d*\b").Success
                                 ? RosterTransactionType.Banned
                                 : RosterTransactionType.Dropped,
-                            Timestamp = ISiteApi.ParseDateTime(m.Groups["timestamp"].Value, TimeZoneInfo.Utc),
+                                Timestamp = ISiteApi.ParseDateTime(m.Groups["timestamp"].Value, TimeZoneInfo.Utc),
+                            };
                         })
                         .Cast<RosterTransaction>(),
 
