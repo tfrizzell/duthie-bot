@@ -37,6 +37,7 @@ public class MyVirtualGamingApiTests
         Assert.True(expectedInfo.LeagueId == actualInfo.LeagueId, $"expected Info.LeagueId to be {expectedInfo.LeagueId} but got {actualInfo.LeagueId}");
         Assert.True(expectedInfo.SeasonId <= actualInfo.SeasonId, $"expected Info.SeasonId to be greater than or equal to {expectedInfo.SeasonId} but got {actualInfo.SeasonId}");
         Assert.True(expectedInfo.ScheduleId <= actualInfo.ScheduleId, $"expected Info.ScheduleId to be greater than or equal to {expectedInfo.ScheduleId} but got {actualInfo.ScheduleId}");
+        Assert.True(expectedInfo.PlayoffEndpoint == actualInfo.PlayoffEndpoint, $"expected Info.PlayoffEndpoint to be {expectedInfo.PlayoffEndpoint} but got {actualInfo.PlayoffEndpoint}");
     }
 
     [Fact]

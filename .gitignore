@@ -1,5 +1,6 @@
 bin/
 dist/
 obj/
-duthie-bot.db*
 *.log
+duthie-bot.db*
+build.sh

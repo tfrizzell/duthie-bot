@@ -227,78 +227,6 @@ public class LeaguegamingApi
         }
     }
 
-    private async Task<string?> GetDailyStarsUrl(League league, DateTimeOffset? timestamp = null)
-    {
-        var date = (timestamp ?? DateTimeOffset.UtcNow.ToOffset(Timezone.BaseUtcOffset).AddDays(-1)).Date;
-
-        return await _memoryCache.GetOrCreateAsync<string?>(new { type = GetType(), method = "GetAllAsync", league, date }, async entry =>
-        {
-            var titleText = $"Daily 3 Stars For {string.Format(date.ToString("dddd MMMM d{0}, yyyy"), GetSuffix(date.Day))}";
-            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
-
-            var xml = await _httpClient.GetStringAsync(GetUrl(league,
-                path: $"forums/forum.{leagueInfo.ForumId}/index.rss")).ConfigureAwait(false);
-
-            var doc = new XmlDocument();
-            doc.LoadXml(xml);
-
-            string? url = null;
-
-            foreach (XmlNode item in doc.GetElementsByTagName("item"))
-            {
-                url = null;
-
-                foreach (XmlNode node in item.ChildNodes)
-                {
-                    if (node.Name == "title" && node.InnerText.EndsWith(titleText, StringComparison.OrdinalIgnoreCase))
-                    {
-                        url = string.Empty;
-                        break;
-                    }
-                }
-
-                if (url == null)
-                    continue;
-
-                foreach (XmlNode node in item.ChildNodes)
-                {
-                    if (node.Name == "link")
-                    {
-                        url = node.InnerText;
-                        break;
-                    }
-                }
-
-                if (!string.IsNullOrWhiteSpace(url))
-                    break;
-            }
-
-            entry.SetOptions(new MemoryCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = url == null ? TimeSpan.FromSeconds(15) : TimeSpan.FromMinutes(15)
-            });
-
-            return url;
-        }).ConfigureAwait(false);
-    }
-
-    private static string GetSuffix(int day)
-    {
-        var num = day.ToString();
-        day %= 100;
-
-        if ((day >= 11) && (day <= 13))
-            return "th";
-
-        switch (day % 10)
-        {
-            case 1: return "st";
-            case 2: return "nd";
-            case 3: return "rd";
-            default: return "th";
-        }
-    }
-
     public async Task<IEnumerable<DraftPick>?> GetDraftPicksAsync(League league)
     {
         try
@@ -976,5 +904,77 @@ public class LeaguegamingApi
 
         var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
         return $"https://{Domain}/forums/index.php?leaguegaming/league&action=league&page=team_news&leagueid={leagueInfo.LeagueId}&seasonid={leagueInfo.SeasonId}&teamid={waiver.TeamId}&typeid={(int)LeaguegamingNewsType.Waivers}";
+    }
+
+    private async Task<string?> GetDailyStarsUrl(League league, DateTimeOffset? timestamp = null)
+    {
+        var date = (timestamp ?? DateTimeOffset.UtcNow.ToOffset(Timezone.BaseUtcOffset).AddDays(-1)).Date;
+
+        return await _memoryCache.GetOrCreateAsync<string?>(new { type = GetType(), method = "GetAllAsync", league, date }, async entry =>
+        {
+            var titleText = $"Daily 3 Stars For {string.Format(date.ToString("dddd MMMM d{0}, yyyy"), GetSuffix(date.Day))}";
+            var leagueInfo = (league.Info as LeaguegamingLeagueInfo)!;
+
+            var xml = await _httpClient.GetStringAsync(GetUrl(league,
+                path: $"forums/forum.{leagueInfo.ForumId}/index.rss")).ConfigureAwait(false);
+
+            var doc = new XmlDocument();
+            doc.LoadXml(xml);
+
+            string? url = null;
+
+            foreach (XmlNode item in doc.GetElementsByTagName("item"))
+            {
+                url = null;
+
+                foreach (XmlNode node in item.ChildNodes)
+                {
+                    if (node.Name == "title" && node.InnerText.EndsWith(titleText, StringComparison.OrdinalIgnoreCase))
+                    {
+                        url = string.Empty;
+                        break;
+                    }
+                }
+
+                if (url == null)
+                    continue;
+
+                foreach (XmlNode node in item.ChildNodes)
+                {
+                    if (node.Name == "link")
+                    {
+                        url = node.InnerText;
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(url))
+                    break;
+            }
+
+            entry.SetOptions(new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = url == null ? TimeSpan.FromSeconds(15) : TimeSpan.FromMinutes(15)
+            });
+
+            return url;
+        }).ConfigureAwait(false);
+    }
+
+    private static string GetSuffix(int day)
+    {
+        var num = day.ToString();
+        day %= 100;
+
+        if ((day >= 11) && (day <= 13))
+            return "th";
+
+        switch (day % 10)
+        {
+            case 1: return "st";
+            case 2: return "nd";
+            case 3: return "rd";
+            default: return "th";
+        }
     }
 }
