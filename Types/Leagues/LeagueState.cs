@@ -3,14 +3,21 @@ namespace Duthie.Types.Leagues;
 public class LeagueState
 {
     public Guid LeagueId { get; set; }
-    public string? LastBid { get; set; }
-    public string? LastContract { get; set; }
-    public DateTimeOffset? LastDailyStar { get; set; }
-    public string? LastDraftPick { get; set; }
-    public string? LastNewsItem { get; set; }
-    public string? LastRosterTransaction { get; set; }
-    public string? LastTrade { get; set; }
-    public string? LastWaiver { get; set; }
+    public string? LastBidHash { get; set; }
+    public DateTimeOffset? LastBidTimestamp { get; set; }
+    public string? LastContractHash { get; set; }
+    public DateTimeOffset? LastContractTimestamp { get; set; }
+    public DateTimeOffset? LastDailyStarTimestamp { get; set; }
+    public string? LastDraftPickHash { get; set; }
+    public DateTimeOffset? LastDraftPickTimestamp { get; set; }
+    public string? LastNewsItemHash { get; set; }
+    public DateTimeOffset? LastNewsItemTimestamp { get; set; }
+    public string? LastRosterTransactionHash { get; set; }
+    public DateTimeOffset? LastRosterTransactionTimestamp { get; set; }
+    public string? LastTradeHash { get; set; }
+    public DateTimeOffset? LastTradeTimestamp { get; set; }
+    public string? LastWaiverHash { get; set; }
+    public DateTimeOffset? LastWaiverTimestamp { get; set; }
 
 #nullable disable
     internal virtual League League { get; set; }

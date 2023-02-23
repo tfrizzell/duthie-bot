@@ -62,13 +62,13 @@ public class NewsBackgroundService : ScheduledBackgroundService
                     return;
 
                 var data = (await api.GetNewsAsync(league))?
-                    .OrderBy(b => b.Timestamp)
-                        .ThenBy(b => b.GetHash())
+                    .Where(n => league.State.LastNewsItemTimestamp == null || n.Timestamp >= league.State.LastNewsItemTimestamp)
+                    .OrderBy(n => n.Timestamp)
                     .ToList();
 
-                if (data?.Count() > 0 && league.State.LastNewsItem != null)
+                if (data?.Count() > 0 && league.State.LastNewsItemHash != null)
                 {
-                    var lastNewsIndex = data.FindIndex(b => b.GetHash() == league.State.LastNewsItem);
+                    var lastNewsIndex = data.FindIndex(b => b.GetHash() == league.State.LastNewsItemHash);
 
                     if (lastNewsIndex >= 0)
                         data.RemoveRange(0, lastNewsIndex + 1);
@@ -112,25 +112,30 @@ public class NewsBackgroundService : ScheduledBackgroundService
                             _logger.LogError(e, $"An unexpected error has occurred while processing news {news.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
 
-                        league.State.LastNewsItem = news.GetHash();
+                        league.State.LastNewsItemHash = news.GetHash();
+                        league.State.LastNewsItemTimestamp = news.Timestamp;
                     }
 
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new winning news")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else if (league.State.LastNewsItem == null)
-                    league.State.LastNewsItem = data?.LastOrDefault()?.GetHash() ?? "";
+                else if (league.State.LastNewsItemHash == null)
+                {
+                    var lastNewsItem = data?.LastOrDefault();
+                    league.State.LastNewsItemHash = lastNewsItem?.GetHash() ?? "";
+                    league.State.LastNewsItemTimestamp = lastNewsItem?.Timestamp;
+                }
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.News);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"News tracking task completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"News tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"News tracking task failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"News tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during news tracking task.");
         }
     }

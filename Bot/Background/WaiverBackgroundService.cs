@@ -62,16 +62,16 @@ public class WaiverBackgroundService : ScheduledBackgroundService
                     return;
 
                 var data = (await api.GetWaiversAsync(league))?
+                    .Where(w => league.State.LastWaiverTimestamp == null || w.Timestamp >= league.State.LastWaiverTimestamp)
                     .OrderBy(w => w.Timestamp)
-                        .ThenBy(w => w.GetHash())
                     .ToList();
 
-                if (data?.Count() > 0 && league.State.LastWaiver != null)
+                if (data?.Count() > 0 && league.State.LastWaiverHash != null)
                 {
-                    var LastWaiverIndex = data.FindIndex(w => w.GetHash() == league.State.LastWaiver);
+                    var lastWaiverIndex = data.FindIndex(w => w.GetHash() == league.State.LastWaiverHash);
 
-                    if (LastWaiverIndex >= 0)
-                        data.RemoveRange(0, LastWaiverIndex + 1);
+                    if (lastWaiverIndex >= 0)
+                        data.RemoveRange(0, lastWaiverIndex + 1);
 
                     foreach (var waiver in data)
                     {
@@ -133,25 +133,30 @@ public class WaiverBackgroundService : ScheduledBackgroundService
                             _logger.LogError(e, $"An unexpected error has occurred while processing waiver {waiver.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
 
-                        league.State.LastWaiver = waiver.GetHash();
+                        league.State.LastWaiverHash = waiver.GetHash();
+                        league.State.LastWaiverTimestamp = waiver?.Timestamp;
                     }
 
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new waiver")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else if (league.State.LastWaiver == null)
-                    league.State.LastWaiver = data?.LastOrDefault()?.GetHash() ?? "";
+                else if (league.State.LastWaiverHash == null)
+                {
+                    var lastWaiver = data?.LastOrDefault();
+                    league.State.LastWaiverHash = lastWaiver?.GetHash() ?? "";
+                    league.State.LastWaiverTimestamp = lastWaiver?.Timestamp;
+                }
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.Waiver);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Waiver tracking task completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Waiver tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Waiver tracking task failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Waiver tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during waiver tracking task.");
         }
     }

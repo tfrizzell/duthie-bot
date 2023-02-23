@@ -64,16 +64,16 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                     return;
 
                 var data = (await api.GetRosterTransactionsAsync(league))?
+                    .Where(t => league.State.LastRosterTransactionTimestamp == null || t.Timestamp >= league.State.LastRosterTransactionTimestamp)
                     .OrderBy(t => t.Timestamp)
-                        .ThenBy(t => t.GetHash())
                     .ToList();
 
-                if (data?.Count() > 0 && league.State.LastRosterTransaction != null)
+                if (data?.Count() > 0 && league.State.LastRosterTransactionHash != null)
                 {
-                    var LastRosterTransactionIndex = data.FindIndex(t => t.GetHash() == league.State.LastRosterTransaction);
+                    var lastRosterTransactionIndex = data.FindIndex(t => t.GetHash() == league.State.LastRosterTransactionHash);
 
-                    if (LastRosterTransactionIndex >= 0)
-                        data.RemoveRange(0, LastRosterTransactionIndex + 1);
+                    if (lastRosterTransactionIndex >= 0)
+                        data.RemoveRange(0, lastRosterTransactionIndex + 1);
 
                     foreach (var rosterTransaction in data)
                     {
@@ -160,25 +160,30 @@ public class RosterTransactionBackgroundService : ScheduledBackgroundService
                             _logger.LogError(e, $"An unexpected error has occurred while processing roster transaction {rosterTransaction.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
 
-                        league.State.LastRosterTransaction = rosterTransaction.GetHash();
+                        league.State.LastRosterTransactionHash = rosterTransaction.GetHash();
+                        league.State.LastRosterTransactionTimestamp = rosterTransaction.Timestamp;
                     }
 
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new roster transaction")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else if (league.State.LastRosterTransaction == null)
-                    league.State.LastRosterTransaction = data?.LastOrDefault()?.GetHash() ?? "";
+                else if (league.State.LastRosterTransactionHash == null)
+                {
+                    var lastRosterTransaction = data?.LastOrDefault();
+                    league.State.LastRosterTransactionHash = lastRosterTransaction?.GetHash() ?? "";
+                    league.State.LastRosterTransactionTimestamp = lastRosterTransaction?.Timestamp;
+                }
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.RosterTransaction);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Roster transaction tracking task completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Roster transaction tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Roster transaction tracking task failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Roster transaction tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during roster transaction tracking task.");
         }
     }

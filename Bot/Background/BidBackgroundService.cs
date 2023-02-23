@@ -62,13 +62,13 @@ public class BidBackgroundService : ScheduledBackgroundService
                     return;
 
                 var data = (await api.GetBidsAsync(league))?
+                    .Where(b => league.State.LastBidTimestamp == null || b.Timestamp >= league.State.LastBidTimestamp)
                     .OrderBy(b => b.Timestamp)
-                        .ThenBy(b => b.GetHash())
                     .ToList();
 
-                if (data?.Count() > 0 && league.State.LastBid != null)
+                if (data?.Count() > 0 && league.State.LastBidHash != null)
                 {
-                    var lastBidIndex = data.FindIndex(b => b.GetHash() == league.State.LastBid);
+                    var lastBidIndex = data.FindIndex(b => b.GetHash() == league.State.LastBidHash);
 
                     if (lastBidIndex >= 0)
                         data.RemoveRange(0, lastBidIndex + 1);
@@ -115,25 +115,30 @@ public class BidBackgroundService : ScheduledBackgroundService
                             _logger.LogError(e, $"An unexpected error has occurred while processing bid {bid.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
 
-                        league.State.LastBid = bid.GetHash();
+                        league.State.LastBidHash = bid.GetHash();
+                        league.State.LastBidTimestamp = bid.Timestamp;
                     }
 
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new winning bid")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else if (league.State.LastBid == null)
-                    league.State.LastBid = data?.LastOrDefault()?.GetHash() ?? "";
+                else if (league.State.LastBidHash == null)
+                {
+                    var lastBid = data?.LastOrDefault();
+                    league.State.LastBidHash = lastBid?.GetHash() ?? "";
+                    league.State.LastBidTimestamp = lastBid?.Timestamp;
+                }
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.Bid);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Bid tracking task completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Bid tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Bid tracking task failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Bid tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during bid tracking task.");
         }
     }

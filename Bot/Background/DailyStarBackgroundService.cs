@@ -52,7 +52,7 @@ public class DailyStarBackgroundService : ScheduledBackgroundService
         try
         {
             var leagues = await _leagueService.GetAllAsync();
-            leagues = leagues.Where(l => l.State.LastDailyStar == null || (DateTimeOffset.UtcNow - l.State.LastDailyStar.GetValueOrDefault()).TotalHours >= 18);
+            leagues = leagues.Where(l => l.State.LastDailyStarTimestamp == null || (DateTimeOffset.UtcNow - l.State.LastDailyStarTimestamp.GetValueOrDefault()).TotalHours >= 18);
 
             var teamLookup = new TeamLookup(leagues);
 
@@ -69,7 +69,7 @@ public class DailyStarBackgroundService : ScheduledBackgroundService
                         .ThenBy(s => s.Rank)
                     .ToList();
 
-                if (data?.Count() > 0 && league.State.LastDailyStar != null)
+                if (data?.Count() > 0 && league.State.LastDailyStarTimestamp != null)
                 {
                     try
                     {
@@ -122,24 +122,24 @@ public class DailyStarBackgroundService : ScheduledBackgroundService
                         _logger.LogError(e, $"An unexpected error has occurred while processing daily stars for league \"{league.Name}\" [{league.Id}]");
                     }
 
-                    league.State.LastDailyStar = DateTimeOffset.UtcNow;
+                    league.State.LastDailyStarTimestamp = DateTimeOffset.UtcNow;
 
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new daily star")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else if (league.State.LastDailyStar == null)
-                    league.State.LastDailyStar = DateTimeOffset.UtcNow;
+                else if (league.State.LastDailyStarTimestamp == null)
+                    league.State.LastDailyStarTimestamp = DateTimeOffset.UtcNow;
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.DailyStar);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Daily star tracking task completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Daily star tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Daily star tracking task failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Daily star tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during daily star tracking task.");
         }
     }

@@ -62,16 +62,16 @@ public class ContractBackgroundService : ScheduledBackgroundService
                     return;
 
                 var data = (await api.GetContractsAsync(league))?
+                    .Where(c => league.State.LastContractTimestamp == null || c.Timestamp >= league.State.LastContractTimestamp)
                     .OrderBy(c => c.Timestamp)
-                        .ThenBy(c => c.GetHash())
                     .ToList();
 
-                if (data?.Count() > 0 && league.State.LastContract != null)
+                if (data?.Count() > 0 && league.State.LastContractHash != null)
                 {
-                    var LastContractIndex = data.FindIndex(c => c.GetHash() == league.State.LastContract);
+                    var lastContractIndex = data.FindIndex(c => c.GetHash() == league.State.LastContractHash);
 
-                    if (LastContractIndex >= 0)
-                        data.RemoveRange(0, LastContractIndex + 1);
+                    if (lastContractIndex >= 0)
+                        data.RemoveRange(0, lastContractIndex + 1);
 
                     foreach (var contract in data)
                     {
@@ -115,25 +115,30 @@ public class ContractBackgroundService : ScheduledBackgroundService
                             _logger.LogError(e, $"An unexpected error has occurred while processing contract {contract.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
 
-                        league.State.LastContract = contract.GetHash();
+                        league.State.LastContractHash = contract.GetHash();
+                        league.State.LastContractTimestamp = contract.Timestamp;
                     }
 
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new contract")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else if (league.State.LastContract == null)
-                    league.State.LastContract = data?.LastOrDefault()?.GetHash() ?? "";
+                else if (league.State.LastContractHash == null)
+                {
+                    var lastContract = data?.LastOrDefault();
+                    league.State.LastContractHash = lastContract?.GetHash() ?? "";
+                    league.State.LastContractTimestamp = lastContract?.Timestamp;
+                }
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.Contract);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Contract tracking task completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Contract tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Contract tracking task failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Contract tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during contract tracking task.");
         }
     }
