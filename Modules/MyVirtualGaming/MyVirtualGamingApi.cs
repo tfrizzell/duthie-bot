@@ -73,6 +73,7 @@ public class MyVirtualGamingApi
                     Timestamp = ISiteApi.ParseDateTime(m.Groups["timestamp"].Value, TimeZoneInfo.Utc),
                 };
             })
+            .Reverse()
             .ToList();
         }
         catch (Exception e)
@@ -128,6 +129,7 @@ public class MyVirtualGamingApi
             .SelectMany(c => c)
             .Where(c => c != null)
             .Cast<Contract>()
+            .Reverse()
             .ToList();
         }
         catch (Exception e)
@@ -178,6 +180,7 @@ public class MyVirtualGamingApi
                 });
             })
             .SelectMany(d => d)
+            .Reverse()
             .ToList();
         }
         catch (Exception e)
@@ -441,6 +444,7 @@ public class MyVirtualGamingApi
             })
             .SelectMany(r => r)
             .Where(r => r != null)
+            .Reverse()
             .ToList();
         }
         catch (Exception e)
@@ -597,6 +601,7 @@ public class MyVirtualGamingApi
             })
             .Where(t => t != null)
             .Cast<Trade>()
+            .Reverse()
             .ToList();
         }
         catch (Exception e)
