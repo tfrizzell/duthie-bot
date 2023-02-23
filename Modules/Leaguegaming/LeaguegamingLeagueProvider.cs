@@ -93,7 +93,7 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l90.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 90 },
         Tags = new Tags { "xbox", "ea nhl", "6v6", "esports" },
-        Enabled = true,
+        Enabled = false,
     };
 
     internal static readonly League ESHL_PSN = new League
@@ -106,7 +106,7 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l91.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 91 },
         Tags = new Tags { "psn", "ea nhl", "6v6", "esports" },
-        Enabled = true,
+        Enabled = false,
     };
 
     internal static readonly League LGWC_PSN = new League
@@ -119,7 +119,7 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l97.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 97 },
         Tags = new Tags { "psn", "ea nhl", "6v6", "tournament" },
-        Enabled = true,
+        Enabled = false,
     };
 
     internal static readonly League LGFNP_XBOX = new League
@@ -145,7 +145,7 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l79.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 79 },
         Tags = new Tags { "psn", "ea nhl", "6v6", "weekly", "pickup" },
-        Enabled = true,
+        Enabled = false,
     };
 
     internal static readonly League LGBA_XBOX = new League
@@ -184,7 +184,7 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l53.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 53 },
         Tags = new Tags { "xbox", "fifa", "11v11" },
-        Enabled = true
+        Enabled = false
     };
 
     internal static readonly League LGFA_PSN = new League
