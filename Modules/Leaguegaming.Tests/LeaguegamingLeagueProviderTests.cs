@@ -12,7 +12,7 @@ public class LeaguegamingLeagueProviderTests
 
     [Theory]
     [MemberData(nameof(DefaultLeagues))]
-    public void DefaultLeagues_Exist(Guid id, string name, int leagueId)
+    public void DefaultLeagues_Exist(Guid id, string name, int leagueId, bool enabled = true)
     {
         var leagueProvider = new LeaguegamingLeagueProvider();
         var league = leagueProvider.Leagues.FirstOrDefault(l => l.Id == id);
@@ -21,7 +21,7 @@ public class LeaguegamingLeagueProviderTests
         Assert.True(LeaguegamingSiteProvider.Leaguegaming.Id == league!.SiteId, $"expected SiteId to be {LeaguegamingSiteProvider.Leaguegaming.Id} but got {league.SiteId}");
         Assert.True(name == league.Name, $"expected Name to be {name} but got {league.Name}");
         Assert.True(league.Info is LeaguegamingLeagueInfo, $"expected Info to be of type {typeof(LeaguegamingLeagueInfo).Name} but got {league.Info?.GetType().Name ?? "null"}");
-        Assert.True(league.Enabled, $"expected Enabled to be {true} but got {league.Enabled}");
+        Assert.True(league.Enabled == enabled, $"expected Enabled to be {enabled} but got {league.Enabled}");
 
         var actualLeagueId = (league.Info as LeaguegamingLeagueInfo)!.LeagueId;
         Assert.True(leagueId == actualLeagueId, $"expected Info.LeagueId to be {leagueId} but got {actualLeagueId}");
@@ -38,14 +38,14 @@ public class LeaguegamingLeagueProviderTests
         yield return new object[] { new Guid("86c4e0fe-056b-450c-9a55-9ab32946ea31"), "LGHL PSN", 67 };
         yield return new object[] { new Guid("c5884f38-cae4-461c-af99-beebcdc63e88"), "LGAHL PSN", 68 };
         yield return new object[] { new Guid("e6f88d50-c9e3-43f2-be3d-11c29fc4403b"), "LGCHL PSN", 69 };
-        yield return new object[] { new Guid("aef1cea7-c626-42b4-9a45-0b9ea3deeb51"), "ESHL", 90 };
-        yield return new object[] { new Guid("0f9b50f8-3526-4bd3-9323-60b67f6a6abb"), "ESHL PSN", 91 };
-        yield return new object[] { new Guid("92718d97-8d2d-4ea3-a4b0-c4cefb75979d"), "LG World Cup", 97 };
+        yield return new object[] { new Guid("aef1cea7-c626-42b4-9a45-0b9ea3deeb51"), "ESHL", 90, false };
+        yield return new object[] { new Guid("0f9b50f8-3526-4bd3-9323-60b67f6a6abb"), "ESHL PSN", 91, false };
+        yield return new object[] { new Guid("92718d97-8d2d-4ea3-a4b0-c4cefb75979d"), "LG World Cup", 97, false };
         yield return new object[] { new Guid("76f28c43-fe50-4d66-910d-be37622ecb0e"), "LGFNP", 78 };
-        yield return new object[] { new Guid("f8ef5453-6b84-4ae9-9c3e-0553f0fd8971"), "LGFNP PSN", 79 };
+        yield return new object[] { new Guid("f8ef5453-6b84-4ae9-9c3e-0553f0fd8971"), "LGFNP PSN", 79, false };
         yield return new object[] { new Guid("c0fcd9f5-d48a-465f-867b-905bafec917d"), "LGBA", 50 };
         yield return new object[] { new Guid("3b5133d0-8801-4b86-9920-b7025cf88335"), "LGBA PSN", 70 };
-        yield return new object[] { new Guid("f9351c11-a36d-4069-804b-e0f317935576"), "LGFA", 53 };
+        yield return new object[] { new Guid("f9351c11-a36d-4069-804b-e0f317935576"), "LGFA", 53, false };
         yield return new object[] { new Guid("1112ece0-a84c-4dc1-9a75-278d4a0e4dd8"), "LGFA PSN", 73 };
     }
 }

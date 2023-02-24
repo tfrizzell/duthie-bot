@@ -68,8 +68,7 @@ public class GameBackgroundService : ScheduledBackgroundService
 
                 var data = (await api.GetGamesAsync(league))?
                     .OrderBy(g => g.Timestamp)
-                        .ThenBy(g => g.Id)
-                        .ThenBy(g => g.GetHash());
+                        .ThenBy(g => g.Id);
 
                 if (data == null)
                     return;
@@ -183,12 +182,12 @@ public class GameBackgroundService : ScheduledBackgroundService
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Game update task completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Game update task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Game update task failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Game update task failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during game update task.");
         }
     }

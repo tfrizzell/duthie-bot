@@ -62,12 +62,13 @@ public class DraftBackgroundService : ScheduledBackgroundService
                     return;
 
                 var data = (await api.GetDraftPicksAsync(league))?
+                    .Where(p => league.State.LastDraftPickTimestamp == null || p.Timestamp >= league.State.LastDraftPickTimestamp)
                     .OrderBy(p => p.OverallPick)
                     .ToList();
 
-                if (data?.Count() > 0 && league.State.LastDraftPick != null)
+                if (data?.Count() > 0 && league.State.LastDraftPickHash != null)
                 {
-                    var lastDraftIndex = data.FindIndex(b => b.GetHash() == league.State.LastDraftPick);
+                    var lastDraftIndex = data.FindIndex(b => b.GetHash() == league.State.LastDraftPickHash);
 
                     if (lastDraftIndex >= 0)
                         data.RemoveRange(0, lastDraftIndex + 1);
@@ -114,25 +115,30 @@ public class DraftBackgroundService : ScheduledBackgroundService
                             _logger.LogError(e, $"An unexpected error has occurred while processing draft pick {draftPick.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
 
-                        league.State.LastDraftPick = draftPick.GetHash();
+                        league.State.LastDraftPickHash = draftPick.GetHash();
+                        league.State.LastDraftPickTimestamp = draftPick.Timestamp;
                     }
 
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new draft pick")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else if (league.State.LastDraftPick == null)
-                    league.State.LastDraftPick = data?.LastOrDefault()?.GetHash() ?? "";
+                else if (league.State.LastDraftPickHash == null)
+                {
+                    var lastDraftPick = data?.LastOrDefault();
+                    league.State.LastDraftPickHash = lastDraftPick?.GetHash() ?? "";
+                    league.State.LastDraftPickTimestamp = lastDraftPick?.Timestamp;
+                }
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.DraftPick);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Draft pick tracking task completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Draft pick tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Draft pick tracking task failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Draft pick tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during draft pick tracking task.");
         }
     }

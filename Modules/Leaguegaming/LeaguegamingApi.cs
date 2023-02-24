@@ -77,6 +77,7 @@ public class LeaguegamingApi
             })
             .Where(b => b != null)
             .Cast<Bid>()
+            .Reverse()
             .ToList();
         }
         catch (Exception e)
@@ -130,6 +131,7 @@ public class LeaguegamingApi
             })
             .Where(c => c != null)
             .Cast<Contract>()
+            .Reverse()
             .ToList();
         }
         catch (Exception e)
@@ -279,6 +281,7 @@ public class LeaguegamingApi
                     OverallPick = overallPick,
                 };
             })
+            .Reverse()
             .ToList();
         }
         catch (Exception e)
@@ -452,6 +455,7 @@ public class LeaguegamingApi
             })
             .Where(n => n != null)
             .Cast<News>()
+            .Reverse()
             .ToList();
         }
         catch (Exception e)
@@ -616,6 +620,7 @@ public class LeaguegamingApi
             })))
             .SelectMany(r => r)
             .Where(r => r != null)
+            .Reverse()
             .ToList();
         }
         catch (Exception e)
@@ -754,6 +759,7 @@ public class LeaguegamingApi
             })
             .Where(b => b != null)
             .Cast<Trade>()
+            .Reverse()
             .ToList();
         }
         catch (Exception e)
@@ -809,6 +815,7 @@ public class LeaguegamingApi
             })
             .Where(w => w != null)
             .Cast<Waiver>()
+            .Reverse()
             .ToList();
         }
         catch (Exception e)

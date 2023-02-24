@@ -64,14 +64,14 @@ public class TradeBackgroundService : ScheduledBackgroundService
                     return;
 
                 var data = (await api.GetTradesAsync(league))?
+                    .Where(t => league.State.LastRosterTransactionTimestamp == null || t.Timestamp >= league.State.LastRosterTransactionTimestamp)
                     .Where(t => t.FromAssets.Count() + t.ToAssets.Count() > 0)
-                    .OrderBy(b => b.Timestamp)
-                        .ThenBy(b => b.GetHash())
+                    .OrderBy(t => t.Timestamp)
                     .ToList();
 
-                if (data?.Count() > 0 && league.State.LastTrade != null)
+                if (data?.Count() > 0 && league.State.LastTradeHash != null)
                 {
-                    var lastTradeIndex = data.FindIndex(b => b.GetHash() == league.State.LastTrade);
+                    var lastTradeIndex = data.FindIndex(b => b.GetHash() == league.State.LastTradeHash);
 
                     if (lastTradeIndex >= 0)
                         data.RemoveRange(0, lastTradeIndex + 1);
@@ -158,25 +158,30 @@ public class TradeBackgroundService : ScheduledBackgroundService
                             _logger.LogError(e, $"An unexpected error has occurred while processing trade {trade.GetHash()} for league \"{league.Name}\" [{league.Id}]");
                         }
 
-                        league.State.LastTrade = trade.GetHash();
+                        league.State.LastTradeHash = trade.GetHash();
+                        league.State.LastTradeTimestamp = trade?.Timestamp;
                     }
 
                     if (data.Count() > 0)
                         _logger.LogTrace($"Successfully processed {MessageUtils.Pluralize(data.Count(), "new trade")} for league \"{league.Name}\" [{league.Id}]");
                 }
-                else if (league.State.LastTrade == null)
-                    league.State.LastTrade = data?.LastOrDefault()?.GetHash() ?? "";
+                else if (league.State.LastTradeHash == null)
+                {
+                    var lastTrade = data?.LastOrDefault();
+                    league.State.LastTradeHash = lastTrade?.GetHash() ?? "";
+                    league.State.LastTradeTimestamp = lastTrade?.Timestamp;
+                }
 
                 await _leagueService.SaveStateAsync(league, LeagueStateType.Trade);
             }));
 
             sw.Stop();
-            _logger.LogTrace($"Trade tracking task completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Trade tracking task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Trade tracking task failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Trade tracking task failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during trade tracking task.");
         }
     }

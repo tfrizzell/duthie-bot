@@ -74,7 +74,7 @@ public class MyVirtualGamingLeagueProvider : ILeagueProvider
             PlayoffEndpoint = "/elimination-games",
         },
         Tags = new Tags { "psn", "ea nhl", "6v6", "tournament" },
-        Enabled = true,
+        Enabled = false,
     };
 
     internal static readonly League VGHLClub = new League

@@ -90,12 +90,12 @@ public class TeamBackgroundService : ScheduledBackgroundService
             await _leagueService.SaveTeamsAsync(leagues);
 
             sw.Stop();
-            _logger.LogTrace($"Team update task completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Team update task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Team update task failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Team update task failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during team update task.");
         }
     }

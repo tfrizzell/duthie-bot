@@ -172,35 +172,42 @@ public class LeagueService
                     switch (stateType)
                     {
                         case LeagueStateType.Bid:
-                            existing.State.LastBid = league.State.LastBid;
+                            existing.State.LastBidHash = league.State.LastBidHash;
+                            existing.State.LastBidTimestamp = league.State.LastBidTimestamp;
                             break;
 
                         case LeagueStateType.Contract:
-                            existing.State.LastContract = league.State.LastContract;
+                            existing.State.LastContractHash = league.State.LastContractHash;
+                            existing.State.LastContractTimestamp = league.State.LastContractTimestamp;
                             break;
 
                         case LeagueStateType.DailyStar:
-                            existing.State.LastDailyStar = league.State.LastDailyStar;
+                            existing.State.LastDailyStarTimestamp = league.State.LastDailyStarTimestamp;
                             break;
 
                         case LeagueStateType.DraftPick:
-                            existing.State.LastDraftPick = league.State.LastDraftPick;
+                            existing.State.LastDraftPickHash = league.State.LastDraftPickHash;
+                            existing.State.LastDraftPickTimestamp = league.State.LastDraftPickTimestamp;
                             break;
 
                         case LeagueStateType.News:
-                            existing.State.LastNewsItem = league.State.LastNewsItem;
+                            existing.State.LastNewsItemHash = league.State.LastNewsItemHash;
+                            existing.State.LastNewsItemTimestamp = league.State.LastNewsItemTimestamp;
                             break;
 
                         case LeagueStateType.RosterTransaction:
-                            existing.State.LastRosterTransaction = league.State.LastRosterTransaction;
+                            existing.State.LastRosterTransactionHash = league.State.LastRosterTransactionHash;
+                            existing.State.LastRosterTransactionTimestamp = league.State.LastRosterTransactionTimestamp;
                             break;
 
                         case LeagueStateType.Trade:
-                            existing.State.LastTrade = league.State.LastTrade;
+                            existing.State.LastTradeHash = league.State.LastTradeHash;
+                            existing.State.LastTradeTimestamp = league.State.LastTradeTimestamp;
                             break;
 
                         case LeagueStateType.Waiver:
-                            existing.State.LastWaiver = league.State.LastWaiver;
+                            existing.State.LastWaiverHash = league.State.LastWaiverHash;
+                            existing.State.LastWaiverTimestamp = league.State.LastWaiverTimestamp;
                             break;
                     }
                 }

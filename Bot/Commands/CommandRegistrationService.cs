@@ -67,12 +67,12 @@ public class CommandRegistrationService
             }
 
             sw.Stop();
-            _logger.LogTrace($"Command registration completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Command registration completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Command registration failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Command registration failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during command registration.");
             Environment.Exit(ExitCode.CommandRegistrationFailure);
         }
@@ -96,13 +96,13 @@ public class CommandRegistrationService
             }
 
             sw.Stop();
-            _logger.LogDebug($"Command registration completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogDebug($"Command registration completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
 
-            _logger.LogError(e, $"Command registration failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogError(e, $"Command registration failed in {sw.Elapsed.TotalMilliseconds}ms");
             Environment.Exit(ExitCode.CommandRegistrationFailure);
         }
     }

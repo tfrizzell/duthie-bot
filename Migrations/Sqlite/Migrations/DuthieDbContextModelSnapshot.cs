@@ -222,28 +222,49 @@ namespace Duthie.Migrations.Sqlite.Migrations
                     b.Property<Guid>("LeagueId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LastBid")
+                    b.Property<string>("LastBidHash")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LastContract")
+                    b.Property<string>("LastBidTimestamp")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LastDailyStar")
+                    b.Property<string>("LastContractHash")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LastDraftPick")
+                    b.Property<string>("LastContractTimestamp")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LastNewsItem")
+                    b.Property<string>("LastDailyStarTimestamp")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LastRosterTransaction")
+                    b.Property<string>("LastDraftPickHash")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LastTrade")
+                    b.Property<string>("LastDraftPickTimestamp")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LastWaiver")
+                    b.Property<string>("LastNewsItemHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastNewsItemTimestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastRosterTransactionHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastRosterTransactionTimestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastTradeHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastTradeTimestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastWaiverHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastWaiverTimestamp")
                         .HasColumnType("TEXT");
 
                     b.HasKey("LeagueId");

@@ -96,12 +96,12 @@ public class MessagingBackgroundService : ScheduledBackgroundService
                 }));
 
             sw.Stop();
-            _logger.LogTrace($"Message sending task completed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Message sending task completed in {sw.Elapsed.TotalMilliseconds}ms");
         }
         catch (Exception e)
         {
             sw.Stop();
-            _logger.LogTrace($"Message sending task failed in {sw.Elapsed.TotalSeconds}s");
+            _logger.LogTrace($"Message sending task failed in {sw.Elapsed.TotalMilliseconds}ms");
             _logger.LogError(e, "An unexpected error during message sending task.");
         }
     }
