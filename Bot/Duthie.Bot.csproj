@@ -34,7 +34,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.16" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables"
+      Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
@@ -51,8 +52,16 @@
     </Content>
   </ItemGroup>
 
-  <Target Name="RenameExecutable" AfterTargets="Publish">
-    <Move SourceFiles="$(PublishDir)\Duthie.Bot.exe" DestinationFiles="$(PublishDir)\duthie.exe" OverwriteReadOnlyFiles="true"/>
+  <PropertyGroup>
+    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <Target Name="RenameWindowsExecutable" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)'=='win-x64'">
+    <Move SourceFiles="$(PublishDir)\Duthie.Bot.exe" DestinationFiles="$(PublishDir)\duthie.exe" OverwriteReadOnlyFiles="true" />
+  </Target>
+
+  <Target Name="RenameLinuxExecutable" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)'=='linux-x64'">
+    <Move SourceFiles="$(PublishDir)\Duthie.Bot" DestinationFiles="$(PublishDir)\duthie.exe" OverwriteReadOnlyFiles="true" />
   </Target>
 
 </Project>
