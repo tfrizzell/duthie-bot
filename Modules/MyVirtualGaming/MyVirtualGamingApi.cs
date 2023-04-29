@@ -239,7 +239,7 @@ public class MyVirtualGamingApi
                 Regex.Match(html,
                     @"<select[^>]*\bsingle_seasons\b[^>]*>(?<seasons>.*?)</select>",
                     RegexOptions.IgnoreCase | RegexOptions.Singleline).Groups["seasons"].Value,
-                @"<option(?=[^>]*>\sselected)[^>]*value=[""']?(?<seasonId>\d+)[""']?[^>]*>",
+                @"<option(?=[^>]*\sselected)[^>]*value=[""']?(?<seasonId>\d+)[""']?[^>]*>",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Cast<Match>()
             .OrderBy(m => Regex.Match(m.Groups[0].Value, @"<option[^>]*\bselected\b[^>]>").Success)
