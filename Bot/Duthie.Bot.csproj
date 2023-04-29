@@ -52,7 +52,7 @@
   </ItemGroup>
 
   <Target Name="RenameExecutable" AfterTargets="Publish">
-    <Move SourceFiles="$(PublishDir)\Duthie.Bot" DestinationFiles="$(PublishDir)\duthie.exe" OverwriteReadOnlyFiles="true"/>
+    <Move SourceFiles="$(PublishDir)\Duthie.Bot.exe" DestinationFiles="$(PublishDir)\duthie.exe" OverwriteReadOnlyFiles="true"/>
   </Target>
 
 </Project>
