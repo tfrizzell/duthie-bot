@@ -6,7 +6,7 @@
     <RootNamespace>Duthie.Bot</RootNamespace>
     <AssemblyVersion>3.0.4.0</AssemblyVersion>
     <AssemblyFileVersion>3.0.4.0</AssemblyFileVersion>
-    <Version>3.0.5</Version>
+    <Version>3.1.0</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>b9fcb4b4-1910-4b2d-a233-477bae5af8ce</UserSecretsId>
