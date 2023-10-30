@@ -2,7 +2,9 @@ namespace Duthie.Modules.MyVirtualGaming.Tests;
 
 public class MyVirtualGamingSiteProviderTests
 {
-    [Fact]
+    private const string disabled = "MyVirtualGaming no longer operational";
+
+    [Fact(Skip = disabled)]
     public void Provides_Only_DefaultSites()
     {
         var expectedCount = new MyVirtualGamingSiteProvider().Sites.Count();
@@ -21,7 +23,7 @@ public class MyVirtualGamingSiteProviderTests
         Assert.True(site != null, $"no matching site found");
         Assert.True(name == site!.Name, $"expected Name to be {name} but got {site.Name}");
         Assert.True(url == site!.Url, $"expected Url to be {url} but got {site.Url}");
-        Assert.True(site.Enabled, $"expected Enabled to be {true} but got {site.Enabled}");
+        Assert.True(!site.Enabled, $"expected Enabled to be {false} but got {site.Enabled}");
 
         var count = siteProvider.Sites.Count(s => s.Name == name);
         Assert.True(count == 1, $"expected 1 site with name {name} but found {count}");

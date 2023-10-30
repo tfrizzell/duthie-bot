@@ -6,6 +6,8 @@ namespace Duthie.Modules.MyVirtualGaming.Tests;
 
 public class MyVirtualGamingApiTests
 {
+    private const string disabled = "MyVirtualGaming no longer operational";
+
     private readonly MyVirtualGamingApi _api;
     private readonly League _league;
 
@@ -17,13 +19,13 @@ public class MyVirtualGamingApiTests
         (_league.Info as MyVirtualGamingLeagueInfo)!.ScheduleId = 119;
     }
 
-    [Fact]
+    [Fact(Skip = disabled)]
     public void Supports_MyVirtualGaming()
     {
         Assert.True(_api.Supports.Contains(MyVirtualGamingSiteProvider.VGHL.Id), $"{_api.GetType().Name} does not support site {MyVirtualGamingSiteProvider.VGHL.Id}");
     }
 
-    [Fact]
+    [Fact(Skip = disabled)]
     public async Task GetLeagueInfoAsync_ReturnsExpectedLeagueInfo()
     {
         var league = await _api.GetLeagueAsync(_league);
@@ -40,7 +42,7 @@ public class MyVirtualGamingApiTests
         Assert.True(expectedInfo.PlayoffEndpoint == actualInfo.PlayoffEndpoint, $"expected Info.PlayoffEndpoint to be {expectedInfo.PlayoffEndpoint} but got {actualInfo.PlayoffEndpoint}");
     }
 
-    [Fact]
+    [Fact(Skip = disabled)]
     public async Task GetTeamsAsync_ReturnsExpectedTeams()
     {
         var actualTeams = await _api.GetTeamsAsync(_league);
@@ -62,7 +64,7 @@ public class MyVirtualGamingApiTests
         }
     }
 
-    [Fact]
+    [Fact(Skip = disabled)]
     public async Task GetGamesAsync_ReturnsExpectedGames()
     {
         var actualGames = await _api.GetGamesAsync(_league);
@@ -89,7 +91,7 @@ public class MyVirtualGamingApiTests
         }
     }
 
-    [Fact]
+    [Fact(Skip = disabled)]
     public async Task GetBidsAsync_ReturnsNotNull()
     {
         var bids = await _api.GetBidsAsync(_league);
@@ -106,7 +108,7 @@ public class MyVirtualGamingApiTests
         }
     }
 
-    [Fact]
+    [Fact(Skip = disabled)]
     public async Task GetContractsAsync_ReturnsNotNull()
     {
         var contracts = await _api.GetContractsAsync(_league);
@@ -122,7 +124,7 @@ public class MyVirtualGamingApiTests
         }
     }
 
-    [Fact]
+    [Fact(Skip = disabled)]
     public async Task GetTradesAsync_ReturnsNotNull()
     {
         var trades = await _api.GetTradesAsync(_league);
@@ -137,7 +139,7 @@ public class MyVirtualGamingApiTests
         }
     }
 
-    [Fact]
+    [Fact(Skip = disabled)]
     public async Task GetDraftPicksAsync_ReturnsNotNull()
     {
         var draftPicks = await _api.GetDraftPicksAsync(_league);
@@ -156,7 +158,7 @@ public class MyVirtualGamingApiTests
         }
     }
 
-    [Fact]
+    [Fact(Skip = disabled)]
     public async Task GetRosterTransactionsAsync_ReturnsNotNull()
     {
         var rosterTransactions = await _api.GetRosterTransactionsAsync(_league);
