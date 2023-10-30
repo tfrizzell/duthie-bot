@@ -5,7 +5,7 @@ namespace Duthie.Modules.Leaguegaming;
 
 public class LeaguegamingLeagueProvider : ILeagueProvider
 {
-    internal static readonly League LGHL_XBOX = new League
+    internal static readonly League LGHL = new League
     {
         SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
         Site = LeaguegamingSiteProvider.Leaguegaming,
@@ -14,11 +14,11 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         ShortName = "LGHL",
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l37.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 37 },
-        Tags = new Tags { "xbox", "ea nhl", "6v6" },
+        Tags = new Tags { "crossplay", "xbox", "psn", "ea nhl", "6v6" },
         Enabled = true,
     };
 
-    internal static readonly League LGAHL_XBOX = new League
+    internal static readonly League LGAHL = new League
     {
         SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
         Site = LeaguegamingSiteProvider.Leaguegaming,
@@ -27,11 +27,24 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         ShortName = "LGAHL",
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l38.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 38 },
-        Tags = new Tags { "xbox", "ea nhl", "6v6" },
+        Tags = new Tags { "crossplay", "xbox", "psn", "ea nhl", "6v6" },
         Enabled = true,
     };
 
-    internal static readonly League LGCHL_XBOX = new League
+    internal static readonly League LGECHL = new League
+    {
+        SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
+        Site = LeaguegamingSiteProvider.Leaguegaming,
+        Id = new Guid("5dc830f1-84b4-4e87-b6ce-7034fbd4b420"),
+        Name = "LGECHL",
+        ShortName = "LGECHL",
+        LogoUrl = "https://www.leaguegaming.com/images/league/icon/l84.png",
+        Info = new LeaguegamingLeagueInfo { LeagueId = 84 },
+        Tags = new Tags { "crossplay", "xbox", "psn", "ea nhl", "6v6" },
+        Enabled = true,
+    };
+
+    internal static readonly League LGCHL = new League
     {
         SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
         Site = LeaguegamingSiteProvider.Leaguegaming,
@@ -40,7 +53,7 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         ShortName = "LGCHL",
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l39.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 39 },
-        Tags = new Tags { "xbox", "ea nhl", "6v6" },
+        Tags = new Tags { "crossplay", "xbox", "psn", "ea nhl", "6v6" },
         Enabled = true,
     };
 
@@ -54,7 +67,7 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l67.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 67 },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
-        Enabled = true,
+        Enabled = false,
     };
 
     internal static readonly League LGAHL_PSN = new League
@@ -67,7 +80,7 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l68.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 68 },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
-        Enabled = true,
+        Enabled = false,
     };
 
     internal static readonly League LGCHL_PSN = new League
@@ -80,7 +93,7 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l69.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 69 },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
-        Enabled = true,
+        Enabled = false,
     };
 
     internal static readonly League ESHL_XBOX = new League
@@ -122,7 +135,7 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         Enabled = false,
     };
 
-    internal static readonly League LGFNP_XBOX = new League
+    internal static readonly League LGFNP = new League
     {
         SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
         Site = LeaguegamingSiteProvider.Leaguegaming,
@@ -131,7 +144,7 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         ShortName = "LGFNP",
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l78.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 78 },
-        Tags = new Tags { "xbox", "ea nhl", "6v6", "weekly", "pickup" },
+        Tags = new Tags { "crossplay", "xbox", "psn", "ea nhl", "6v6", "weekly", "pickup" },
         Enabled = true,
     };
 
@@ -153,25 +166,25 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
         Site = LeaguegamingSiteProvider.Leaguegaming,
         Id = new Guid("c0fcd9f5-d48a-465f-867b-905bafec917d"),
-        Name = "LGBA",
-        ShortName = "LGBA",
+        Name = "LGBA XBOX",
+        ShortName = "LGBA XBOX",
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l50.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 50 },
         Tags = new Tags { "xbox", "nba 2k", "5v5" },
-        Enabled = true
+        Enabled = false,
     };
 
-    internal static readonly League LGBA_PSN = new League
+    internal static readonly League LGBA = new League
     {
         SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
         Site = LeaguegamingSiteProvider.Leaguegaming,
         Id = new Guid("3b5133d0-8801-4b86-9920-b7025cf88335"),
-        Name = "LGBA PSN",
-        ShortName = "LGBA PSN",
+        Name = "LGBA",
+        ShortName = "LGBA",
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l70.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 70 },
-        Tags = new Tags { "psn", "nba 2k", "5v5" },
-        Enabled = true
+        Tags = new Tags { "crossplay", "xbox", "psn", "nba 2k", "5v5" },
+        Enabled = true,
     };
 
     internal static readonly League LGFA_XBOX = new League
@@ -179,71 +192,110 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
         Site = LeaguegamingSiteProvider.Leaguegaming,
         Id = new Guid("f9351c11-a36d-4069-804b-e0f317935576"),
-        Name = "LGFA",
-        ShortName = "LGFA",
+        Name = "LGFA XBOX",
+        ShortName = "LGFA XBOX",
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l53.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 53 },
         Tags = new Tags { "xbox", "fifa", "11v11" },
-        Enabled = false
+        Enabled = false,
     };
 
-    internal static readonly League LGFA_PSN = new League
+    internal static readonly League LGFA = new League
     {
         SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
         Site = LeaguegamingSiteProvider.Leaguegaming,
         Id = new Guid("1112ece0-a84c-4dc1-9a75-278d4a0e4dd8"),
-        Name = "LGFA PSN",
-        ShortName = "LGFA PSN",
+        Name = "LGFA",
+        ShortName = "LGFA",
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l73.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 73 },
-        Tags = new Tags { "psn", "fifa", "11v11" },
-        Enabled = true
+        Tags = new Tags { "crossplay", "xbox", "psn", "fifa", "11v11" },
+        Enabled = true,
     };
 
     public LeaguegamingLeagueProvider()
     {
-        LGHL_XBOX.Affiliates = new LeagueAffiliate[] {
+        LGHL.Affiliates = new LeagueAffiliate[] {
             new LeagueAffiliate {
-                LeagueId = LGHL_XBOX.Id,
-                League = LGHL_XBOX,
-                AffiliateId = LGAHL_XBOX.Id,
-                Affiliate = LGAHL_XBOX,
+                LeagueId = LGHL.Id,
+                League = LGHL,
+                AffiliateId = LGAHL.Id,
+                Affiliate = LGAHL,
             },
             new LeagueAffiliate {
-                LeagueId = LGHL_XBOX.Id,
-                League = LGHL_XBOX,
-                AffiliateId = LGCHL_XBOX.Id,
-                Affiliate = LGCHL_XBOX,
-            },
-        };
-
-        LGAHL_XBOX.Affiliates = new LeagueAffiliate[] {
-            new LeagueAffiliate {
-                LeagueId = LGAHL_XBOX.Id,
-                League = LGAHL_XBOX,
-                AffiliateId = LGHL_XBOX.Id,
-                Affiliate = LGHL_XBOX,
+                LeagueId = LGHL.Id,
+                League = LGHL,
+                AffiliateId = LGECHL.Id,
+                Affiliate = LGECHL,
             },
             new LeagueAffiliate {
-                LeagueId = LGAHL_XBOX.Id,
-                League = LGAHL_XBOX,
-                AffiliateId = LGCHL_XBOX.Id,
-                Affiliate = LGCHL_XBOX,
+                LeagueId = LGHL.Id,
+                League = LGHL,
+                AffiliateId = LGCHL.Id,
+                Affiliate = LGCHL,
             },
         };
 
-        LGCHL_XBOX.Affiliates = new LeagueAffiliate[] {
+        LGAHL.Affiliates = new LeagueAffiliate[] {
             new LeagueAffiliate {
-                LeagueId = LGCHL_XBOX.Id,
-                League = LGCHL_XBOX,
-                AffiliateId = LGHL_XBOX.Id,
-                Affiliate = LGHL_XBOX,
+                LeagueId = LGAHL.Id,
+                League = LGAHL,
+                AffiliateId = LGHL.Id,
+                Affiliate = LGHL,
             },
             new LeagueAffiliate {
-                LeagueId = LGCHL_XBOX.Id,
-                League = LGCHL_XBOX,
-                AffiliateId = LGAHL_XBOX.Id,
-                Affiliate = LGAHL_XBOX,
+                LeagueId = LGAHL.Id,
+                League = LGAHL,
+                AffiliateId = LGECHL.Id,
+                Affiliate = LGECHL,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGAHL.Id,
+                League = LGAHL,
+                AffiliateId = LGCHL.Id,
+                Affiliate = LGCHL,
+            },
+        };
+
+        LGECHL.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = LGAHL.Id,
+                League = LGAHL,
+                AffiliateId = LGHL.Id,
+                Affiliate = LGHL,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGAHL.Id,
+                League = LGAHL,
+                AffiliateId = LGAHL.Id,
+                Affiliate = LGAHL,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGAHL.Id,
+                League = LGAHL,
+                AffiliateId = LGCHL.Id,
+                Affiliate = LGCHL,
+            },
+        };
+
+        LGCHL.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = LGCHL.Id,
+                League = LGCHL,
+                AffiliateId = LGHL.Id,
+                Affiliate = LGHL,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGCHL.Id,
+                League = LGCHL,
+                AffiliateId = LGAHL.Id,
+                Affiliate = LGAHL,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGCHL.Id,
+                League = LGCHL,
+                AffiliateId = LGECHL.Id,
+                Affiliate = LGECHL,
             },
         };
 
@@ -297,21 +349,22 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
     {
         get => new League[]
         {
-            LGHL_XBOX,
-            LGAHL_XBOX,
-            LGCHL_XBOX,
+            LGHL,
+            LGAHL,
+            LGECHL,
+            LGCHL,
             LGHL_PSN,
             LGAHL_PSN,
             LGCHL_PSN,
             ESHL_XBOX,
             ESHL_PSN,
             LGWC_PSN,
-            LGFNP_XBOX,
+            LGFNP,
             LGFNP_PSN,
             LGBA_XBOX,
-            LGBA_PSN,
+            LGBA,
             LGFA_XBOX,
-            LGFA_PSN,
+            LGFA,
         };
     }
 }
