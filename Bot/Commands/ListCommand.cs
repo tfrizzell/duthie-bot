@@ -276,7 +276,7 @@ public class ListCommand : BaseCommand
                     data: teams.Select(t => new string[] {
                         t.Name,
                         t.ShortName,
-                        Regex.Replace(string.Join(", ", t.Leagues.Select(l => l.Name).OrderBy(n => n)), @"^(.{27}).{4,}", @"$1..."),
+                        Regex.Replace(string.Join(", ", t.Leagues.Where(t => t.Enabled && t.Site.Enabled).Select(l => l.Name).OrderBy(n => n)), @"^(.{27}).{4,}", @"$1..."),
                         string.Join(", ", t.Tags)
                     })), ephemeral: true);
 
