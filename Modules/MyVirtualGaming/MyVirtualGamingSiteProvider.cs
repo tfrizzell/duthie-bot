@@ -11,7 +11,7 @@ public class MyVirtualGamingSiteProvider : ISiteProvider
         Name = "VGHL",
         Url = "vghl.myvirtualgaming.com",
         Tags = new Tags { "psn", "ea nhl" },
-        Enabled = true,
+        Enabled = false,
     };
 
     public IReadOnlyCollection<Site> Sites
