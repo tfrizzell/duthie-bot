@@ -57,6 +57,19 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         Enabled = true,
     };
 
+    internal static readonly League LGNCAA = new League
+    {
+        SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
+        Site = LeaguegamingSiteProvider.Leaguegaming,
+        Id = new Guid("73bff1b6-8177-44f8-878a-84b9f74eb728"),
+        Name = "LGHL NCAA",
+        ShortName = "LGNCAA",
+        LogoUrl = "https://www.leaguegaming.com/images/league/icon/l112.png",
+        Info = new LeaguegamingLeagueInfo { LeagueId = 112 },
+        Tags = new Tags { "crossplay", "xbox", "psn", "ea nhl", "6v6" },
+        Enabled = true,
+    };
+
     internal static readonly League LGHL_PSN = new League
     {
         SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
@@ -92,6 +105,19 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
         ShortName = "LGCHL PSN",
         LogoUrl = "https://www.leaguegaming.com/images/league/icon/l69.png",
         Info = new LeaguegamingLeagueInfo { LeagueId = 69 },
+        Tags = new Tags { "psn", "ea nhl", "6v6" },
+        Enabled = false,
+    };
+
+    internal static readonly League LGNCAA_PSN = new League
+    {
+        SiteId = LeaguegamingSiteProvider.Leaguegaming.Id,
+        Site = LeaguegamingSiteProvider.Leaguegaming,
+        Id = new Guid("bff63f00-6cb6-4bea-a5ce-5abc3077fc96"),
+        Name = "LGHL NCAA PSN",
+        ShortName = "LGNCAA PSN",
+        LogoUrl = "https://www.leaguegaming.com/images/league/icon/l113.png",
+        Info = new LeaguegamingLeagueInfo { LeagueId = 113 },
         Tags = new Tags { "psn", "ea nhl", "6v6" },
         Enabled = false,
     };
@@ -234,6 +260,12 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
                 AffiliateId = LGCHL.Id,
                 Affiliate = LGCHL,
             },
+            new LeagueAffiliate {
+                LeagueId = LGHL.Id,
+                League = LGHL,
+                AffiliateId = LGNCAA.Id,
+                Affiliate = LGNCAA,
+            },
         };
 
         LGAHL.Affiliates = new LeagueAffiliate[] {
@@ -255,26 +287,38 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
                 AffiliateId = LGCHL.Id,
                 Affiliate = LGCHL,
             },
+            new LeagueAffiliate {
+                LeagueId = LGAHL.Id,
+                League = LGAHL,
+                AffiliateId = LGNCAA.Id,
+                Affiliate = LGNCAA,
+            },
         };
 
         LGECHL.Affiliates = new LeagueAffiliate[] {
             new LeagueAffiliate {
-                LeagueId = LGAHL.Id,
-                League = LGAHL,
+                LeagueId = LGECHL.Id,
+                League = LGECHL,
                 AffiliateId = LGHL.Id,
                 Affiliate = LGHL,
             },
             new LeagueAffiliate {
-                LeagueId = LGAHL.Id,
-                League = LGAHL,
+                LeagueId = LGECHL.Id,
+                League = LGECHL,
                 AffiliateId = LGAHL.Id,
                 Affiliate = LGAHL,
             },
             new LeagueAffiliate {
-                LeagueId = LGAHL.Id,
-                League = LGAHL,
+                LeagueId = LGECHL.Id,
+                League = LGECHL,
                 AffiliateId = LGCHL.Id,
                 Affiliate = LGCHL,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGECHL.Id,
+                League = LGECHL,
+                AffiliateId = LGNCAA.Id,
+                Affiliate = LGNCAA,
             },
         };
 
@@ -297,6 +341,39 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
                 AffiliateId = LGECHL.Id,
                 Affiliate = LGECHL,
             },
+            new LeagueAffiliate {
+                LeagueId = LGCHL.Id,
+                League = LGCHL,
+                AffiliateId = LGNCAA.Id,
+                Affiliate = LGNCAA,
+            },
+        };
+
+        LGNCAA.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = LGNCAA.Id,
+                League = LGNCAA,
+                AffiliateId = LGHL.Id,
+                Affiliate = LGHL,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGNCAA.Id,
+                League = LGNCAA,
+                AffiliateId = LGAHL.Id,
+                Affiliate = LGAHL,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGNCAA.Id,
+                League = LGNCAA,
+                AffiliateId = LGECHL.Id,
+                Affiliate = LGECHL,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGNCAA.Id,
+                League = LGNCAA,
+                AffiliateId = LGCHL.Id,
+                Affiliate = LGCHL,
+            },
         };
 
         LGHL_PSN.Affiliates = new LeagueAffiliate[] {
@@ -311,6 +388,12 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
                 League = LGHL_PSN,
                 AffiliateId = LGCHL_PSN.Id,
                 Affiliate = LGCHL_PSN,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGHL_PSN.Id,
+                League = LGHL_PSN,
+                AffiliateId = LGNCAA_PSN.Id,
+                Affiliate = LGNCAA_PSN,
             },
         };
 
@@ -327,6 +410,12 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
                 AffiliateId = LGCHL_PSN.Id,
                 Affiliate = LGCHL_PSN,
             },
+            new LeagueAffiliate {
+                LeagueId = LGAHL_PSN.Id,
+                League = LGAHL_PSN,
+                AffiliateId = LGNCAA_PSN.Id,
+                Affiliate = LGNCAA_PSN,
+            },
         };
 
         LGCHL_PSN.Affiliates = new LeagueAffiliate[] {
@@ -342,6 +431,33 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
                 AffiliateId = LGAHL_PSN.Id,
                 Affiliate = LGAHL_PSN,
             },
+            new LeagueAffiliate {
+                LeagueId = LGCHL_PSN.Id,
+                League = LGCHL_PSN,
+                AffiliateId = LGNCAA_PSN.Id,
+                Affiliate = LGNCAA_PSN,
+            },
+        };
+
+        LGNCAA_PSN.Affiliates = new LeagueAffiliate[] {
+            new LeagueAffiliate {
+                LeagueId = LGNCAA_PSN.Id,
+                League = LGNCAA_PSN,
+                AffiliateId = LGHL_PSN.Id,
+                Affiliate = LGHL_PSN,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGNCAA_PSN.Id,
+                League = LGNCAA_PSN,
+                AffiliateId = LGAHL_PSN.Id,
+                Affiliate = LGAHL_PSN,
+            },
+            new LeagueAffiliate {
+                LeagueId = LGNCAA_PSN.Id,
+                League = LGNCAA_PSN,
+                AffiliateId = LGCHL_PSN.Id,
+                Affiliate = LGCHL_PSN,
+            },
         };
     }
 
@@ -353,9 +469,11 @@ public class LeaguegamingLeagueProvider : ILeagueProvider
             LGAHL,
             LGECHL,
             LGCHL,
+            LGNCAA,
             LGHL_PSN,
             LGAHL_PSN,
             LGCHL_PSN,
+            LGNCAA_PSN,
             ESHL_XBOX,
             ESHL_PSN,
             LGWC_PSN,

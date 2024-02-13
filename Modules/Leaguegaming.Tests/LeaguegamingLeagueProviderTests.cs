@@ -36,9 +36,11 @@ public class LeaguegamingLeagueProviderTests
         yield return new object[] { new Guid("981d1b21-fa47-4979-9684-13336ecb3f6c"), "LGAHL", 38 };
         yield return new object[] { new Guid("5dc830f1-84b4-4e87-b6ce-7034fbd4b420"), "LGECHL", 84 };
         yield return new object[] { new Guid("f5bbe441-7cc0-4de8-8960-b479113997b7"), "LGCHL", 39 };
+        yield return new object[] { new Guid("73bff1b6-8177-44f8-878a-84b9f74eb728"), "LGHL NCAA", 112 };
         yield return new object[] { new Guid("86c4e0fe-056b-450c-9a55-9ab32946ea31"), "LGHL PSN", 67, false };
         yield return new object[] { new Guid("c5884f38-cae4-461c-af99-beebcdc63e88"), "LGAHL PSN", 68, false };
         yield return new object[] { new Guid("e6f88d50-c9e3-43f2-be3d-11c29fc4403b"), "LGCHL PSN", 69, false };
+        yield return new object[] { new Guid("bff63f00-6cb6-4bea-a5ce-5abc3077fc96"), "LGHL NCAA PSN", 113, false };
         yield return new object[] { new Guid("aef1cea7-c626-42b4-9a45-0b9ea3deeb51"), "ESHL", 90, false };
         yield return new object[] { new Guid("0f9b50f8-3526-4bd3-9323-60b67f6a6abb"), "ESHL PSN", 91, false };
         yield return new object[] { new Guid("92718d97-8d2d-4ea3-a4b0-c4cefb75979d"), "LG World Cup", 97, false };
