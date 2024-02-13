@@ -4,3 +4,4 @@ obj/
 *.log
 duthie-bot.db*
 build.sh
+duthie-v*.zip
