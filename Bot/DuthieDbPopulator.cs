@@ -1,4 +1,5 @@
 using Duthie.Data;
+using Duthie.Services.Extensions;
 using Duthie.Types.Leagues;
 using Duthie.Types.Sites;
 using Microsoft.EntityFrameworkCore;
@@ -36,12 +37,24 @@ internal static class DuthieDbPopulator
             .Where(t => !t.IsAbstract && typeof(ILeagueProvider).IsAssignableFrom(t))
             .SelectMany(t => ((ILeagueProvider)Activator.CreateInstance(t)!).Leagues);
 
+        var affiliates = new List<LeagueAffiliate>();
+
         foreach (var league in leagues)
         {
+            context.Attach(league.Site);
+
             if (!await context.Set<League>().AnyAsync(l => l.Id == league.Id))
+            {
+                affiliates.AddRange(league.Affiliates ?? new List<LeagueAffiliate>());
+                league.Affiliates = null;
                 await context.Set<League>().AddAsync(league);
+            }
         }
 
+        await context.Set<LeagueAffiliate>().RemoveRangeAsync(await context.Set<LeagueAffiliate>().ToListAsync());
+        await context.SaveChangesAsync();
+
+        await context.Set<LeagueAffiliate>().AddRangeAsync(affiliates);
         await context.SaveChangesAsync();
     }
 }
