@@ -1,4 +1,7 @@
-[![build and test](https://github.com/tfrizzell/lg-sportscentre/actions/workflows/build-and-test.yml/badge.svg?branch=3.0-dev)](https://github.com/tfrizzell/lg-sportscentre/actions/workflows/build-and-test.yml)
+[![build and test](https://github.com/tfrizzell/lg-sportscentre/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/tfrizzell/lg-sportscentre/actions/workflows/build-and-test.yml)
+
+> [!IMPORTANT]
+> **Duthie Bot** has been shut down as of __March 18, 2024__ due to data scriping issues, and at the request of the sites it supports. If you'd like to continue with this type of functionality, you're encouraged to reach out to the teams behind [leaguegaming.com](https://leaguegaming.com/) and/or [thespnhl.com](https://thespnhl.com/) about developing bots specifically for their sites.
 
 Duthie Bot
 ===============
